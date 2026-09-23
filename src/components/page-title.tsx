@@ -12,9 +12,7 @@ export function PageTitle({ children }: { children?: string | null }) {
 
   if (!children) {
     return (
-      <title>
-        {`${env.REACT_APP_NAME} – A Threadiverse client for Lemmy and PieFed`}
-      </title>
+      <title>{`${env.REACT_APP_NAME} – Easier to Find Your People`}</title>
     );
   }
   return <title>{`${env.REACT_APP_NAME} | ${children}`}</title>;
