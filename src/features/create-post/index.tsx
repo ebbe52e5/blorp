@@ -120,7 +120,7 @@ const DraftCardMemoed = memo(function DraftCard({
         searchParams={`?id=${encodeURIComponent(key)}`}
         className={cn(
           "bg-background border px-3 py-2 gap-1 rounded-lg flex flex-col",
-          isActive && "border-brand border-dashed bg-brand/20",
+          isActive && "border-brand border-dashed bg-brand/10 dark:bg-brand/20",
         )}
         onClick={onClickDraft}
       >
