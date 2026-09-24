@@ -196,23 +196,12 @@ export default function Messages() {
                           className={cn(
                             "flex flex-col p-2.5 rounded-lg max-w-2/3",
                             isMe
-                              ? "bg-violet-600 ml-auto"
+                              ? "bg-brand/10 dark:bg-brand/20 ml-auto"
                               : "rounded-tl-none bg-secondary",
                           )}
                         >
-                          <MarkdownRenderer
-                            className={cn(
-                              isMe &&
-                                "text-white [&_*]:text-white! [&_a]:underline",
-                            )}
-                            markdown={item.body}
-                          />
-                          <span
-                            className={cn(
-                              "self-end text-xs text-secondary-foreground/50 mt-1",
-                              isMe && "text-white/85",
-                            )}
-                          >
+                          <MarkdownRenderer markdown={item.body} />
+                          <span className="self-end text-xs text-secondary-foreground/50 mt-1">
                             {dayjs(item.createdAt).format(
                               getPreferedTimeFormat(),
                             )}
