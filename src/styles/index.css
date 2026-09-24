@@ -220,6 +220,10 @@ html:root[data-dark-mode="dark"] {
 
 @theme inline {
   --font-jersey: "Jersey10";
+  /* Jersey10 has no CJK glyphs, so Chinese site titles fall through to a
+     system clerical-script (隶书) font where one is installed. */
+  --font-site-title: "Jersey10", "LiSu", "隶书", "STLiti", "华文隶书",
+    "Libian SC", serif;
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
