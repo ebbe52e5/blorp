@@ -21,6 +21,7 @@ import { Schemas } from "@/src/apis/api-blueprint";
 import { useTagUserStore } from "@/src/stores/user-tags";
 import { Badge } from "../ui/badge";
 import { PersonActionMenu } from "./person-action-menu";
+import { PersonFollowButton } from "./person-follow-button";
 import { cn } from "@/src/lib/utils";
 import { useState } from "react";
 import { Button } from "../ui/button";
@@ -63,6 +64,7 @@ export function SmallScreenSidebar({ person }: { person?: Schemas.Person }) {
             aggregates={{
               Posts: person?.postCount,
               Comments: person?.commentCount,
+              Followers: person?.followerCount,
             }}
           >
             <PersonBadge person={person} />
@@ -71,6 +73,7 @@ export function SmallScreenSidebar({ person }: { person?: Schemas.Person }) {
 
         <div className="flex-1" />
 
+        <PersonFollowButton person={person} />
         <PersonActionMenu person={person} />
       </div>
 
@@ -128,16 +131,19 @@ function PersonSidebarInner({ person }: { person?: Schemas.Person }) {
           <PersonActionMenu person={person} />
         </div>
 
-        <span className="flex items-center text-ellipsis overflow-hidden">
-          <b>{name}</b>
-          {tag ? (
-            <Badge size="sm" variant="brand-secondary" className="ml-2">
-              {tag}
-            </Badge>
-          ) : (
-            <i className="text-muted-foreground">@{host}</i>
-          )}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="flex items-center text-ellipsis overflow-hidden">
+            <b>{name}</b>
+            {tag ? (
+              <Badge size="sm" variant="brand-secondary" className="ml-2">
+                {tag}
+              </Badge>
+            ) : (
+              <i className="text-muted-foreground">@{host}</i>
+            )}
+          </span>
+          <PersonFollowButton person={person} className="shrink-0" />
+        </div>
 
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <LuCakeSlice />
@@ -151,6 +157,7 @@ function PersonSidebarInner({ person }: { person?: Schemas.Person }) {
           aggregates={{
             Posts: person?.postCount,
             Comments: person?.commentCount,
+            Followers: person?.followerCount,
           }}
         >
           <PersonBadge person={person} />

@@ -2262,6 +2262,52 @@ export function useFollowCommunityMutation() {
   });
 }
 
+export function useFollowPersonMutation() {
+  const { api, queryKeyPrefix } = useApiClients();
+
+  const getCachePrefixer = useAuth((s) => s.getCachePrefixer);
+  const patchProfile = useProfilesStore((s) => s.patchProfile);
+
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (form: { person: Schemas.Person; follow: boolean }) => {
+      return (await api).followPerson({
+        personId: form.person.id,
+        follow: form.follow,
+      });
+    },
+    onMutate: ({ person, follow }) => {
+      patchProfile(person.apId, getCachePrefixer(), {
+        followed: follow,
+        ...(_.isNumber(person.followerCount)
+          ? {
+              followerCount: Math.max(
+                0,
+                person.followerCount + (follow ? 1 : -1),
+              ),
+            }
+          : null),
+      });
+    },
+    onSuccess: (data) => {
+      patchProfile(data.apId, getCachePrefixer(), data);
+    },
+    onError: (_err, { person, follow }) => {
+      patchProfile(person.apId, getCachePrefixer(), {
+        followed: person.followed,
+        followerCount: person.followerCount,
+      });
+      toast.error(follow ? "Couldn't follow user" : "Couldn't unfollow user");
+    },
+    onSettled: (_data, _err, { person }) => {
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeyPrefix, "getPersonDetails", person.apId],
+      });
+    },
+  });
+}
+
 export function useFollowFeedMutation() {
   const { api, queryKeyPrefix } = useApiClients();
 

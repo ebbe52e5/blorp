@@ -1104,6 +1104,10 @@ export class LemmyV3Api implements ApiBlueprint<lemmyV3.LemmyHttp> {
     return {} as any;
   }
 
+  async followPerson(): Promise<Schemas.Person> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
   async followFeed() {
     throw Errors.NOT_IMPLEMENTED;
     return {} as any;

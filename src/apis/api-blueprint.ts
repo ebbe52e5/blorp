@@ -41,6 +41,12 @@ export const personSchema = z.object({
   commentCount: z.number().nullable().optional(),
   postCount: z.number().nullable().optional(),
   isBanned: z.boolean(),
+  // Person follows are a zhifou.io Lemmy fork feature. These are only
+  // set when the backend supports it, so they're absent elsewhere.
+  followerCount: z.number().optional(),
+  // Whether the logged in user follows this person. Only known
+  // when the person was fetched directly, not as e.g. a post creator.
+  followed: z.boolean().optional(),
 });
 
 export const postPollSchema = z.object({
@@ -657,6 +663,11 @@ export namespace Forms {
     follow: boolean;
   };
 
+  export type FollowPerson = {
+    personId: number;
+    follow: boolean;
+  };
+
   // Due to some PieFed weirdness we have to require
   // postApId unless we're looking at saved content only
   export type GetComments =
@@ -966,6 +977,8 @@ export abstract class ApiBlueprint<C> {
   abstract followFeed(
     form: Forms.FollowFeed,
   ): Promise<Schemas.MultiCommunityFeed>;
+
+  abstract followPerson(form: Forms.FollowPerson): Promise<Schemas.Person>;
 
   abstract logout(): Promise<void>;
 

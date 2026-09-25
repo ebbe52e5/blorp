@@ -334,6 +334,18 @@ const DEFAULT_HEADERS = {
   "User-Agent": env.REACT_APP_NAME.toLowerCase(),
 };
 
+// Person follows only exist in the zhifou.io Lemmy fork, so the npm
+// lemmy-js-client doesn't have these fields or the follow endpoint.
+type ForkPerson = lemmyV4.Person & { follower_count?: number };
+type ForkPersonView = lemmyV4.PersonView & {
+  person: ForkPerson;
+  person_follow?: { active: boolean };
+};
+
+// lemmy-js-client doesn't export its HttpType enum, but its
+// values are just the HTTP method names.
+const HTTP_POST = "POST" as Parameters<lemmyV4.LemmyHttp["wrapper"]>[0];
+
 function convertCommunity(
   communityView: Pick<lemmyV4.CommunityView, "community" | "community_actions">,
 ): Schemas.Community {
@@ -378,10 +390,19 @@ function convertCommunity(
   };
 }
 
-function convertPerson({
-  person,
-}: lemmyV4.PersonView | { person: lemmyV4.Person }): Schemas.Person {
+function convertPerson(
+  view: ForkPersonView | { person: ForkPerson },
+): Schemas.Person {
+  const { person } = view;
+  // Only a full PersonView (e.g. a profile) carries the viewer's follow
+  // state. Omit the keys otherwise so cached values aren't overwritten.
+  const followed =
+    "is_admin" in view ? { followed: !!view.person_follow?.active } : null;
   return {
+    ...(_.isNumber(person.follower_count)
+      ? { followerCount: person.follower_count }
+      : null),
+    ...followed,
     id: person.id,
     apId: person.ap_id,
     avatar: person.avatar ?? null,
@@ -1195,6 +1216,23 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
         owner,
       };
     });
+  }
+
+  async followPerson(form: Forms.FollowPerson) {
+    const followPersonResponse = await this.client.wrapper<
+      { person_id: number; follow: boolean },
+      { person_view: ForkPersonView }
+    >(
+      HTTP_POST,
+      "/person/follow",
+      {
+        person_id: form.personId,
+        follow: form.follow,
+      },
+      undefined,
+    );
+    const { person_view } = unwrapResponsData(followPersonResponse);
+    return convertPerson(person_view);
   }
 
   async followFeed(form: Forms.FollowFeed) {

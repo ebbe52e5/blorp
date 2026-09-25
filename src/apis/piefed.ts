@@ -988,6 +988,10 @@ export class PieFedApi
     }
   }
 
+  async followPerson(): Promise<Schemas.Person> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
   async followFeed(
     form: Forms.FollowFeed,
   ): Promise<Schemas.MultiCommunityFeed> {
