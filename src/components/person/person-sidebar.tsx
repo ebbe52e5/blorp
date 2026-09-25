@@ -131,8 +131,8 @@ function PersonSidebarInner({ person }: { person?: Schemas.Person }) {
           <PersonActionMenu person={person} />
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="flex items-center text-ellipsis overflow-hidden">
+        <div className="flex items-center justify-between gap-2">
+          <span className="flex items-center min-w-0 text-ellipsis overflow-hidden">
             <b>{name}</b>
             {tag ? (
               <Badge size="sm" variant="brand-secondary" className="ml-2">
