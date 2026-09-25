@@ -356,6 +356,19 @@ export const commentReportSchema = z.object({
   reason: z.string(),
 });
 
+/**
+ * A request from a person to follow a community that
+ * requires moderator approval (e.g. a private community).
+ */
+export const communityFollowRequestSchema = z.object({
+  personId: z.number(),
+  personApId: z.string(),
+  personHandle: handleSchema,
+  communityId: z.number(),
+  communityApId: z.string(),
+  communityHandle,
+});
+
 export const modlogItemSchema = z.object({
   id: z.number(),
   actionType: z.string(),
@@ -439,6 +452,9 @@ export namespace Schemas {
 
   export type PostReport = z.infer<typeof postReportSchema>;
   export type CommentReport = z.infer<typeof commentReportSchema>;
+  export type CommunityFollowRequest = z.infer<
+    typeof communityFollowRequestSchema
+  >;
   export type ModlogItem = z.infer<typeof modlogItemSchema>;
 }
 
@@ -560,6 +576,16 @@ export namespace Forms {
   export type ResolveCommentReport = {
     reportId: number;
     resolved: boolean;
+  };
+
+  export type GetCommunityFollowRequests = {
+    pageCursor?: string;
+  };
+
+  export type ResolveCommunityFollowRequest = {
+    communityId: number;
+    personId: number;
+    approve: boolean;
   };
 
   export type MarkPostRead = {
@@ -1086,6 +1112,25 @@ export abstract class ApiBlueprint<C> {
   abstract resolveCommentReport(
     form: Forms.ResolvePostReport,
   ): Promise<Schemas.CommentReport>;
+
+  /**
+   * Lists pending requests to follow communities the
+   * logged in user moderates.
+   */
+  abstract getCommunityFollowRequests(
+    form: Forms.GetCommunityFollowRequests,
+    options?: RequestOptions,
+  ): Promise<
+    Paginated & {
+      followRequests: Schemas.CommunityFollowRequest[];
+      users: Schemas.Person[];
+      communities: Schemas.Community[];
+    }
+  >;
+
+  abstract resolveCommunityFollowRequest(
+    form: Forms.ResolveCommunityFollowRequest,
+  ): Promise<void>;
 
   abstract resolveObject(
     form: Forms.ResolveObject,

@@ -1929,6 +1929,15 @@ export class PieFedApi
     return {} as any;
   }
 
+  async getCommunityFollowRequests() {
+    throw Errors.NOT_IMPLEMENTED;
+    return {} as any;
+  }
+
+  async resolveCommunityFollowRequest() {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
   async resolveObject(form: Forms.ResolveObject, options: RequestOptions) {
     try {
       const { post, community, person, comment, feed } =

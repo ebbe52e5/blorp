@@ -1838,6 +1838,52 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
     return convertCommentReport(comment_report_view);
   }
 
+  async getCommunityFollowRequests(
+    form: Forms.GetCommunityFollowRequests,
+    options: RequestOptions,
+  ) {
+    const listPendingFollowsResponse =
+      await this.client.listCommunityPendingFollows(
+        {
+          unread_only: true,
+          page_cursor:
+            form.pageCursor === INIT_PAGE_TOKEN ? undefined : form.pageCursor,
+          limit: this.limit,
+        },
+        options,
+      );
+    const { items, next_page } = unwrapResponsData(listPendingFollowsResponse);
+    return {
+      followRequests: items.map(({ person, community }) => ({
+        personId: person.id,
+        personApId: person.ap_id,
+        personHandle: createHandle({ apId: person.ap_id, name: person.name }),
+        communityId: community.id,
+        communityApId: community.ap_id,
+        communityHandle: createHandle({
+          apId: community.ap_id,
+          name: community.name,
+        }),
+      })),
+      users: items.map(({ person }) => convertPerson({ person })),
+      communities: items.map(({ community }) =>
+        convertCommunity({ community }),
+      ),
+      nextCursor: next_page ?? null,
+    };
+  }
+
+  async resolveCommunityFollowRequest(
+    form: Forms.ResolveCommunityFollowRequest,
+  ) {
+    const approveResponse = await this.client.approveCommunityPendingFollow({
+      community_id: form.communityId,
+      follower_id: form.personId,
+      approve: form.approve,
+    });
+    unwrapResponsData(approveResponse);
+  }
+
   async resolveObject(form: Forms.ResolveObject, options?: RequestOptions) {
     const resolveObjectResponse = await this.client.resolveObject(
       {

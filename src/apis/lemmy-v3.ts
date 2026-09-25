@@ -1753,6 +1753,16 @@ export class LemmyV3Api implements ApiBlueprint<lemmyV3.LemmyHttp> {
     });
   }
 
+  // Lemmy v3 has no communities that require follow approval
+  async getCommunityFollowRequests() {
+    throw Errors.NOT_IMPLEMENTED;
+    return {} as any;
+  }
+
+  async resolveCommunityFollowRequest() {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
   async resolveObject(form: Forms.ResolveObject, options: RequestOptions) {
     return translateErrors(async () => {
       const { post, community, person, comment } =

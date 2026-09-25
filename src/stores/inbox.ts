@@ -11,6 +11,7 @@ const inboxType = z.enum([
   "replies",
   "post-reports",
   "comment-reports",
+  "requests",
 ]);
 
 type InboxType = z.infer<typeof inboxType>;

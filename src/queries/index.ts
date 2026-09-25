@@ -1836,6 +1836,98 @@ function useCommentReportsKey() {
   return [...queryKeyPrefix, "getCommentReports"];
 }
 
+function useCommunityFollowRequestsKey() {
+  const { queryKeyPrefix } = useApiClients();
+  return [...queryKeyPrefix, "getCommunityFollowRequests"];
+}
+
+export function useCommunityFollowRequestsQuery() {
+  const isLoggedIn = useAuth((s) => s.isLoggedIn());
+  const { api } = useApiClients();
+  const getCachePrefixer = useAuth((s) => s.getCachePrefixer);
+  const cacheProfiles = useProfilesStore((s) => s.cacheProfiles);
+  const cacheCommunities = useCommunitiesStore((s) => s.cacheCommunities);
+  const queryKey = useCommunityFollowRequestsKey();
+  return useThrottledInfiniteQuery({
+    queryKey,
+    queryFn: async ({ pageParam, signal }) => {
+      const { followRequests, users, communities, nextCursor } = await (
+        await api
+      ).getCommunityFollowRequests(
+        {
+          pageCursor: pageParam,
+        },
+        {
+          signal,
+        },
+      );
+      cacheProfiles(getCachePrefixer(), users);
+      cacheCommunities(
+        getCachePrefixer(),
+        communities.map((communityView) => ({ communityView })),
+      );
+      return {
+        followRequests,
+        nextCursor,
+      };
+    },
+    initialPageParam: INIT_PAGE_TOKEN,
+    getNextPageParam: (prev) => prev.nextCursor,
+    enabled: isLoggedIn,
+    refetchOnWindowFocus: "always",
+  });
+}
+
+export function useResolveCommunityFollowRequestMutation() {
+  const { api } = useApiClients();
+  const queryClient = useQueryClient();
+  const followRequestsQueryKey = useCommunityFollowRequestsKey();
+  const notificationCountQueryKey = useNotificationCountQueryKey();
+
+  return useMutation({
+    mutationFn: async (form: Forms.ResolveCommunityFollowRequest) =>
+      (await api).resolveCommunityFollowRequest(form),
+    onMutate: (form) => {
+      // Only pending requests are listed, so a resolved
+      // request is removed from the list right away.
+      const requests = queryClient.getQueryData<
+        InfiniteData<
+          { followRequests: Schemas.CommunityFollowRequest[] },
+          unknown
+        >
+      >(followRequestsQueryKey);
+      if (requests) {
+        const patched = produce(requests, (prev) => {
+          for (const page of prev.pages) {
+            page.followRequests = page.followRequests.filter(
+              (r) =>
+                r.communityId !== form.communityId ||
+                r.personId !== form.personId,
+            );
+          }
+        });
+        queryClient.setQueryData(followRequestsQueryKey, patched);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: notificationCountQueryKey,
+      });
+      queryClient.invalidateQueries({
+        queryKey: followRequestsQueryKey,
+      });
+    },
+    onError: (err, { approve }) => {
+      if (isErrorLike(err)) {
+        toast.error(extractErrorContent(err));
+      } else {
+        toast.error(`Failed to ${approve ? "approve" : "deny"} request`);
+      }
+      console.error(err);
+    },
+  });
+}
+
 export function useCommentReportsQuery() {
   const isLoggedIn = useAuth((s) => s.isLoggedIn());
   const { api } = useApiClients();
@@ -1921,33 +2013,39 @@ export function useNotificationCountQuery() {
 
           const a = await api;
 
-          const [mentions, replies, postReports, commentReports] =
-            await Promise.allSettled([
-              a.getMentions(
-                {
-                  unreadOnly: true,
-                },
-                { signal },
-              ),
-              a.getReplies(
-                {
-                  unreadOnly: true,
-                },
-                { signal },
-              ),
-              a.getPostReports(
-                {
-                  unresolvedOnly: true,
-                },
-                { signal },
-              ),
-              a.getCommentReports(
-                {
-                  unresolvedOnly: true,
-                },
-                { signal },
-              ),
-            ]);
+          const [
+            mentions,
+            replies,
+            postReports,
+            commentReports,
+            followRequests,
+          ] = await Promise.allSettled([
+            a.getMentions(
+              {
+                unreadOnly: true,
+              },
+              { signal },
+            ),
+            a.getReplies(
+              {
+                unreadOnly: true,
+              },
+              { signal },
+            ),
+            a.getPostReports(
+              {
+                unresolvedOnly: true,
+              },
+              { signal },
+            ),
+            a.getCommentReports(
+              {
+                unresolvedOnly: true,
+              },
+              { signal },
+            ),
+            a.getCommunityFollowRequests({}, { signal }),
+          ]);
           const mentionCount =
             mentions.status === "fulfilled"
               ? mentions.value.mentions.length
@@ -1962,13 +2060,18 @@ export function useNotificationCountQuery() {
             commentReports.status === "fulfilled"
               ? commentReports.value.commentReports.length
               : 0;
+          const followRequestsCount =
+            followRequests.status === "fulfilled"
+              ? followRequests.value.followRequests.length
+              : 0;
 
           return [
             account.uuid,
             mentionCount +
               repliesCount +
               postReportsCount +
-              commentReportsCount,
+              commentReportsCount +
+              followRequestsCount,
           ] as const;
         }),
       );

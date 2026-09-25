@@ -5,6 +5,8 @@ import { MarkdownRenderer } from "../components/markdown/renderer";
 import { RelativeTime } from "@/src/components/relative-time";
 import {
   useCommentReportsQuery,
+  useCommunityFollowRequestsQuery,
+  useResolveCommunityFollowRequestMutation,
   useMarkAllReadMutation,
   useMarkPersonMentionReadMutation,
   useMarkReplyReadMutation,
@@ -46,7 +48,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "../components/ui/tooltip";
-import { encodeApId, getCommentSaved } from "../apis/utils";
+import { encodeApId, getCommentSaved, parseHandle } from "../apis/utils";
 import {
   CommentButtonBar,
   CommentVoting,
@@ -71,7 +73,8 @@ type Item =
   | { id: string; reply: Schemas.Reply }
   | { id: string; mention: Schemas.Mention }
   | { id: string; postReport: Schemas.PostReport }
-  | { id: string; commentReport: Schemas.CommentReport };
+  | { id: string; commentReport: Schemas.CommentReport }
+  | { id: string; followRequest: Schemas.CommunityFollowRequest };
 
 function NoInboxItemsMessage({ type }: { type: string }) {
   return (
@@ -183,6 +186,75 @@ function PostReport({
               />
             </div>
           </div>
+        </div>
+      </div>
+      <></>
+    </ContentGutters>
+  );
+}
+
+function CommunityFollowRequest({
+  followRequest,
+}: {
+  followRequest: Schemas.CommunityFollowRequest;
+}) {
+  const resolve = useResolveCommunityFollowRequestMutation();
+  const getConfirmation = useConfirmationAlert();
+  const person = parseHandle(followRequest.personHandle).name;
+  const form = {
+    communityId: followRequest.communityId,
+    personId: followRequest.personId,
+  };
+  return (
+    <ContentGutters noMobilePadding>
+      <div className={cn("flex-1 border-b", ContentGutters.mobilePadding)}>
+        <div className="flex my-2.5 gap-3 items-center">
+          <Link
+            to="/inbox/u/:userId"
+            params={{ userId: encodeApId(followRequest.personApId) }}
+          >
+            <PersonAvatar actorId={followRequest.personApId} size="sm" />
+          </Link>
+          <div className="flex-1 text-sm leading-6 min-w-0">
+            <PersonHoverCard actorId={followRequest.personApId} asChild>
+              <Link
+                to="/inbox/u/:userId"
+                params={{ userId: encodeApId(followRequest.personApId) }}
+                className="font-medium"
+              >
+                {person}
+              </Link>
+            </PersonHoverCard>{" "}
+            <span className="text-muted-foreground">requested to join</span>{" "}
+            <Link
+              to="/inbox/c/:communityHandle"
+              params={{ communityHandle: followRequest.communityHandle }}
+              className="font-medium text-brand break-all"
+            >
+              {followRequest.communityHandle}
+            </Link>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={resolve.isPending}
+            onClick={() =>
+              getConfirmation({
+                message: `Deny ${person}'s request to join ${followRequest.communityHandle}?`,
+                confirmText: "Deny",
+                danger: true,
+              }).then(() => resolve.mutate({ ...form, approve: false }))
+            }
+          >
+            Deny
+          </Button>
+          <Button
+            size="sm"
+            disabled={resolve.isPending}
+            onClick={() => resolve.mutate({ ...form, approve: true })}
+          >
+            Approve
+          </Button>
         </div>
       </div>
       <></>
@@ -502,6 +574,7 @@ export default function Inbox() {
   });
   const postReports = usePostReportsQuery();
   const commentReports = useCommentReportsQuery();
+  const followRequests = useCommunityFollowRequestsQuery();
 
   const repliesPagination = usePagination({
     pages: replies.data?.pages,
@@ -552,6 +625,20 @@ export default function Inbox() {
     listKey: type,
   });
 
+  const followRequestsPagination = usePagination({
+    pages: followRequests.data?.pages,
+    getItems: (p) =>
+      p.followRequests.map((followRequest) => ({
+        followRequest,
+        id: `fr${followRequest.communityId}-${followRequest.personId}`,
+      })),
+    fetchNextPage: followRequests.fetchNextPage,
+    hasNextPage: followRequests.hasNextPage,
+    isFetchingNextPage: followRequests.isFetchingNextPage,
+    mode: isMergedTab ? "infinite" : paginationMode,
+    listKey: type,
+  });
+
   const activePagination =
     type === "replies"
       ? repliesPagination
@@ -561,7 +648,9 @@ export default function Inbox() {
           ? postReportsPagination
           : type === "comment-reports"
             ? commentReportsPagination
-            : repliesPagination;
+            : type === "requests"
+              ? followRequestsPagination
+              : repliesPagination;
 
   // This updates in the background,
   // but calling it here ensures the
@@ -635,6 +724,12 @@ export default function Inbox() {
       isFetching = isFetching || commentReports.isFetching;
     }
 
+    // Follow requests have no timestamp to sort by, so they're
+    // only shown via their own tab's pagination, not merged here.
+    if (type === "requests") {
+      isFetching = isFetching || followRequests.isFetching;
+    }
+
     mergedData.sort((a, b) => {
       const aPublished =
         "reply" in a
@@ -669,6 +764,7 @@ export default function Inbox() {
     postReports.isFetching,
     commentReports.data,
     commentReports.isFetching,
+    followRequests.isFetching,
   ]);
 
   // For merged tabs, use combined mergedData directly. For single-query tabs, use pagination flatData.
@@ -686,6 +782,9 @@ export default function Inbox() {
   const hasUnresolvedCommentReport = !!commentReports.data?.pages
     .flatMap((pages) => pages.commentReports)
     .find((r) => !r.resolved);
+  const hasPendingRequest = !!followRequests.data?.pages.some(
+    (page) => page.followRequests.length > 0,
+  );
 
   const confirmationAlrt = useConfirmationAlert();
 
@@ -745,6 +844,9 @@ export default function Inbox() {
                     Comment Reports
                   </ToggleGroupItem>
                 </BadgeCount>
+                <BadgeCount showBadge={hasPendingRequest}>
+                  <ToggleGroupItem value="requests">Requests</ToggleGroupItem>
+                </BadgeCount>
               </ToggleGroup>
             </ToolbarButtons>
           </IonToolbar>
@@ -787,6 +889,9 @@ export default function Inbox() {
                     Comment Reports
                   </ToggleGroupItem>
                 </BadgeCount>
+                <BadgeCount showBadge={hasPendingRequest}>
+                  <ToggleGroupItem value="requests">Requests</ToggleGroupItem>
+                </BadgeCount>
               </ToggleGroup>
               <Tooltip>
                 <TooltipTrigger
@@ -814,6 +919,12 @@ export default function Inbox() {
             isMergedTab ? undefined : activePagination.paginationControls
           }
           renderItem={({ item }) => {
+            if ("followRequest" in item) {
+              return (
+                <CommunityFollowRequest followRequest={item.followRequest} />
+              );
+            }
+
             if ("commentReport" in item) {
               return <CommentReport commentReport={item.commentReport} />;
             }
