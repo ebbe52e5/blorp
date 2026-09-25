@@ -87,10 +87,12 @@ export function ExpandedCommunities({ sort }: { sort?: string }) {
     communitiesQuery.data,
   ]);
 
+  // Moderating comes from the cached site, not communitiesQuery. That query
+  // is disabled for it, so it stays isPending forever and can't gate this.
   const noItems =
     communities?.length === 0 &&
-    !communitiesQuery.isRefetching &&
-    !communitiesQuery.isPending;
+    (listingType === "ModeratorView" ||
+      (!communitiesQuery.isRefetching && !communitiesQuery.isPending));
 
   let numCols = 1;
   if (media.xl && !noItems) {
