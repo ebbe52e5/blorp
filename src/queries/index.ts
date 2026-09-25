@@ -9,9 +9,11 @@ import {
 import { useFiltersStore } from "@/src/stores/filters";
 import {
   Account,
+  accountCanModerate,
   getAccountSite,
   parseAccountInfo,
   useAuth,
+  useCanModerate,
 } from "../stores/auth";
 // eslint-disable-next-line no-restricted-imports -- intentional: useRefreshAuthQuery iterates multiple accounts and must scope each cache write to a specific account explicitly
 import { getCachePrefixer } from "../stores/auth";
@@ -1685,6 +1687,7 @@ function usePostReportsKey() {
 
 export function usePostReportsQuery() {
   const isLoggedIn = useAuth((s) => s.isLoggedIn());
+  const canModerate = useCanModerate();
   const { api } = useApiClients();
   const getCachePrefixer = useAuth((s) => s.getCachePrefixer);
   const cacheProfiles = useProfilesStore((s) => s.cacheProfiles);
@@ -1717,7 +1720,7 @@ export function usePostReportsQuery() {
     },
     initialPageParam: INIT_PAGE_TOKEN,
     getNextPageParam: (prev) => prev.nextCursor,
-    enabled: isLoggedIn,
+    enabled: isLoggedIn && canModerate,
     refetchOnWindowFocus: "always",
   });
 }
@@ -1843,6 +1846,7 @@ function useCommunityFollowRequestsKey() {
 
 export function useCommunityFollowRequestsQuery() {
   const isLoggedIn = useAuth((s) => s.isLoggedIn());
+  const canModerate = useCanModerate();
   const { api } = useApiClients();
   const getCachePrefixer = useAuth((s) => s.getCachePrefixer);
   const cacheProfiles = useProfilesStore((s) => s.cacheProfiles);
@@ -1873,7 +1877,7 @@ export function useCommunityFollowRequestsQuery() {
     },
     initialPageParam: INIT_PAGE_TOKEN,
     getNextPageParam: (prev) => prev.nextCursor,
-    enabled: isLoggedIn,
+    enabled: isLoggedIn && canModerate,
     refetchOnWindowFocus: "always",
   });
 }
@@ -1930,6 +1934,7 @@ export function useResolveCommunityFollowRequestMutation() {
 
 export function useCommentReportsQuery() {
   const isLoggedIn = useAuth((s) => s.isLoggedIn());
+  const canModerate = useCanModerate();
   const { api } = useApiClients();
   const getCachePrefixer = useAuth((s) => s.getCachePrefixer);
   const cacheProfiles = useProfilesStore((s) => s.cacheProfiles);
@@ -1963,7 +1968,7 @@ export function useCommentReportsQuery() {
     },
     initialPageParam: INIT_PAGE_TOKEN,
     getNextPageParam: (prev) => prev.nextCursor,
-    enabled: isLoggedIn,
+    enabled: isLoggedIn && canModerate,
     refetchOnWindowFocus: "always",
   });
 }
@@ -2012,6 +2017,8 @@ export function useNotificationCountQuery() {
           }
 
           const a = await api;
+          // Reports and follow requests error for non-mods
+          const canModerate = accountCanModerate(account);
 
           const [
             mentions,
@@ -2032,19 +2039,23 @@ export function useNotificationCountQuery() {
               },
               { signal },
             ),
-            a.getPostReports(
-              {
-                unresolvedOnly: true,
-              },
-              { signal },
-            ),
-            a.getCommentReports(
-              {
-                unresolvedOnly: true,
-              },
-              { signal },
-            ),
-            a.getCommunityFollowRequests({}, { signal }),
+            canModerate
+              ? a.getPostReports(
+                  {
+                    unresolvedOnly: true,
+                  },
+                  { signal },
+                )
+              : null,
+            canModerate
+              ? a.getCommentReports(
+                  {
+                    unresolvedOnly: true,
+                  },
+                  { signal },
+                )
+              : null,
+            canModerate ? a.getCommunityFollowRequests({}, { signal }) : null,
           ]);
           const mentionCount =
             mentions.status === "fulfilled"
@@ -2054,15 +2065,15 @@ export function useNotificationCountQuery() {
             replies.status === "fulfilled" ? replies.value.replies.length : 0;
           const postReportsCount =
             postReports.status === "fulfilled"
-              ? postReports.value.postReports.length
+              ? (postReports.value?.postReports.length ?? 0)
               : 0;
           const commentReportsCount =
             commentReports.status === "fulfilled"
-              ? commentReports.value.commentReports.length
+              ? (commentReports.value?.commentReports.length ?? 0)
               : 0;
           const followRequestsCount =
             followRequests.status === "fulfilled"
-              ? followRequests.value.followRequests.length
+              ? (followRequests.value?.followRequests.length ?? 0)
               : 0;
 
           return [

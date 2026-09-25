@@ -460,6 +460,24 @@ export function useIsAdmin(apId?: string) {
   return apId ? (adminApIds?.includes(apId) ?? false) : false;
 }
 
+/**
+ * Whether the account is an admin or moderates at least one
+ * community. Report and follow request endpoints return
+ * not_a_mod_or_admin for anyone else, so skip calling them.
+ */
+export function accountCanModerate(account: Account) {
+  const site = getAccountSite(account);
+  const myApId = site?.me?.apId;
+  if (!myApId) {
+    return false;
+  }
+  return !!site.admins?.includes(myApId) || !!site.moderates?.length;
+}
+
+export function useCanModerate() {
+  return useAuth((s) => accountCanModerate(s.getSelectedAccount()));
+}
+
 export function useAmIAdmin() {
   return useAuth((s) => {
     const account = s.getSelectedAccount();

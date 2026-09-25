@@ -62,7 +62,7 @@ import { Page } from "../components/page";
 import { StickyFilterBar } from "../components/sticky-filter-bar";
 import { usePostFromStore } from "../stores/posts";
 import { SmallPostCard } from "../components/posts/post";
-import { getAccountSite, useAuth } from "../stores/auth";
+import { getAccountSite, useAuth, useCanModerate } from "../stores/auth";
 import { Checkbox } from "../components/ui/checkbox";
 import { PersonHoverCard } from "../components/person/person-hover-card";
 import { useProfileFromStore } from "../stores/profiles";
@@ -561,7 +561,16 @@ export default function Inbox() {
   const media = useMedia();
 
   const paginationMode = useSettingsStore((s) => s.paginationMode);
-  const type = useInboxStore((s) => s.inboxType);
+  const canModerate = useCanModerate();
+  const storedType = useInboxStore((s) => s.inboxType);
+  // Reports and requests are only available to mods and admins
+  const type =
+    !canModerate &&
+    (storedType === "post-reports" ||
+      storedType === "comment-reports" ||
+      storedType === "requests")
+      ? "all"
+      : storedType;
   const setType = useInboxStore((s) => s.setInboxType);
 
   const isMergedTab = type === "all" || type === "unread";
@@ -834,19 +843,25 @@ export default function Inbox() {
                 <BadgeCount showBadge={hasUnreadMention}>
                   <ToggleGroupItem value="mentions">Mentions</ToggleGroupItem>
                 </BadgeCount>
-                <BadgeCount showBadge={hasUnresolvedPostReport}>
-                  <ToggleGroupItem value="post-reports">
-                    Post Reports
-                  </ToggleGroupItem>
-                </BadgeCount>
-                <BadgeCount showBadge={hasUnresolvedCommentReport}>
-                  <ToggleGroupItem value="comment-reports">
-                    Comment Reports
-                  </ToggleGroupItem>
-                </BadgeCount>
-                <BadgeCount showBadge={hasPendingRequest}>
-                  <ToggleGroupItem value="requests">Requests</ToggleGroupItem>
-                </BadgeCount>
+                {canModerate && (
+                  <>
+                    <BadgeCount showBadge={hasUnresolvedPostReport}>
+                      <ToggleGroupItem value="post-reports">
+                        Post Reports
+                      </ToggleGroupItem>
+                    </BadgeCount>
+                    <BadgeCount showBadge={hasUnresolvedCommentReport}>
+                      <ToggleGroupItem value="comment-reports">
+                        Comment Reports
+                      </ToggleGroupItem>
+                    </BadgeCount>
+                    <BadgeCount showBadge={hasPendingRequest}>
+                      <ToggleGroupItem value="requests">
+                        Requests
+                      </ToggleGroupItem>
+                    </BadgeCount>
+                  </>
+                )}
               </ToggleGroup>
             </ToolbarButtons>
           </IonToolbar>
@@ -879,19 +894,25 @@ export default function Inbox() {
                 <BadgeCount showBadge={hasUnreadMention}>
                   <ToggleGroupItem value="mentions">Mentions</ToggleGroupItem>
                 </BadgeCount>
-                <BadgeCount showBadge={hasUnresolvedPostReport}>
-                  <ToggleGroupItem value="post-reports">
-                    Post Reports
-                  </ToggleGroupItem>
-                </BadgeCount>
-                <BadgeCount showBadge={hasUnresolvedCommentReport}>
-                  <ToggleGroupItem value="comment-reports">
-                    Comment Reports
-                  </ToggleGroupItem>
-                </BadgeCount>
-                <BadgeCount showBadge={hasPendingRequest}>
-                  <ToggleGroupItem value="requests">Requests</ToggleGroupItem>
-                </BadgeCount>
+                {canModerate && (
+                  <>
+                    <BadgeCount showBadge={hasUnresolvedPostReport}>
+                      <ToggleGroupItem value="post-reports">
+                        Post Reports
+                      </ToggleGroupItem>
+                    </BadgeCount>
+                    <BadgeCount showBadge={hasUnresolvedCommentReport}>
+                      <ToggleGroupItem value="comment-reports">
+                        Comment Reports
+                      </ToggleGroupItem>
+                    </BadgeCount>
+                    <BadgeCount showBadge={hasPendingRequest}>
+                      <ToggleGroupItem value="requests">
+                        Requests
+                      </ToggleGroupItem>
+                    </BadgeCount>
+                  </>
+                )}
               </ToggleGroup>
               <Tooltip>
                 <TooltipTrigger
