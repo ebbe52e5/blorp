@@ -607,7 +607,7 @@ function convertFeed(
   multiCommunity: lemmyV4.MultiCommunityView,
   communities?: lemmyV4.CommunityView[],
 ): { feed: Schemas.MultiCommunityFeed; owner: Schemas.Person | null } {
-  const { multi, owner } = multiCommunity;
+  const { multi, owner, follow_state } = multiCommunity;
   const ownerPerson = convertPerson({ person: owner });
   return {
     feed: {
@@ -629,6 +629,7 @@ function convertFeed(
         communities?.map((c) =>
           createHandle({ apId: c.community.ap_id, name: c.community.name }),
         ) ?? [],
+      subscribed: follow_state ? follow_state === "accepted" : null,
       ownerId: ownerPerson.id,
       ownerApId: ownerPerson.apId,
       ownerHandle: ownerPerson.handle,
@@ -1196,9 +1197,19 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
     });
   }
 
-  async followFeed() {
-    throw Errors.NOT_IMPLEMENTED;
-    return {} as any;
+  async followFeed(form: Forms.FollowFeed) {
+    const followMultiCommunityResponse = await this.client.followMultiCommunity(
+      {
+        multi_community_id: form.feedId,
+        follow: form.follow,
+      },
+    );
+    const { multi_community_view } = unwrapResponsData(
+      followMultiCommunityResponse,
+    );
+    // The follow response doesn't include the feed's communities, so leave
+    // communityHandles out rather than overwriting the cached list with [].
+    return _.omit(convertFeed(multi_community_view).feed, "communityHandles");
   }
 
   async followCommunity(form: Forms.FollowCommunity) {
