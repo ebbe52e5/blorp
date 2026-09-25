@@ -60,6 +60,20 @@ export const useFiltersStore = create<SortsStore>()(
       migrate: (state) => {
         return persistedSchema.passthrough().parse(state);
       },
+      merge: (persisted, current) => {
+        const data = persistedSchema.partial().safeParse(persisted).data;
+        return {
+          ...current,
+          ...data,
+          // zhifou.io hides "Local" from the listing filters since the app is
+          // locked to one instance. Move anyone who had it selected to "All"
+          // so they aren't stuck on an option they can't see.
+          ...(data?.listingType === "Local" ? { listingType: "All" } : null),
+          ...(data?.communitiesListingType === "Local"
+            ? { communitiesListingType: "All" }
+            : null),
+        } satisfies SortsStore;
+      },
     },
   ),
 );

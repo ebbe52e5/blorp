@@ -402,16 +402,9 @@ export function PostCardStyleButton({
 }
 
 export function HomeFilter() {
-  const instance = useAuth((s) => s.getSelectedAccount().instance);
   const isLoggedIn = useAuth((s) => s.isLoggedIn());
   const listingType = useFiltersStore((s) => s.listingType);
   const setListingType = useFiltersStore((s) => s.setListingType);
-
-  let instanceHost = "";
-  try {
-    const url = new URL(instance);
-    instanceHost = url.host;
-  } catch {}
 
   const LISTING_TYPE_OPTIONS: ActionMenuProps["actions"] = useMemo(
     () =>
@@ -419,10 +412,6 @@ export function HomeFilter() {
         {
           label: "All",
           value: "All",
-        } as const,
-        {
-          label: `Local (${instanceHost ? instanceHost : ""})`,
-          value: "Local",
         } as const,
         ...(isLoggedIn
           ? ([
@@ -441,7 +430,7 @@ export function HomeFilter() {
         value: opt.value,
         onClick: () => setListingType(opt.value),
       })),
-    [isLoggedIn, setListingType, instanceHost],
+    [isLoggedIn, setListingType],
   );
 
   return (
@@ -466,17 +455,9 @@ export function HomeFilter() {
 }
 
 export function CommunityFilter() {
-  const instance = useAuth((s) => s.getSelectedAccount().instance);
-
   const listingType = useFiltersStore((s) => s.communitiesListingType);
   const setListingType = useFiltersStore((s) => s.setCommunitiesListingType);
   const isLoggedIn = useAuth((s) => s.isLoggedIn());
-
-  let instanceHost = "";
-  try {
-    const url = new URL(instance);
-    instanceHost = url.host;
-  } catch {}
 
   const LISTING_TYPE_OPTIONS = useMemo(
     () =>
@@ -484,10 +465,6 @@ export function CommunityFilter() {
         {
           label: "All",
           value: "All",
-        } as const,
-        {
-          label: `Local (${instanceHost})`,
-          value: "Local",
         } as const,
         ...(isLoggedIn
           ? ([
@@ -506,7 +483,7 @@ export function CommunityFilter() {
         value: opt.value,
         onClick: () => setListingType(opt.value),
       })),
-    [isLoggedIn, setListingType, instanceHost],
+    [isLoggedIn, setListingType],
   );
 
   return (

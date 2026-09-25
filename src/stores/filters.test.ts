@@ -106,6 +106,33 @@ describe("useFiltersStore", () => {
   });
 });
 
+describe("merge", () => {
+  const merge = useFiltersStore.persist.getOptions().merge!;
+
+  test("moves a persisted Local listing type to All", () => {
+    const merged = merge(
+      { listingType: "Local", communitiesListingType: "Local" },
+      useFiltersStore.getState(),
+    );
+    expect(merged.listingType).toBe("All");
+    expect(merged.communitiesListingType).toBe("All");
+  });
+
+  test("keeps other persisted values", () => {
+    const merged = merge(
+      {
+        listingType: "Subscribed",
+        communitiesListingType: "ModeratorView",
+        postSort: "New",
+      },
+      useFiltersStore.getState(),
+    );
+    expect(merged.listingType).toBe("Subscribed");
+    expect(merged.communitiesListingType).toBe("ModeratorView");
+    expect(merged.postSort).toBe("New");
+  });
+});
+
 describe("persisted state snapshot", () => {
   test("filters store initial shape", () => {
     const { result } = renderHook(() => useFiltersStore());
