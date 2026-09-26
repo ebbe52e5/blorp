@@ -844,6 +844,10 @@ export class LemmyV3Api implements ApiBlueprint<lemmyV3.LemmyHttp> {
   }
 
   async getPosts(form: Forms.GetPosts, options: RequestOptions) {
+    const type = form.type;
+    if (type === "Following") {
+      throw Errors.NOT_IMPLEMENTED;
+    }
     return translateErrors(async () => {
       const { data: sort } = postSortSchema.safeParse(form.sort);
 
@@ -851,7 +855,7 @@ export class LemmyV3Api implements ApiBlueprint<lemmyV3.LemmyHttp> {
         {
           show_read: form.showRead,
           sort,
-          type_: form.type,
+          type_: type,
           page_cursor:
             form.pageCursor === INIT_PAGE_TOKEN ? undefined : form.pageCursor,
           limit: form.limit ?? this.limit,

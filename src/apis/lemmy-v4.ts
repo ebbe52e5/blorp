@@ -346,6 +346,9 @@ type ForkPersonView = lemmyV4.PersonView & {
 // values are just the HTTP method names.
 const HTTP_POST = "POST" as Parameters<lemmyV4.LemmyHttp["wrapper"]>[0];
 
+// The fork's Following listing type isn't in lemmy-js-client's ListingType.
+const LISTING_TYPE_FOLLOWING = "following" as lemmyV4.ListingType;
+
 function convertCommunity(
   communityView: Pick<lemmyV4.CommunityView, "community" | "community_actions">,
 ): Schemas.Community {
@@ -967,6 +970,7 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
                   Local: "local",
                   Subscribed: "subscribed",
                   ModeratorView: "moderator_view",
+                  Following: LISTING_TYPE_FOLLOWING,
                 }),
             page_cursor:
               form.pageCursor === INIT_PAGE_TOKEN ? undefined : form.pageCursor,

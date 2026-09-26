@@ -548,7 +548,9 @@ export namespace Forms {
     showRead?: boolean;
     sort?: string;
     pageCursor?: string;
-    type?: "All" | "Local" | "Subscribed" | "ModeratorView";
+    // Following is a zhifou.io Lemmy fork listing type (posts by
+    // followed people and in followed multi-community feeds)
+    type?: "All" | "Local" | "Subscribed" | "ModeratorView" | "Following";
     communityHandle?: Handle;
     multiCommunityFeedApId?: string;
     multiCommunityFeedId?: number;

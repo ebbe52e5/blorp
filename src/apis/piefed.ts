@@ -826,6 +826,10 @@ export class PieFedApi
   }
 
   async getPosts(form: Forms.GetPosts, options: RequestOptions) {
+    const type = form.type;
+    if (type === "Following") {
+      throw Errors.NOT_IMPLEMENTED;
+    }
     const { data: sort } = postSortSchema.safeParse(form.sort);
 
     let feed_id: number | undefined = form.multiCommunityFeedId;
@@ -847,7 +851,7 @@ export class PieFedApi
               : pageCursorToInt(form.pageCursor),
           community_name: form.communityHandle,
           sort,
-          type_: form.type,
+          type_: type,
           saved_only: form.savedOnly,
           feed_id,
           ignore_sticky: form.ignoreSticky,

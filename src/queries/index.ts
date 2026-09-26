@@ -556,7 +556,10 @@ export function usePostsQuery(form: Forms.GetPosts) {
     queryFn,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     initialPageParam: INIT_PAGE_TOKEN,
-    enabled: form.type === "Subscribed" ? isLoggedIn : true,
+    enabled:
+      form.type === "Subscribed" || form.type === "Following"
+        ? isLoggedIn
+        : true,
     reduceAutomaticRefetch: true,
   });
 }
@@ -947,7 +950,12 @@ export function useLogoutMutation() {
   const logout = useAuth((s) => s.logout);
 
   const resetFilters = () => {
-    if (listingType === "Subscribed") {
+    // These listings only have content when logged in
+    if (
+      listingType === "Subscribed" ||
+      listingType === "Following" ||
+      listingType === "ModeratorView"
+    ) {
       setListingType("All");
     }
     if (communitiesListingType === "Subscribed") {

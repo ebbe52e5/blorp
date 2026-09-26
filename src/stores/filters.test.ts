@@ -1,6 +1,6 @@
 import { renderHook, act } from "@testing-library/react";
 import { describe, test, expect, afterEach } from "vitest";
-import { useFiltersStore } from "./filters";
+import { HomeListingType, useFiltersStore } from "./filters";
 import _ from "lodash";
 import { CommentSortType, ListingType, SortType } from "lemmy-v3";
 
@@ -77,7 +77,8 @@ describe("useFiltersStore", () => {
       ["Local"],
       ["Subscribed"],
       ["ModeratorView"],
-    ] satisfies [ListingType][])("change sort %s", (listingType) => {
+      ["Following"],
+    ] satisfies [HomeListingType][])("change sort %s", (listingType) => {
       act(() => {
         result.current.setListingType(listingType);
       });
@@ -116,6 +117,14 @@ describe("merge", () => {
     );
     expect(merged.listingType).toBe("All");
     expect(merged.communitiesListingType).toBe("All");
+  });
+
+  test("keeps a persisted Following home listing type", () => {
+    const merged = merge(
+      { listingType: "Following" },
+      useFiltersStore.getState(),
+    );
+    expect(merged.listingType).toBe("Following");
   });
 
   test("keeps other persisted values", () => {

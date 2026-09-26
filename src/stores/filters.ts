@@ -7,11 +7,16 @@ import z from "zod";
 const listingType = z.enum(["All", "Local", "Subscribed", "ModeratorView"]);
 type ListingType = z.infer<typeof listingType>;
 
+// Home can also list Following (a zhifou.io Lemmy fork listing type).
+// Explore's communities listing can't, so it keeps `listingType`.
+const homeListingType = z.enum([...listingType.options, "Following"]);
+export type HomeListingType = z.infer<typeof homeListingType>;
+
 const persistedSchema = z.object({
   communitySort: z.string(),
   commentSort: z.string(),
   postSort: z.string(),
-  listingType,
+  listingType: homeListingType,
   communitiesListingType: listingType,
 });
 
@@ -19,7 +24,7 @@ type SortsStore = {
   setCommunitySort: (sort: string) => void;
   setCommentSort: (sort: string) => void;
   setPostSort: (sort: string) => void;
-  setListingType: (type: ListingType) => void;
+  setListingType: (type: HomeListingType) => void;
   setCommunitiesListingType: (type: ListingType) => void;
   reset: () => void;
 } & z.infer<typeof persistedSchema>;

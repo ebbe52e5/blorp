@@ -1,6 +1,6 @@
-import { useFiltersStore } from "@/src/stores/filters";
+import { HomeListingType, useFiltersStore } from "@/src/stores/filters";
 import { useMemo } from "react";
-import { useAuth } from "../stores/auth";
+import { getAccountSite, useAuth } from "../stores/auth";
 import { useMedia } from "../hooks";
 import { ActionMenu, ActionMenuProps } from "./adaptable/action-menu";
 import _ from "lodash";
@@ -401,8 +401,21 @@ export function PostCardStyleButton({
   );
 }
 
+const HOME_LISTING_TYPE_LABELS: Record<HomeListingType, string> = {
+  All: "All",
+  Local: "Local",
+  Subscribed: "Subscribed",
+  Following: "Following",
+  ModeratorView: "Moderating",
+};
+
 export function HomeFilter() {
   const isLoggedIn = useAuth((s) => s.isLoggedIn());
+  // Following needs the zhifou.io Lemmy fork, which is signaled by
+  // it sending follower counts (the same check as the follow button).
+  const supportsFollowing = useAuth((s) =>
+    _.isNumber(getAccountSite(s.getSelectedAccount())?.me?.followerCount),
+  );
   const listingType = useFiltersStore((s) => s.listingType);
   const setListingType = useFiltersStore((s) => s.setListingType);
 
@@ -419,6 +432,14 @@ export function HomeFilter() {
                 label: "Subscribed",
                 value: "Subscribed",
               },
+              ...(supportsFollowing
+                ? ([
+                    {
+                      label: "Following",
+                      value: "Following",
+                    },
+                  ] as const)
+                : []),
               {
                 label: "Moderating",
                 value: "ModeratorView",
@@ -430,7 +451,7 @@ export function HomeFilter() {
         value: opt.value,
         onClick: () => setListingType(opt.value),
       })),
-    [isLoggedIn, setListingType],
+    [isLoggedIn, supportsFollowing, setListingType],
   );
 
   return (
@@ -445,7 +466,7 @@ export function HomeFilter() {
           className="flex flex-row items-center gap-0.5 text-lg"
         >
           <span className="font-black capitalize">
-            {listingType === "ModeratorView" ? "Moderating" : listingType}
+            {HOME_LISTING_TYPE_LABELS[listingType]}
           </span>
           <IoChevronDown className="text-muted-foreground" />
         </Button>
