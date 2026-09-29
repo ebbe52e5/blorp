@@ -349,8 +349,23 @@ const HTTP_POST = "POST" as Parameters<lemmyV4.LemmyHttp["wrapper"]>[0];
 // The fork's Following listing type isn't in lemmy-js-client's ListingType.
 const LISTING_TYPE_FOLLOWING = "following" as lemmyV4.ListingType;
 
+function convertCommunityTag(tag: lemmyV4.CommunityTag): Schemas.CommunityTag {
+  return {
+    id: tag.id,
+    name: tag.name,
+    displayName: tag.display_name ?? null,
+    summary: tag.summary ?? null,
+    color: tag.color,
+    deleted: tag.deleted,
+  };
+}
+
 function convertCommunity(
-  communityView: Pick<lemmyV4.CommunityView, "community" | "community_actions">,
+  communityView: Pick<
+    lemmyV4.CommunityView,
+    "community" | "community_actions"
+  > &
+    Partial<Pick<lemmyV4.CommunityView, "can_mod" | "tags">>,
 ): Schemas.Community {
   const { community } = communityView;
   const subscribed = (() => {
@@ -385,6 +400,21 @@ function convertCommunity(
     commentCount: community.comments,
     subscriberCount: community.subscribers,
     subscribersLocalCount: community.subscribers_local,
+    title: community.title,
+    sidebar: community.sidebar ?? null,
+    visibility: community.visibility,
+    postingRestrictedToMods: community.posting_restricted_to_mods,
+    deleted: community.deleted,
+    removed: community.removed,
+    local: community.local,
+    // Only a full CommunityView carries these; omit them otherwise so cached
+    // values aren't overwritten
+    ...(_.isBoolean(communityView.can_mod)
+      ? { canMod: communityView.can_mod }
+      : null),
+    ...(communityView.tags
+      ? { tags: communityView.tags.map(convertCommunityTag) }
+      : null),
     ...(subscribed
       ? {
           subscribed,
@@ -1159,10 +1189,14 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
       },
       options,
     );
-    const { community_view, moderators } =
+    const { community_view, moderators, discussion_languages } =
       unwrapResponsData(getCommunityResponse);
     return {
-      community: convertCommunity(community_view),
+      community: {
+        ...convertCommunity(community_view),
+        discussionLanguages: discussion_languages,
+      },
+      // Lemmy keeps moderators in rank order, so mods[0] is the top mod
       mods: moderators.map((m) => convertPerson({ person: m.moderator })),
     };
   }
@@ -1311,6 +1345,159 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
     );
     // The edit response doesn't include the feed's communities
     return _.omit(convertFeed(multi_community_view).feed, "communityHandles");
+  }
+
+  // Sends exactly the fields lemmy-ui's community form submits in edit mode
+  async editCommunity(form: Forms.EditCommunity) {
+    const editCommunityResponse = await this.client.editCommunity({
+      community_id: form.communityId,
+      title: form.title,
+      summary: form.summary,
+      sidebar: form.sidebar,
+      nsfw: form.nsfw,
+      posting_restricted_to_mods: form.postingRestrictedToMods,
+      discussion_languages: form.discussionLanguages,
+      visibility: form.visibility,
+    });
+    const { community_view, discussion_languages } = unwrapResponsData(
+      editCommunityResponse,
+    );
+    return {
+      ...convertCommunity(community_view),
+      discussionLanguages: discussion_languages,
+    };
+  }
+
+  async deleteCommunity(form: Forms.DeleteCommunity) {
+    const deleteCommunityResponse = await this.client.deleteCommunity({
+      community_id: form.communityId,
+      deleted: form.deleted,
+    });
+    const { community_view } = unwrapResponsData(deleteCommunityResponse);
+    return convertCommunity(community_view);
+  }
+
+  async uploadCommunityImage(form: Forms.UploadCommunityImage) {
+    const query = { id: form.communityId };
+    const image = { image: form.image };
+    const uploadResponse =
+      form.kind === "icon"
+        ? await this.client.uploadCommunityIcon(query, image)
+        : await this.client.uploadCommunityBanner(query, image);
+    const { image_url } = unwrapResponsData(uploadResponse);
+    return { url: image_url };
+  }
+
+  async deleteCommunityImage(form: Forms.DeleteCommunityImage) {
+    const query = { id: form.communityId };
+    unwrapResponsData(
+      form.kind === "icon"
+        ? await this.client.deleteCommunityIcon(query)
+        : await this.client.deleteCommunityBanner(query),
+    );
+  }
+
+  async addCommunityMod(form: Forms.AddCommunityMod) {
+    const addModResponse = await this.client.addModToCommunity({
+      community_id: form.communityId,
+      person_id: form.personId,
+      added: form.added,
+    });
+    const { moderators } = unwrapResponsData(addModResponse);
+    return moderators.map((m) => convertPerson({ person: m.moderator }));
+  }
+
+  async transferCommunity(form: Forms.TransferCommunity) {
+    const transferResponse = await this.client.transferCommunity({
+      community_id: form.communityId,
+      person_id: form.personId,
+    });
+    const { community_view, moderators } = unwrapResponsData(transferResponse);
+    return {
+      community: convertCommunity(community_view),
+      mods: moderators.map((m) => convertPerson({ person: m.moderator })),
+    };
+  }
+
+  // Same query as lemmy-ui's "Appoint moderator" search (searchUsers)
+  async searchPersonsForMod(
+    form: Forms.SearchPersonsForMod,
+    options: RequestOptions,
+  ) {
+    const listPersonsResponse = await this.client.listPersons(
+      {
+        search_term: form.q,
+        sort: "comment_score",
+        type_: "all",
+      },
+      options,
+    );
+    const { items } = unwrapResponsData(listPersonsResponse);
+    return items.map(convertPerson);
+  }
+
+  async getCommunityFollowers(
+    form: Forms.GetCommunityFollowers,
+    options: RequestOptions,
+  ) {
+    // Same request as the Followers tab in lemmy-ui's community settings.
+    // This lemmy-js-client build predates ListPersons.community_id and
+    // PersonView.community_actions.
+    const listPersonsResponse = await this.client.listPersons(
+      {
+        community_id: form.communityId,
+        page_cursor:
+          form.pageCursor === INIT_PAGE_TOKEN ? undefined : form.pageCursor,
+        limit: this.limit,
+      } as lemmyV4.ListPersons,
+      options,
+    );
+    const { items, next_page } = unwrapResponsData(listPersonsResponse);
+    const views = items as (lemmyV4.PersonView & {
+      community_actions?: Pick<
+        lemmyV4.CommunityActions,
+        "followed_at" | "received_ban_at"
+      >;
+    })[];
+    return {
+      followers: views.map((view) => ({
+        personApId: view.person.ap_id,
+        followedAt: view.community_actions?.followed_at ?? null,
+        isBanned: view.banned,
+        isBannedFromCommunity: !!view.community_actions?.received_ban_at,
+      })),
+      persons: views.map(convertPerson),
+      nextCursor: next_page ?? null,
+    };
+  }
+
+  async createCommunityTag(form: Forms.CreateCommunityTag) {
+    const createTagResponse = await this.client.createCommunityTag({
+      community_id: form.communityId,
+      name: form.name,
+      display_name: form.displayName,
+      summary: form.summary,
+      color: form.color as lemmyV4.TagColor | undefined,
+    });
+    return convertCommunityTag(unwrapResponsData(createTagResponse));
+  }
+
+  async editCommunityTag(form: Forms.EditCommunityTag) {
+    const editTagResponse = await this.client.editCommunityTag({
+      tag_id: form.tagId,
+      display_name: form.displayName,
+      summary: form.summary,
+      color: form.color as lemmyV4.TagColor | undefined,
+    });
+    return convertCommunityTag(unwrapResponsData(editTagResponse));
+  }
+
+  async deleteCommunityTag(form: Forms.DeleteCommunityTag) {
+    const deleteTagResponse = await this.client.deleteCommunityTag({
+      tag_id: form.tagId,
+      delete: form.deleted,
+    });
+    return convertCommunityTag(unwrapResponsData(deleteTagResponse));
   }
 
   async addMultiCommunityFeedEntry(form: Forms.MultiCommunityFeedEntry) {

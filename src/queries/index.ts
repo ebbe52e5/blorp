@@ -39,6 +39,7 @@ import {
 } from "../tanstack-query/throttled-infinite-query";
 import { produce } from "immer";
 import {
+  ApiBlueprint,
   Errors,
   Forms,
   Handle,
@@ -2725,6 +2726,236 @@ export function useSearchCommunitiesForFeedQuery(
     },
     enabled: form.q.length > 0,
   });
+}
+
+function toastMutationError(fallback: string) {
+  return (err: Error) => {
+    if (isErrorLike(err)) {
+      toast.error(extractErrorContent(err));
+    } else {
+      toast.error(fallback);
+    }
+  };
+}
+
+/**
+ * Writes an updated community (and optionally its mods) to the store and
+ * refetches it, like lemmy-ui does after changing community settings.
+ */
+function useUpdateCachedCommunity() {
+  const { queryKeyPrefix } = useApiClients();
+  const queryClient = useQueryClient();
+  const getCachePrefixer = useAuth((s) => s.getCachePrefixer);
+  const cacheCommunities = useCommunitiesStore((s) => s.cacheCommunities);
+  const cacheProfiles = useProfilesStore((s) => s.cacheProfiles);
+  return (
+    handle: Handle,
+    update?: { community?: Schemas.Community; mods?: Schemas.Person[] },
+  ) => {
+    if (update?.community) {
+      cacheCommunities(getCachePrefixer(), [
+        {
+          communityView: update.community,
+          ...(update.mods ? { mods: update.mods } : null),
+        },
+      ]);
+    }
+    if (update?.mods) {
+      cacheProfiles(getCachePrefixer(), update.mods);
+    }
+    queryClient.invalidateQueries({
+      queryKey: [...queryKeyPrefix, "getCommunity", `getCommunity-${handle}`],
+    });
+  };
+}
+
+export function useEditCommunityMutation(handle: Handle) {
+  const { api } = useApiClients();
+  const updateCachedCommunity = useUpdateCachedCommunity();
+  return useMutation({
+    mutationFn: async (form: Forms.EditCommunity) =>
+      (await api).editCommunity(form),
+    onSuccess: (community) => {
+      updateCachedCommunity(handle, { community });
+      toast.success("Saved");
+    },
+    onError: toastMutationError("Couldn't save community"),
+  });
+}
+
+export function useDeleteCommunityMutation(handle: Handle) {
+  const { api } = useApiClients();
+  const updateCachedCommunity = useUpdateCachedCommunity();
+  return useMutation({
+    mutationFn: async (form: Forms.DeleteCommunity) =>
+      (await api).deleteCommunity(form),
+    onSuccess: (community, form) => {
+      updateCachedCommunity(handle, { community });
+      toast.success(form.deleted ? "Deleted community" : "Restored community");
+    },
+    onError: toastMutationError("Couldn't update community"),
+  });
+}
+
+export function useUploadCommunityImageMutation(handle: Handle) {
+  const { api } = useApiClients();
+  const updateCachedCommunity = useUpdateCachedCommunity();
+  return useMutation({
+    mutationFn: async (form: Forms.UploadCommunityImage) =>
+      (await api).uploadCommunityImage(form),
+    onSuccess: () => {
+      updateCachedCommunity(handle);
+      toast.success("Image uploaded");
+    },
+    onError: toastMutationError("Failed to upload image"),
+  });
+}
+
+export function useDeleteCommunityImageMutation(handle: Handle) {
+  const { api } = useApiClients();
+  const updateCachedCommunity = useUpdateCachedCommunity();
+  return useMutation({
+    mutationFn: async (form: Forms.DeleteCommunityImage) =>
+      (await api).deleteCommunityImage(form),
+    onSuccess: () => {
+      updateCachedCommunity(handle);
+      toast.success("Image deleted");
+    },
+    onError: toastMutationError("Couldn't delete image"),
+  });
+}
+
+export function useAddCommunityModMutation(handle: Handle) {
+  const { api } = useApiClients();
+  const history = useHistory();
+  const queryClient = useQueryClient();
+  const refreshAuthKey = useRefreshAuthKey();
+  const getCachePrefixer = useAuth((s) => s.getCachePrefixer);
+  const patchCommunity = useCommunitiesStore((s) => s.patchCommunity);
+  const cacheProfiles = useProfilesStore((s) => s.cacheProfiles);
+  const updateCachedCommunity = useUpdateCachedCommunity();
+  return useMutation({
+    mutationFn: async (
+      form: Forms.AddCommunityMod & {
+        /** Leaving the mod team yourself, which navigates home after */
+        leaving?: boolean;
+      },
+    ) =>
+      (await api).addCommunityMod(
+        _.pick(form, ["communityId", "personId", "added"]),
+      ),
+    onSuccess: (mods, form) => {
+      cacheProfiles(getCachePrefixer(), mods);
+      patchCommunity(handle, getCachePrefixer(), { mods });
+      updateCachedCommunity(handle);
+      if (form.leaving) {
+        // Refresh the site so the community drops out of moderates
+        queryClient.invalidateQueries({ queryKey: refreshAuthKey });
+        toast.success("You have left the mod team");
+        history.replace("/home");
+      } else {
+        toast.success(form.added ? "Appointed moderator" : "Removed moderator");
+      }
+    },
+    onError: toastMutationError("Couldn't update moderators"),
+  });
+}
+
+export function useTransferCommunityMutation(handle: Handle) {
+  const { api } = useApiClients();
+  const updateCachedCommunity = useUpdateCachedCommunity();
+  return useMutation({
+    mutationFn: async (form: Forms.TransferCommunity) =>
+      (await api).transferCommunity(form),
+    onSuccess: ({ community, mods }) => {
+      updateCachedCommunity(handle, { community, mods });
+      toast.success("Transfer community");
+    },
+    onError: toastMutationError("Couldn't transfer community"),
+  });
+}
+
+export function useSearchPersonsForModQuery(form: Forms.SearchPersonsForMod) {
+  const { api, queryKeyPrefix } = useApiClients();
+  const getCachePrefixer = useAuth((s) => s.getCachePrefixer);
+  const cacheProfiles = useProfilesStore((s) => s.cacheProfiles);
+  return useQuery({
+    queryKey: [...queryKeyPrefix, "searchPersonsForMod", form.q],
+    queryFn: async ({ signal }) => {
+      const persons = await (await api).searchPersonsForMod(form, { signal });
+      cacheProfiles(getCachePrefixer(), persons);
+      return persons.map((p) => p.apId);
+    },
+    enabled: form.q.length > 0,
+  });
+}
+
+export function useCommunityFollowersQuery({
+  communityId,
+}: {
+  communityId?: number;
+}) {
+  const { api, queryKeyPrefix } = useApiClients();
+  const getCachePrefixer = useAuth((s) => s.getCachePrefixer);
+  const cacheProfiles = useProfilesStore((s) => s.cacheProfiles);
+  return useThrottledInfiniteQuery({
+    queryKey: [...queryKeyPrefix, "getCommunityFollowers", communityId],
+    queryFn: async ({ pageParam, signal }) => {
+      const { followers, persons, nextCursor } = await (
+        await api
+      ).getCommunityFollowers(
+        { communityId: communityId!, pageCursor: pageParam },
+        { signal },
+      );
+      cacheProfiles(getCachePrefixer(), persons);
+      return { followers, nextCursor };
+    },
+    initialPageParam: INIT_PAGE_TOKEN,
+    getNextPageParam: (prev) => prev.nextCursor,
+    enabled: _.isNumber(communityId),
+  });
+}
+
+function useCommunityTagMutation<F>(
+  handle: Handle,
+  fn: (api: ApiBlueprint<any>, form: F) => Promise<Schemas.CommunityTag>,
+  successMessage: (form: F) => string,
+) {
+  const { api } = useApiClients();
+  const updateCachedCommunity = useUpdateCachedCommunity();
+  return useMutation({
+    mutationFn: async (form: F) => fn(await api, form),
+    onSuccess: (_tag, form) => {
+      // lemmy-ui refetches the community to rebuild its tag list
+      updateCachedCommunity(handle);
+      toast.success(successMessage(form));
+    },
+    onError: toastMutationError("Couldn't update tag"),
+  });
+}
+
+export function useCreateCommunityTagMutation(handle: Handle) {
+  return useCommunityTagMutation<Forms.CreateCommunityTag>(
+    handle,
+    (api, form) => api.createCommunityTag(form),
+    () => "Community tag created",
+  );
+}
+
+export function useEditCommunityTagMutation(handle: Handle) {
+  return useCommunityTagMutation<Forms.EditCommunityTag>(
+    handle,
+    (api, form) => api.editCommunityTag(form),
+    () => "Community tag edited",
+  );
+}
+
+export function useDeleteCommunityTagMutation(handle: Handle) {
+  return useCommunityTagMutation<Forms.DeleteCommunityTag>(
+    handle,
+    (api, form) => api.deleteCommunityTag(form),
+    () => "Community tag deleted",
+  );
 }
 
 export function useDeleteImageMutation() {

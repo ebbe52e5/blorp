@@ -29,7 +29,10 @@ import { useParams } from "@/src/routing";
 import { getAccountActorId, useAuth } from "@/src/stores/auth";
 import { useCommunityFromStore } from "@/src/stores/communities";
 import { useMultiCommunityFeedFromStore } from "@/src/stores/multi-community-feeds";
-import { NO_FOCUS_RING } from "@/src/features/create-community/shared";
+import {
+  DELETE_BUTTON_CLASS,
+  NO_FOCUS_RING,
+} from "@/src/features/create-community/shared";
 
 // Mirrors lemmy-ui's MultiCommunityForm in edit mode: title and summary only
 function EditForm({ feed }: { feed: Schemas.MultiCommunityFeed }) {
@@ -83,11 +86,7 @@ function EditForm({ feed }: { feed: Schemas.MultiCommunityFeed }) {
         <Button
           type="button"
           variant={feed.deleted ? "outline" : "default"}
-          className={
-            feed.deleted
-              ? undefined
-              : "bg-foreground border-foreground text-background hover:bg-foreground/90 hover:border-foreground/90"
-          }
+          className={feed.deleted ? undefined : DELETE_BUTTON_CLASS}
           onClick={() => {
             const deleted = !feed.deleted;
             const confirm = deleted

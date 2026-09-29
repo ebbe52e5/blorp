@@ -59,6 +59,7 @@ export const routeDefs = {
   ...buildRoute("/home/c/:communityHandle/s", searchSchema),
   ...buildRoute("/home/c/:communityHandle/sidebar", communityHandleSchema),
   ...buildRoute("/home/c/:communityHandle/modlog", communityHandleSchema),
+  ...buildRoute("/home/c/:communityHandle/settings", communityHandleSchema),
   ...buildRoute("/home/modlog"),
   ...buildRoute("/home/c/:communityHandle/posts/:post", postCommentSchema),
   ...buildRoute("/home/posts/:post", postSchema),
@@ -89,6 +90,10 @@ export const routeDefs = {
   ),
   ...buildRoute(
     "/communities/c/:communityHandle/modlog",
+    communityHandleSchema,
+  ),
+  ...buildRoute(
+    "/communities/c/:communityHandle/settings",
     communityHandleSchema,
   ),
   ...buildRoute("/communities/modlog"),
@@ -122,6 +127,7 @@ export const routeDefs = {
   ...buildRoute("/inbox/c/:communityHandle/s", searchSchema),
   ...buildRoute("/inbox/c/:communityHandle/sidebar", communityHandleSchema),
   ...buildRoute("/inbox/c/:communityHandle/modlog", communityHandleSchema),
+  ...buildRoute("/inbox/c/:communityHandle/settings", communityHandleSchema),
   ...buildRoute("/inbox/modlog"),
   ...buildRoute("/inbox/c/:communityHandle/posts/:post", postCommentSchema),
   ...buildRoute("/inbox/posts/:post", postSchema),

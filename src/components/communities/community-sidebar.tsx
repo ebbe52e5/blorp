@@ -2,6 +2,7 @@ import _ from "lodash";
 import {
   useBlockCommunityMutation,
   useBlockInstanceMutation,
+  useSoftware,
 } from "@/src/queries/index";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
@@ -10,7 +11,8 @@ import { CommunityJoinButton } from "./community-join-button";
 import { useLinkContext } from "@/src/hooks/navigation-hooks";
 import { useCommunityFromStore } from "@/src/stores/communities";
 import { LuCakeSlice } from "react-icons/lu";
-import { Link, resolveRoute } from "@/src/routing/index";
+import { Link, resolveRoute, useHistory } from "@/src/routing/index";
+import { supportsCreateCommunity } from "@/src/apis/support";
 import {
   useAuth,
   useIsCommunityBlocked,
@@ -73,6 +75,7 @@ export function SmallScreenSidebar({
     communityHandle,
     communityView,
     actorId,
+    showSettings: true,
   });
 
   const createdAt = (
@@ -219,10 +222,13 @@ export function useCommunityActions({
   actorId,
   communityHandle,
   communityView,
+  showSettings,
 }: {
   actorId?: string | null;
   communityHandle: Handle;
   communityView?: Schemas.Community;
+  /** Only the community page's own menu links to its settings */
+  showSettings?: boolean;
 }): SubAction[] {
   const getConfirmation = useConfirmationAlert();
   const blockCommunity = useBlockCommunityMutation({
@@ -245,6 +251,15 @@ export function useCommunityActions({
     communityHandle,
   });
 
+  const history = useHistory();
+  const software = useSoftware();
+  // lemmy-ui shows the Settings link to mods and admins (can_mod)
+  const canOpenSettings =
+    showSettings &&
+    isLoggedIn &&
+    supportsCreateCommunity(software) &&
+    !!communityView?.canMod;
+
   const shareActions = useShareActions(
     "community",
     actorId
@@ -258,6 +273,17 @@ export function useCommunityActions({
   );
 
   return [
+    ...(canOpenSettings
+      ? [
+          {
+            text: "Settings",
+            onClick: () =>
+              history.push(`${linkCtx.root}c/:communityHandle/settings`, {
+                communityHandle,
+              }),
+          },
+        ]
+      : []),
     ...(isLoggedIn && !isBlocked
       ? [
           {
@@ -341,6 +367,7 @@ function CommunitySidebarInner({
     communityHandle,
     communityView: data?.communityView,
     actorId,
+    showSettings: true,
   });
 
   if (!data) {

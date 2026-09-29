@@ -79,6 +79,9 @@ const MultiCommunityFeedSettings = lazy(
 const CommunityFeed = lazy(() => import("@/src/features/community-posts"));
 const CommunitySidebar = lazy(() => import("@/src/features/community-sidebar"));
 const CommunityModlog = lazy(() => import("@/src/features/community-modlog"));
+const CommunitySettings = lazy(
+  () => import("@/src/features/community-settings"),
+);
 const SiteModlog = lazy(() => import("@/src/features/site-modlog"));
 const CommunitiesFeed = lazy(
   () => import("@/src/features/explore/explore-screen"),
@@ -207,6 +210,13 @@ const HOME_STACK = [
   >
     <CommunityModlog />
   </Route>,
+  <Route
+    key="/home/c/:communityHandle/settings"
+    exact
+    path="/home/c/:communityHandle/settings"
+  >
+    <CommunitySettings />
+  </Route>,
   <Route key="/home/modlog" exact path="/home/modlog">
     <SiteModlog />
   </Route>,
@@ -329,6 +339,13 @@ const COMMUNITIES_STACK = [
   >
     <CommunityModlog />
   </Route>,
+  <Route
+    key="/communities/c/:communityHandle/settings"
+    exact
+    path="/communities/c/:communityHandle/settings"
+  >
+    <CommunitySettings />
+  </Route>,
   <Route key="/communities/modlog" exact path="/communities/modlog">
     <SiteModlog />
   </Route>,
@@ -423,6 +440,13 @@ const INBOX_STACK = [
     path="/inbox/c/:communityHandle/modlog"
   >
     <CommunityModlog />
+  </Route>,
+  <Route
+    key="/inbox/c/:communityHandle/settings"
+    exact
+    path="/inbox/c/:communityHandle/settings"
+  >
+    <CommunitySettings />
   </Route>,
   <Route key="/inbox/modlog" exact path="/inbox/modlog">
     <SiteModlog />

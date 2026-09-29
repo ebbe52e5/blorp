@@ -127,6 +127,14 @@ export const postSchema = z.object({
     }),
   ),
 });
+export const communityTagSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  displayName: z.string().nullable(),
+  summary: z.string().nullable(),
+  color: z.string(),
+  deleted: z.boolean(),
+});
 export const communitySchema = z.object({
   createdAt: z.string(),
   id: z.number(),
@@ -156,6 +164,32 @@ export const communitySchema = z.object({
     )
     .optional(),
   nsfw: z.boolean(),
+  // Lemmy v4 only, used by the community settings page. description
+  // holds the summary.
+  title: z.string().optional(),
+  sidebar: z.string().nullable().optional(),
+  visibility: z
+    .enum([
+      "public",
+      "unlisted",
+      "local_only_public",
+      "local_only_private",
+      "private",
+    ])
+    .optional(),
+  postingRestrictedToMods: z.boolean().optional(),
+  deleted: z.boolean().optional(),
+  removed: z.boolean().optional(),
+  local: z.boolean().optional(),
+  canMod: z.boolean().optional(),
+  tags: z.array(communityTagSchema).optional(),
+  discussionLanguages: z.array(z.number()).optional(),
+});
+export const communityFollowerSchema = z.object({
+  personApId: z.string(),
+  followedAt: z.string().nullable(),
+  isBanned: z.boolean(),
+  isBannedFromCommunity: z.boolean(),
 });
 export const multiCommunityFeedSchema = z.object({
   createdAt: z.string(),
@@ -448,6 +482,8 @@ export namespace Schemas {
   export type MultiCommunityFeed = z.infer<typeof multiCommunityFeedSchema>;
 
   export type Community = z.infer<typeof communitySchema>;
+  export type CommunityTag = z.infer<typeof communityTagSchema>;
+  export type CommunityFollower = z.infer<typeof communityFollowerSchema>;
   export type Person = z.infer<typeof personSchema>;
 
   export type Comment = z.infer<typeof commentSchema>;
@@ -715,6 +751,76 @@ export namespace Forms {
 
   export type SearchCommunitiesForFeed = {
     q: string;
+  };
+
+  // Mirrors the fields lemmy-ui's community form submits in edit mode
+  export type EditCommunity = {
+    communityId: number;
+    title?: string;
+    summary?: string;
+    sidebar?: string;
+    nsfw?: boolean;
+    postingRestrictedToMods?: boolean;
+    discussionLanguages?: number[];
+    visibility?: CommunityVisibility;
+  };
+
+  export type DeleteCommunity = {
+    communityId: number;
+    deleted: boolean;
+  };
+
+  export type CommunityImageKind = "icon" | "banner";
+
+  export type UploadCommunityImage = {
+    communityId: number;
+    kind: CommunityImageKind;
+    image: File;
+  };
+
+  export type DeleteCommunityImage = {
+    communityId: number;
+    kind: CommunityImageKind;
+  };
+
+  export type AddCommunityMod = {
+    communityId: number;
+    personId: number;
+    added: boolean;
+  };
+
+  export type TransferCommunity = {
+    communityId: number;
+    personId: number;
+  };
+
+  export type SearchPersonsForMod = {
+    q: string;
+  };
+
+  export type GetCommunityFollowers = {
+    communityId: number;
+    pageCursor?: string;
+  };
+
+  export type CreateCommunityTag = {
+    communityId: number;
+    name: string;
+    displayName?: string;
+    summary?: string;
+    color?: string;
+  };
+
+  export type EditCommunityTag = {
+    tagId: number;
+    displayName?: string;
+    summary?: string;
+    color?: string;
+  };
+
+  export type DeleteCommunityTag = {
+    tagId: number;
+    deleted: boolean;
   };
 
   export type DeleteImage = {
@@ -1049,6 +1155,56 @@ export abstract class ApiBlueprint<C> {
   abstract editMultiCommunityFeed(
     form: Forms.EditMultiCommunityFeed,
   ): Promise<Schemas.MultiCommunityFeed>;
+
+  abstract editCommunity(form: Forms.EditCommunity): Promise<Schemas.Community>;
+
+  abstract deleteCommunity(
+    form: Forms.DeleteCommunity,
+  ): Promise<Schemas.Community>;
+
+  abstract uploadCommunityImage(
+    form: Forms.UploadCommunityImage,
+  ): Promise<Schemas.UploadImageResponse>;
+
+  abstract deleteCommunityImage(
+    form: Forms.DeleteCommunityImage,
+  ): Promise<void>;
+
+  /** Returns the community's moderators, top mod first */
+  abstract addCommunityMod(
+    form: Forms.AddCommunityMod,
+  ): Promise<Schemas.Person[]>;
+
+  abstract transferCommunity(form: Forms.TransferCommunity): Promise<{
+    community: Schemas.Community;
+    mods: Schemas.Person[];
+  }>;
+
+  abstract searchPersonsForMod(
+    form: Forms.SearchPersonsForMod,
+    options: RequestOptions,
+  ): Promise<Schemas.Person[]>;
+
+  abstract getCommunityFollowers(
+    form: Forms.GetCommunityFollowers,
+    options: RequestOptions,
+  ): Promise<{
+    followers: Schemas.CommunityFollower[];
+    persons: Schemas.Person[];
+    nextCursor: string | null;
+  }>;
+
+  abstract createCommunityTag(
+    form: Forms.CreateCommunityTag,
+  ): Promise<Schemas.CommunityTag>;
+
+  abstract editCommunityTag(
+    form: Forms.EditCommunityTag,
+  ): Promise<Schemas.CommunityTag>;
+
+  abstract deleteCommunityTag(
+    form: Forms.DeleteCommunityTag,
+  ): Promise<Schemas.CommunityTag>;
 
   abstract addMultiCommunityFeedEntry(
     form: Forms.MultiCommunityFeedEntry,

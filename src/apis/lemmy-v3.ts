@@ -1137,6 +1137,57 @@ export class LemmyV3Api implements ApiBlueprint<lemmyV3.LemmyHttp> {
     throw Errors.NOT_IMPLEMENTED;
   }
 
+  async editCommunity(): Promise<Schemas.Community> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
+  async deleteCommunity(): Promise<Schemas.Community> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
+  async uploadCommunityImage(): Promise<Schemas.UploadImageResponse> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
+  async deleteCommunityImage(): Promise<void> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
+  async addCommunityMod(): Promise<Schemas.Person[]> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
+  async transferCommunity(): Promise<{
+    community: Schemas.Community;
+    mods: Schemas.Person[];
+  }> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
+  async searchPersonsForMod(): Promise<Schemas.Person[]> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
+  async getCommunityFollowers(): Promise<{
+    followers: Schemas.CommunityFollower[];
+    persons: Schemas.Person[];
+    nextCursor: string | null;
+  }> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
+  async createCommunityTag(): Promise<Schemas.CommunityTag> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
+  async editCommunityTag(): Promise<Schemas.CommunityTag> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
+  async deleteCommunityTag(): Promise<Schemas.CommunityTag> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
   async deleteImage(): Promise<void> {
     throw Errors.NOT_IMPLEMENTED;
   }

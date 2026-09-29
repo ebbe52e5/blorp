@@ -1,38 +1,26 @@
 import { useId, useState } from "react";
-import { useDropzone } from "react-dropzone";
-import { FaRegImage } from "react-icons/fa6";
 import { Forms } from "@/src/apis/api-blueprint";
 import { MarkdownEditor } from "@/src/components/markdown/editor";
-import { Button, LoadingButton } from "@/src/components/ui/button";
+import { LoadingButton } from "@/src/components/ui/button";
 import { Checkbox } from "@/src/components/ui/checkbox";
 import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
 import { MultiSelect } from "@/src/components/ui/multi-select";
 import { SimpleSelect } from "@/src/components/ui/simple-select";
-import { Skeleton } from "@/src/components/ui/skeleton";
-import { cn } from "@/src/lib/utils";
 import {
   useCreateCommunityMutation,
   useDeleteImageMutation,
   useUploadImageMutation,
 } from "@/src/queries";
 import { getAccountSite, useAuth } from "@/src/stores/auth";
+import { ImageDropzone } from "./image-dropzone";
 import {
   ACTOR_NAME_PATTERN,
   ACTOR_NAME_REQUIREMENTS,
   NO_FOCUS_RING,
+  VISIBILITY_OPTIONS,
+  useSiteLanguageOptions,
 } from "./shared";
-
-const VISIBILITY_OPTIONS: {
-  value: Forms.CommunityVisibility;
-  label: string;
-}[] = [
-  { value: "public", label: "Public" },
-  { value: "unlisted", label: "Unlisted" },
-  { value: "local_only_public", label: "Local only (public)" },
-  { value: "local_only_private", label: "Local only (private)" },
-  { value: "private", label: "Private" },
-];
 
 function ImageUploadField({
   id,
@@ -49,62 +37,26 @@ function ImageUploadField({
 }) {
   const uploadImage = useUploadImageMutation();
   const deleteImage = useDeleteImageMutation();
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    accept: {
-      "image/*": [],
-      "video/*": [],
-    },
-    onDrop: (files) => {
-      if (files[0]) {
-        uploadImage
-          .mutateAsync({ image: files[0] })
-          .then((res) => onChange(res.url))
-          .catch((err) => console.log(err));
-      }
-    },
-  });
-
   return (
-    <div className="flex flex-col gap-2">
-      <Label htmlFor={id}>{label}</Label>
-      <div
-        {...getRootProps()}
-        className="border-2 border-dashed flex flex-col items-center justify-center gap-2 p-2 cursor-pointer rounded-md min-h-32"
-      >
-        <input id={id} {...getInputProps()} />
-        {url && !uploadImage.isPending && (
-          <img src={url} className={cn("object-cover", imgClassName)} />
-        )}
-        {uploadImage.isPending && (
-          <Skeleton
-            className={cn("flex items-center justify-center", imgClassName)}
-          >
-            <FaRegImage className="text-muted-foreground text-4xl" />
-          </Skeleton>
-        )}
-        {isDragActive ? (
-          <p>Drop the files here ...</p>
-        ) : (
-          <p className="text-muted-foreground">
-            Drop or upload image here
-            {url && " to replace"}
-          </p>
-        )}
-      </div>
-      {url && (
-        <Button
-          type="button"
-          variant="outline"
-          className="self-start"
-          onClick={() => {
-            deleteImage.mutate({ url });
-            onChange(undefined);
-          }}
-        >
-          Remove {label.toLowerCase()}
-        </Button>
-      )}
-    </div>
+    <ImageDropzone
+      id={id}
+      label={label}
+      url={url}
+      pending={uploadImage.isPending}
+      onDrop={(image) =>
+        uploadImage
+          .mutateAsync({ image })
+          .then((res) => onChange(res.url))
+          .catch((err) => console.log(err))
+      }
+      onRemove={() => {
+        if (url) {
+          deleteImage.mutate({ url });
+        }
+        onChange(undefined);
+      }}
+      imgClassName={imgClassName}
+    />
   );
 }
 
@@ -123,11 +75,7 @@ export function CommunityForm() {
   const [icon, setIcon] = useState<string>();
   const [banner, setBanner] = useState<string>();
 
-  const allLanguages = site?.allLanguages ?? [];
-  const siteLanguages = site?.discussionLanguages ?? [];
-  const languageOptions = allLanguages
-    .filter((l) => siteLanguages.length === 0 || siteLanguages.includes(l.id))
-    .map((l) => ({ value: l.id, label: l.name }));
+  const languageOptions = useSiteLanguageOptions();
 
   const handleSubmit = () => {
     if (!form.name) {
