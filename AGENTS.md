@@ -25,6 +25,7 @@ pnpm lint
 
 - Prefer satisfies over as when writing TypeScript
 - Do not silently change `||` to `??` when fixing type errors — they are not the same. If you are certain it should be ?? you can ask the developer to confirm.
+- The pinned `lemmy-v4` client's request types can lag the backend. For example, its `CreateCommunity` still has `icon`/`banner` and a required `title`, but the current backend has no `icon`/`banner` and an optional `title`. Check `lemmy/crates/db_views/*/src/api.rs` when a field looks wrong.
 
 ## Commands
 
