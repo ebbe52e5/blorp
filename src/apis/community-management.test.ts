@@ -658,6 +658,22 @@ describe("LemmyV4Api post tags", () => {
     ]);
   });
 
+  test("getPosts filters by tag with tag_id, like lemmy-ui", async () => {
+    mockRoute("/api/v4/post/list", { items: [postView] });
+
+    await api.getPosts(
+      { type: "All", communityHandle: "cats@lemmy.example", tagId: TAG.id },
+      {},
+    );
+    let url = new URL(String(lastRequest().url));
+    expect(url.searchParams.get("tag_id")).toBe(String(TAG.id));
+    expect(url.searchParams.get("community_name")).toBe("cats@lemmy.example");
+
+    await api.getPosts({ type: "All" }, {});
+    url = new URL(String(lastRequest().url));
+    expect(url.searchParams.has("tag_id")).toBe(false);
+  });
+
   test("getCommunity offers only non-deleted tags", async () => {
     mockRoute("/api/v4/community", communityResponse);
 

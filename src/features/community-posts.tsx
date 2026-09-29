@@ -8,7 +8,8 @@ import {
   SmallScreenSidebar,
 } from "@/src/components/communities/community-sidebar";
 import { ContentGutters } from "../components/gutters";
-import { Fragment, memo, useMemo, useState } from "react";
+import { Fragment, memo, useCallback, useMemo, useState } from "react";
+import { z } from "zod";
 import { usePagination } from "../components/pagination/use-pagination";
 import { useSettingsStore } from "../stores/settings";
 import { VirtualList } from "../components/virtual-list";
@@ -34,6 +35,8 @@ import { LuLoaderCircle } from "react-icons/lu";
 import { FaArrowUp } from "react-icons/fa6";
 import { useMedia } from "../hooks";
 import { CommunityPostSortBar } from "../components/communities/community-post-sort-bar";
+import { CommunityTagFilter } from "../components/communities/community-tag-filter";
+import { useUrlSearchState } from "../hooks/use-url-search-state";
 import { ToolbarTitle } from "../components/toolbar/toolbar-title";
 import {
   useAuth,
@@ -60,6 +63,9 @@ const Post = memo((props: PostProps) => (
   </ContentGutters>
 ));
 
+// Empty means no tag filter
+const tagIdSchema = z.union([z.literal(""), z.string().regex(/^\d+$/)]);
+
 export default function CommunityPosts() {
   const media = useMedia();
 
@@ -77,14 +83,35 @@ export default function CommunityPosts() {
 
   const paginationMode = useSettingsStore((s) => s.paginationMode);
   const { postSort, suggestedPostSort } = useAvailableSortsQuery();
+
+  // Like lemmy-ui, the tag filter lives in the URL (?tagId=)
+  const {
+    value: tagIdValue,
+    set: setTagIdParam,
+    remove: removeTagIdParam,
+  } = useUrlSearchState("tagId", "", tagIdSchema);
+  const tagId = tagIdValue ? Number(tagIdValue) : undefined;
+  const setTagId = useCallback(
+    (id: number | undefined) => {
+      if (_.isNumber(id)) {
+        setTagIdParam(String(id));
+      } else {
+        removeTagIdParam();
+      }
+    },
+    [setTagIdParam, removeTagIdParam],
+  );
+
   const posts = usePostsQuery({
     communityHandle,
+    tagId,
   });
 
   const mostRecentPost = useMostRecentPostQuery(
     "community",
     {
       communityHandle,
+      tagId,
     },
     posts,
   );
@@ -116,7 +143,7 @@ export default function CommunityPosts() {
     hasNextPage,
     isFetchingNextPage,
     mode: paginationMode,
-    listKey: postSort,
+    listKey: `${postSort}-${tagId ?? "all"}`,
   });
 
   const data = useMemo(() => _.uniq(flatData), [flatData]);
@@ -191,6 +218,13 @@ export default function CommunityPosts() {
               </Link>
             </Button>
             <div className="md:hidden contents">
+              <CommunityTagFilter
+                communityHandle={communityHandle}
+                tagId={tagId}
+                onChange={setTagId}
+                variant="icon"
+                align="end"
+              />
               <PostSortButton align="end" className="text-muted-foreground" />
             </div>
             <UserDropdown />
@@ -225,7 +259,7 @@ export default function CommunityPosts() {
       <IonContent scrollY={false} fullscreen={media.maxMd}>
         <PostReportProvider>
           <VirtualList
-            key={postSort}
+            key={`${postSort}-${tagId ?? "all"}`}
             fullscreen
             scrollHost
             data={data}
@@ -244,7 +278,11 @@ export default function CommunityPosts() {
                 </ContentGutters>
               </Fragment>,
               <Fragment key="community-sort-bar">
-                <CommunityPostSortBar communityHandle={communityHandle} />
+                <CommunityPostSortBar
+                  communityHandle={communityHandle}
+                  tagId={tagId}
+                  onTagIdChange={setTagId}
+                />
                 {!refreshing && (
                   <Separator className="[[data-is-sticky-header=false]_&]:opacity-1 data-[orientation=horizontal]:h-[0.5px] md:hidden" />
                 )}

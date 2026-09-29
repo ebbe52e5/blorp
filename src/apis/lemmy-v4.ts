@@ -1036,7 +1036,9 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
             community_name: form.communityHandle,
             multi_community_id,
             show_nsfw: form.showNsfw,
-          },
+            // This lemmy-js-client build predates GetPosts.tag_id
+            tag_id: form.tagId,
+          } as lemmyV4.GetPosts,
           options,
         )
       : null;

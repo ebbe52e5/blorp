@@ -610,6 +610,8 @@ export namespace Forms {
      */
     ignoreSticky?: boolean;
     limit?: number;
+    /** Only posts with this community tag (Lemmy v4 only) */
+    tagId?: number;
   };
 
   export type GetPostReports = {
