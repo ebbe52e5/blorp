@@ -215,6 +215,13 @@ export const siteSchema = z.object({
   showDownvotes: z.boolean().optional(),
   replyCollapseThreshold: z.number().optional(),
   replyHideThreshold: z.number().optional(),
+  // Only populated by Lemmy v4; used by the create community page.
+  communityCreationAdminOnly: z.boolean().optional(),
+  nsfwContentDisallowed: z.boolean().optional(),
+  allLanguages: z
+    .array(z.object({ id: z.number(), code: z.string(), name: z.string() }))
+    .optional(),
+  discussionLanguages: z.array(z.number()).optional(),
   software: z.nativeEnum(Software),
 });
 export const commentSchema = z.object({
@@ -665,6 +672,36 @@ export namespace Forms {
     follow: boolean;
   };
 
+  export type CommunityVisibility =
+    | "public"
+    | "unlisted"
+    | "local_only_public"
+    | "local_only_private"
+    | "private";
+
+  // Mirrors the fields lemmy-ui's community form submits
+  export type CreateCommunity = {
+    name: string;
+    title?: string;
+    summary?: string;
+    sidebar?: string;
+    nsfw?: boolean;
+    postingRestrictedToMods?: boolean;
+    discussionLanguages?: number[];
+    visibility?: CommunityVisibility;
+  };
+
+  // Mirrors the fields lemmy-ui's multi-community form submits
+  export type CreateMultiCommunityFeed = {
+    name: string;
+    title?: string;
+    summary?: string;
+  };
+
+  export type DeleteImage = {
+    url: string;
+  };
+
   export type FollowPerson = {
     personId: number;
     follow: boolean;
@@ -982,6 +1019,14 @@ export abstract class ApiBlueprint<C> {
 
   abstract followPerson(form: Forms.FollowPerson): Promise<Schemas.Person>;
 
+  abstract createCommunity(
+    form: Forms.CreateCommunity,
+  ): Promise<Schemas.Community>;
+
+  abstract createMultiCommunityFeed(
+    form: Forms.CreateMultiCommunityFeed,
+  ): Promise<Schemas.MultiCommunityFeed>;
+
   abstract logout(): Promise<void>;
 
   abstract getComments(
@@ -1087,6 +1132,8 @@ export abstract class ApiBlueprint<C> {
   abstract uploadImage(
     form: Forms.UploadImage,
   ): Promise<Schemas.UploadImageResponse>;
+
+  abstract deleteImage(form: Forms.DeleteImage): Promise<void>;
 
   abstract getCaptcha(options: RequestOptions): Promise<Schemas.Captcha>;
 

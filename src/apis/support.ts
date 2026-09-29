@@ -24,6 +24,20 @@ export function supportsFeeds({ software, softwareVersion }: Software) {
   );
 }
 
+// Community and multi-community creation mirror lemmy-ui, which only
+// targets the Lemmy v4 API
+export function supportsCreateCommunity({
+  software,
+  softwareVersion,
+}: Software) {
+  return Boolean(
+    software === "lemmy" &&
+      softwareVersion &&
+      (softwareVersion.startsWith("nightly") ||
+        compareVersions(softwareVersion, "1.0.0")),
+  );
+}
+
 export function supportsMarkCommentAsAnswer({ software }: Software) {
   return software === "piefed";
 }

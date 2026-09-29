@@ -22,9 +22,11 @@ import {
   IoPersonOutline,
   IoBookmarksOutline,
   IoPersonAddOutline,
+  IoAddCircleOutline,
 } from "react-icons/io5";
 import {
   useLogoutMutation,
+  useSoftware,
   // eslint-disable-next-line local/no-query-hooks-in-components -- the nav bar is persistent app chrome shown on every route. No feature owns it, so badge counts can't be fetched upstream and passed down.
   useNotificationCountQuery,
   // eslint-disable-next-line local/no-query-hooks-in-components -- same as above
@@ -40,6 +42,7 @@ import { Separator } from "./ui/separator";
 import { formatOrdinal } from "../lib/utils";
 import { env } from "../env";
 import { Button } from "./ui/button";
+import { supportsCreateCommunity } from "../apis/support";
 
 function AccountNotificationBadge({
   accountUuid,
@@ -84,6 +87,7 @@ export function UserDropdown() {
     );
 
   const { person, instance } = parseAccountInfo(selectedAccount);
+  const canStartCommunity = supportsCreateCommunity(useSoftware());
 
   const content = (
     <BadgeCount showBadge={!!count}>
@@ -167,6 +171,13 @@ export function UserDropdown() {
             >
               <DropdownMenuItem>
                 <IoPersonOutline /> Profile
+              </DropdownMenuItem>
+            </Link>
+          )}
+          {person && canStartCommunity && (
+            <Link to="/create_community">
+              <DropdownMenuItem>
+                <IoAddCircleOutline /> Start community
               </DropdownMenuItem>
             </Link>
           )}
@@ -264,6 +275,7 @@ export function UserSidebar() {
 
   const { person, instance } = parseAccountInfo(selectedAccount);
   const userName = parseHandle(person?.handle).name;
+  const canStartCommunity = supportsCreateCommunity(useSoftware());
 
   return (
     <div
@@ -309,6 +321,18 @@ export function UserSidebar() {
               className="flex flex-row items-center gap-2 text-lg"
             >
               <IoPersonOutline className="text-muted-foreground" /> Profile
+            </Link>
+          </IonMenuToggle>
+        )}
+
+        {person && canStartCommunity && (
+          <IonMenuToggle menu={RIGHT_SIDEBAR_MENU_ID} autoHide={false}>
+            <Link
+              to="/create_community"
+              className="flex flex-row items-center gap-2 text-lg"
+            >
+              <IoAddCircleOutline className="text-muted-foreground" /> Start
+              community
             </Link>
           </IonMenuToggle>
         )}

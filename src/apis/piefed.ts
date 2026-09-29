@@ -996,6 +996,19 @@ export class PieFedApi
     throw Errors.NOT_IMPLEMENTED;
   }
 
+  // Community creation is only implemented for Lemmy v4, to match lemmy-ui
+  async createCommunity(): Promise<Schemas.Community> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
+  async createMultiCommunityFeed(): Promise<Schemas.MultiCommunityFeed> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
+  async deleteImage(): Promise<void> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
   async followFeed(
     form: Forms.FollowFeed,
   ): Promise<Schemas.MultiCommunityFeed> {

@@ -134,6 +134,7 @@ export const routeDefs = {
   // Create
   ...buildRoute("/create_post"),
   ...buildRoute("/create_post/*"),
+  ...buildRoute("/create_community"),
   // Settings
   ...buildRoute("/settings"),
   ...buildRoute("/settings/manage-blocks/:index", manageAccountSchema),

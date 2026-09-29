@@ -1112,6 +1112,19 @@ export class LemmyV3Api implements ApiBlueprint<lemmyV3.LemmyHttp> {
     throw Errors.NOT_IMPLEMENTED;
   }
 
+  // Community creation is only implemented for Lemmy v4, to match lemmy-ui
+  async createCommunity(): Promise<Schemas.Community> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
+  async createMultiCommunityFeed(): Promise<Schemas.MultiCommunityFeed> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
+  async deleteImage(): Promise<void> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
   async followFeed() {
     throw Errors.NOT_IMPLEMENTED;
     return {} as any;

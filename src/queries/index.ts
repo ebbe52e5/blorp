@@ -25,7 +25,7 @@ import { useSettingsStore } from "../stores/settings";
 import { z } from "zod";
 import { useCommentsStore } from "../stores/comments";
 import { useCommunitiesStore } from "../stores/communities";
-import { extractErrorContent, lemmyTimestamp } from "../apis/utils";
+import { encodeApId, extractErrorContent, lemmyTimestamp } from "../apis/utils";
 import { useProfilesStore } from "@/src/stores/profiles";
 import { toast } from "sonner";
 import {
@@ -53,7 +53,7 @@ import { normalizeInstance } from "../normalize-instance";
 import { compressImage } from "../lib/image";
 import { useFlairsStore } from "@/src/stores/flairs";
 import { confetti } from "@/src/lib/confetti";
-import { useHistory } from "@/src/routing";
+import { resolveRoute, useHistory } from "@/src/routing";
 import { getPostEmbed } from "../apis/post-embed";
 import { useMultiCommunityFeedStore } from "@/src/stores/multi-community-feeds";
 import { useShouldShowNsfw } from "../hooks/nsfw";
@@ -2523,6 +2523,78 @@ export function useMarkPersonMentionReadMutation() {
         toast.error(`Couldn't mark mention ${read ? "read" : "unread"}`);
       }
     },
+  });
+}
+
+export function useCreateCommunityMutation() {
+  const history = useHistory();
+  const { api } = useApiClients();
+  const queryClient = useQueryClient();
+  const refreshAuthKey = useRefreshAuthKey();
+  const getCachePrefixer = useAuth((s) => s.getCachePrefixer);
+  const cacheCommunities = useCommunitiesStore((s) => s.cacheCommunities);
+  return useMutation({
+    mutationFn: async (form: Forms.CreateCommunity) =>
+      (await api).createCommunity(form),
+    onMutate: () => toast.loading("Creating community"),
+    onSuccess: (community, _, toastId) => {
+      toast.dismiss(toastId);
+      cacheCommunities(getCachePrefixer(), [{ communityView: community }]);
+      // Refresh the site so the new community shows up under moderates
+      queryClient.invalidateQueries({ queryKey: refreshAuthKey });
+      history.replace(
+        resolveRoute("/communities/c/:communityHandle", {
+          communityHandle: community.handle,
+        }),
+      );
+    },
+    onError: (err, _, toastId) => {
+      if (isErrorLike(err)) {
+        toast.error(extractErrorContent(err), { id: toastId });
+      } else {
+        toast.error("Couldn't create community", { id: toastId });
+      }
+    },
+  });
+}
+
+export function useCreateMultiCommunityFeedMutation() {
+  const history = useHistory();
+  const { api, queryKeyPrefix } = useApiClients();
+  const queryClient = useQueryClient();
+  const getCachePrefixer = useAuth((s) => s.getCachePrefixer);
+  const cacheFeeds = useMultiCommunityFeedStore((s) => s.cacheFeeds);
+  return useMutation({
+    mutationFn: async (form: Forms.CreateMultiCommunityFeed) =>
+      (await api).createMultiCommunityFeed(form),
+    onMutate: () => toast.loading("Creating multi-community"),
+    onSuccess: (feed, _, toastId) => {
+      toast.dismiss(toastId);
+      cacheFeeds(getCachePrefixer(), [{ feedView: feed }]);
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeyPrefix, "getMultiCommunityFeeds"],
+      });
+      history.replace(
+        resolveRoute("/communities/f/:apId", {
+          apId: encodeApId(feed.apId),
+        }),
+      );
+    },
+    onError: (err, _, toastId) => {
+      if (isErrorLike(err)) {
+        toast.error(extractErrorContent(err), { id: toastId });
+      } else {
+        toast.error("Couldn't create multi-community", { id: toastId });
+      }
+    },
+  });
+}
+
+export function useDeleteImageMutation() {
+  const { api } = useApiClients();
+  return useMutation({
+    mutationFn: async (form: Forms.DeleteImage) =>
+      (await api).deleteImage(form),
   });
 }
 

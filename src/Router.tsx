@@ -66,6 +66,7 @@ const ManageBlocks = lazy(
 const UpdateProfile = lazy(
   () => import("@/src/features/settings/update-profile-screen"),
 );
+const CreateCommunity = lazy(() => import("@/src/features/create-community"));
 const MultiCommunityFeedPosts = lazy(
   () => import("@/src/features/multi-community-feed-posts"),
 );
@@ -253,6 +254,9 @@ const CREATE_POST_STACK = [
     <NotFound />
   </Route>,
   <Route key="/create" exact path="/create_post" component={CreatePost} />,
+  <Route key="/create_community" exact path="/create_community">
+    <CreateCommunity />
+  </Route>,
 ];
 
 const COMMUNITIES_STACK = [

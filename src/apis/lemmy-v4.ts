@@ -806,6 +806,16 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
       blurNsfw: true,
       enablePostDownvotes: enableDownvotes,
       enableCommentDownvotes: enableDownvotes,
+      communityCreationAdminOnly:
+        lemmySite.site_view.local_site.community_creation_admin_only,
+      nsfwContentDisallowed:
+        lemmySite.site_view.local_site.nsfw_content_disallowed,
+      allLanguages: lemmySite.all_languages.map(({ id, code, name }) => ({
+        id,
+        code,
+        name,
+      })),
+      discussionLanguages: lemmySite.discussion_languages,
       software: this.software,
     };
 
@@ -1252,6 +1262,38 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
     // The follow response doesn't include the feed's communities, so leave
     // communityHandles out rather than overwriting the cached list with [].
     return _.omit(convertFeed(multi_community_view).feed, "communityHandles");
+  }
+
+  async createCommunity(form: Forms.CreateCommunity) {
+    // Sends exactly the fields lemmy-ui's community form submits. The
+    // backend's CreateCommunity has an optional title and no icon/banner, but
+    // this lemmy-js-client build still types title as required.
+    const createCommunityResponse = await this.client.createCommunity({
+      name: form.name,
+      title: form.title,
+      summary: form.summary,
+      sidebar: form.sidebar,
+      nsfw: form.nsfw,
+      posting_restricted_to_mods: form.postingRestrictedToMods,
+      discussion_languages: form.discussionLanguages,
+      visibility: form.visibility,
+    } as lemmyV4.CreateCommunity);
+    const { community_view } = unwrapResponsData(createCommunityResponse);
+    return convertCommunity(community_view);
+  }
+
+  async createMultiCommunityFeed(form: Forms.CreateMultiCommunityFeed) {
+    const createMultiCommunityResponse = await this.client.createMultiCommunity(
+      {
+        name: form.name,
+        title: form.title,
+        summary: form.summary,
+      },
+    );
+    const { multi_community_view } = unwrapResponsData(
+      createMultiCommunityResponse,
+    );
+    return convertFeed(multi_community_view).feed;
   }
 
   async followCommunity(form: Forms.FollowCommunity) {
@@ -1727,6 +1769,14 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
       res.image_url = `${this.instance}/pictrs/image/${fileId}`;
     }
     return { url: res.image_url };
+  }
+
+  async deleteImage(form: Forms.DeleteImage) {
+    const filename = form.url.split("/").pop();
+    if (!filename) {
+      return;
+    }
+    unwrapResponsData(await this.client.deleteMedia({ filename }));
   }
 
   async getCaptcha(options: RequestOptions) {
