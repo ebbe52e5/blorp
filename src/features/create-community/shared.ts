@@ -5,3 +5,6 @@ export const ACTOR_NAME_PATTERN =
 
 // lemmy-ui's "community_reqs" string
 export const ACTOR_NAME_REQUIREMENTS = "lowercase, underscores, and no spaces.";
+
+// These forms drop the Input's focus glow; the border still changes on focus
+export const NO_FOCUS_RING = "focus-within:ring-0";

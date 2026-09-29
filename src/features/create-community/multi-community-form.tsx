@@ -4,7 +4,11 @@ import { LoadingButton } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
 import { useCreateMultiCommunityFeedMutation } from "@/src/queries";
-import { ACTOR_NAME_PATTERN, ACTOR_NAME_REQUIREMENTS } from "./shared";
+import {
+  ACTOR_NAME_PATTERN,
+  ACTOR_NAME_REQUIREMENTS,
+  NO_FOCUS_RING,
+} from "./shared";
 
 export function MultiCommunityForm() {
   const id = useId();
@@ -38,6 +42,7 @@ export function MultiCommunityForm() {
       <div className="flex flex-col gap-1.5">
         <Label htmlFor={`${id}-name`}>Name</Label>
         <Input
+          wrapperClassName={NO_FOCUS_RING}
           id={`${id}-name`}
           placeholder="Name used in the multi-community's URL, can't be changed"
           value={form.name ?? ""}
@@ -52,6 +57,7 @@ export function MultiCommunityForm() {
       <div className="flex flex-col gap-1.5">
         <Label htmlFor={`${id}-title`}>Display name</Label>
         <Input
+          wrapperClassName={NO_FOCUS_RING}
           id={`${id}-title`}
           placeholder="Shown in place of the name"
           value={form.title ?? ""}
@@ -64,6 +70,7 @@ export function MultiCommunityForm() {
       <div className="flex flex-col gap-1.5">
         <Label htmlFor={`${id}-summary`}>Summary</Label>
         <Input
+          wrapperClassName={NO_FOCUS_RING}
           id={`${id}-summary`}
           value={form.summary ?? ""}
           onChange={(e) => patchForm({ summary: e.target.value })}

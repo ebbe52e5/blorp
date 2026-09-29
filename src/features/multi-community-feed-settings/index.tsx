@@ -29,6 +29,7 @@ import { useParams } from "@/src/routing";
 import { getAccountActorId, useAuth } from "@/src/stores/auth";
 import { useCommunityFromStore } from "@/src/stores/communities";
 import { useMultiCommunityFeedFromStore } from "@/src/stores/multi-community-feeds";
+import { NO_FOCUS_RING } from "@/src/features/create-community/shared";
 
 // Mirrors lemmy-ui's MultiCommunityForm in edit mode: title and summary only
 function EditForm({ feed }: { feed: Schemas.MultiCommunityFeed }) {
@@ -50,6 +51,7 @@ function EditForm({ feed }: { feed: Schemas.MultiCommunityFeed }) {
       <div className="flex flex-col gap-1.5">
         <Label htmlFor={`${id}-title`}>Display name</Label>
         <Input
+          wrapperClassName={NO_FOCUS_RING}
           id={`${id}-title`}
           value={title ?? ""}
           onChange={(e) => setTitle(e.target.value)}
@@ -61,6 +63,7 @@ function EditForm({ feed }: { feed: Schemas.MultiCommunityFeed }) {
       <div className="flex flex-col gap-1.5">
         <Label htmlFor={`${id}-summary`}>Summary</Label>
         <Input
+          wrapperClassName={NO_FOCUS_RING}
           id={`${id}-summary`}
           value={summary ?? ""}
           onChange={(e) => setSummary(e.target.value)}
@@ -79,7 +82,12 @@ function EditForm({ feed }: { feed: Schemas.MultiCommunityFeed }) {
         </LoadingButton>
         <Button
           type="button"
-          variant={feed.deleted ? "outline" : "destructive"}
+          variant={feed.deleted ? "outline" : "default"}
+          className={
+            feed.deleted
+              ? undefined
+              : "bg-foreground border-foreground text-background hover:bg-foreground/90 hover:border-foreground/90"
+          }
           onClick={() => {
             const deleted = !feed.deleted;
             const confirm = deleted
@@ -172,6 +180,7 @@ function AddCommunity({ feed }: { feed: Schemas.MultiCommunityFeed }) {
     <div className="flex flex-col gap-2">
       <Label htmlFor={`${id}-add`}>Add a community</Label>
       <Input
+        wrapperClassName={NO_FOCUS_RING}
         id={`${id}-add`}
         placeholder="Search communities"
         value={text}
