@@ -585,7 +585,8 @@ function CreatePostInner() {
                     htmlFor={`${id}-flair`}
                     className={cn(!draft.flairs?.length && "sr-only")}
                   >
-                    Post Flair
+                    {/* Lemmy calls these community tags */}
+                    {software === "lemmy" ? "Tags" : "Post Flair"}
                   </Label>
                   <MultiSelect
                     id={`${id}-flair`}
@@ -602,7 +603,9 @@ function CreatePostInner() {
                       value: flair,
                     }))}
                     keyExtractor={(val) => val.apId ?? val.title}
-                    placeholder="Add Post Flair"
+                    placeholder={
+                      software === "lemmy" ? "Add tags" : "Add Post Flair"
+                    }
                     renderOption={(opt) => <Flair flair={opt.value} />}
                     buttonVariant="ghost"
                     buttonClassName="rounded-full -mx-3 px-2"

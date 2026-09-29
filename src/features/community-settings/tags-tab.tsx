@@ -12,30 +12,22 @@ import {
 } from "@/src/features/create-community/shared";
 import { cn } from "@/src/lib/utils";
 import {
+  COMMUNITY_TAG_COLORS,
+  DEFAULT_COMMUNITY_TAG_COLOR,
+  getCommunityTagColors,
+} from "@/src/lib/community-tag-colors";
+import {
   useCreateCommunityTagMutation,
   useDeleteCommunityTagMutation,
   useEditCommunityTagMutation,
 } from "@/src/queries";
 
-// lemmy-ui maps tag colors to Bootstrap's light, primary, info, success,
-// warning and danger, and only offers color01–color06. Anything else
-// renders like color01.
-const TAG_COLOR_CLASSES: Record<string, string> = {
-  color01: "bg-foreground/10 text-foreground",
-  color02: "bg-blue-600 text-white",
-  color03: "bg-cyan-500 text-black",
-  color04: "bg-green-600 text-white",
-  color05: "bg-yellow-400 text-black",
-  color06: "bg-red-600 text-white",
-};
-
-const TAG_COLOR_OPTIONS = Object.keys(TAG_COLOR_CLASSES).map((value, i) => ({
+const TAG_COLOR_OPTIONS = Object.keys(COMMUNITY_TAG_COLORS).map((value, i) => ({
   value,
   label: String(i + 1),
 }));
 
-const DEFAULT_TAG_COLOR = "color01";
-
+// Same colors as the tag badges on posts (see Flair)
 export function CommunityTagBadge({
   tag,
   useName,
@@ -47,12 +39,14 @@ export function CommunityTagBadge({
   useName?: boolean;
 }) {
   const label = useName ? tag.name : (tag.displayName ?? tag.name);
+  const { backgroundColor, color } = getCommunityTagColors(tag.color);
   return (
     <Badge
-      className={cn(
-        TAG_COLOR_CLASSES[tag.color ?? DEFAULT_TAG_COLOR] ??
-          TAG_COLOR_CLASSES[DEFAULT_TAG_COLOR],
-      )}
+      className="rounded-full"
+      style={{
+        backgroundColor: backgroundColor ?? undefined,
+        color: color ?? undefined,
+      }}
       title={tag.summary ? `${tag.name} - ${tag.summary}` : tag.name}
     >
       {label}
@@ -70,7 +64,7 @@ function TagColorSelect({
   return (
     <SimpleSelect
       options={TAG_COLOR_OPTIONS}
-      value={TAG_COLOR_CLASSES[value] ? value : DEFAULT_TAG_COLOR}
+      value={COMMUNITY_TAG_COLORS[value] ? value : DEFAULT_COMMUNITY_TAG_COLOR}
       onChange={(opt) => onChange(opt.value)}
       valueGetter={(o) => o.value}
       labelGetter={(o) => `Color: ${o.label}`}
@@ -175,7 +169,7 @@ function TagForm({
         maxLength={150}
       />
       <TagColorSelect
-        value={form.color ?? DEFAULT_TAG_COLOR}
+        value={form.color ?? DEFAULT_COMMUNITY_TAG_COLOR}
         onChange={(color) => patchForm({ color })}
       />
       <LoadingButton

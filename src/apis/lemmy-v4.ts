@@ -13,11 +13,13 @@ import {
 } from "./api-blueprint";
 import {
   createHandle,
+  getFlairLookup,
   shrinkBlockedCommunity,
   shrinkBlockedPerson,
 } from "./utils";
 import _ from "lodash";
 import { exhaustiveList, isErrorLike, ErrorLike } from "../lib/utils";
+import { getCommunityTagColors } from "../lib/community-tag-colors";
 import { getIdFromLocalApId } from "./lemmy-common";
 
 function translateError(err: ErrorLike): Error {
@@ -451,6 +453,16 @@ function convertPerson(
   };
 }
 
+// Lemmy community tags are shown and picked through blorp's flair UI
+function convertTagToFlair(tag: lemmyV4.CommunityTag): Schemas.Flair {
+  return {
+    id: tag.id,
+    apId: tag.ap_id,
+    title: tag.display_name ?? tag.name,
+    ...getCommunityTagColors(tag.color),
+  };
+}
+
 function convertPost({
   post,
   community,
@@ -458,6 +470,7 @@ function convertPost({
   post_actions,
   image_details,
   creator_banned_from_community,
+  tags,
 }: Pick<
   lemmyV4.PostView,
   | "post"
@@ -466,7 +479,9 @@ function convertPost({
   | "post_actions"
   | "image_details"
   | "creator_banned_from_community"
->): Schemas.Post {
+> &
+  // Report views don't carry tags
+  Partial<Pick<lemmyV4.PostView, "tags">>): Schemas.Post {
   const ar = image_details ? image_details.width / image_details.height : null;
   return {
     locked: post.locked,
@@ -502,7 +517,7 @@ function convertPost({
     saved: !!post_actions?.saved_at,
     nsfw: post.nsfw || community.nsfw,
     altText: post.alt_text ?? null,
-    flairs: [],
+    flairs: tags?.map((t) => ({ id: t.id })) ?? [],
     myVote: post_actions ? (post_actions.vote_is_upvote ? 1 : -1) : undefined,
     emojiReactions: [],
   };
@@ -882,7 +897,7 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
         convertPerson({ person }),
       ),
       community: convertCommunity(fullPost.community_view),
-      flairs: undefined,
+      flairs: fullPost.post_view.tags.map(convertTagToFlair),
     };
   }
 
@@ -1049,6 +1064,7 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
       posts:
         items?.map((p) => ({
           post: convertPost(p),
+          flairs: p.tags.map(convertTagToFlair),
           creator: convertPerson({ person: p.creator }),
           community: convertCommunity({
             community: p.community,
@@ -1198,7 +1214,29 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
       },
       // Lemmy keeps moderators in rank order, so mods[0] is the top mod
       mods: moderators.map((m) => convertPerson({ person: m.moderator })),
+      // The tags posts can use. Mods also get deleted tags back, which
+      // lemmy-ui leaves out of its picker too.
+      flairs: community_view.tags
+        .filter((t) => !t.deleted)
+        .map(convertTagToFlair),
     };
+  }
+
+  // Resolves the post form's flairs ({title, apId} from the draft) to the
+  // community's tag ids, which is what lemmy-ui's post form sends
+  private resolveTagIds(
+    flairs: Forms.CreatePost["flairs"],
+    tags: lemmyV4.CommunityTag[],
+  ) {
+    if (!flairs) {
+      return undefined;
+    }
+    const lookup = getFlairLookup(
+      tags.filter((t) => !t.deleted).map(convertTagToFlair),
+    );
+    return _.uniq(
+      flairs.map((f) => lookup(f)?.id).filter((id) => _.isNumber(id)),
+    );
   }
 
   async getCommunities(form: Forms.GetCommunities, options: RequestOptions) {
@@ -1567,6 +1605,15 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
       throw new Error("couldn't find post");
     }
 
+    // Only touch tags when the form has them; an empty list clears them
+    let tags: number[] | undefined;
+    if (form.flairs) {
+      const { community_view } = unwrapResponsData(
+        await this.client.getPost({ id: post_id }),
+      );
+      tags = this.resolveTagIds(form.flairs, community_view.tags);
+    }
+
     const editPostResponse = await this.client.editPost({
       post_id,
       url: form.url ?? undefined,
@@ -1574,6 +1621,7 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
       name: form.title,
       alt_text: form.altText ?? undefined,
       custom_thumbnail: form.thumbnailUrl ?? undefined,
+      tags,
     });
     const { post_view } = unwrapResponsData(editPostResponse);
 
@@ -1892,18 +1940,19 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
   }
 
   async createPost(form: Forms.CreatePost) {
-    const community = await this.getCommunity({
-      handle: form.communityHandle,
-    });
+    const { community_view } = unwrapResponsData(
+      await this.client.getCommunity({ name: form.communityHandle }),
+    );
 
     const createPostResponse = await this.client.createPost({
       alt_text: form.altText ?? undefined,
       body: form.body ?? undefined,
-      community_id: community.community.id,
+      community_id: community_view.community.id,
       custom_thumbnail: form.thumbnailUrl ?? undefined,
       name: form.title,
       nsfw: form.nsfw ?? undefined,
       url: form.url ?? undefined,
+      tags: this.resolveTagIds(form.flairs, community_view.tags),
     });
     const { post_view } = unwrapResponsData(createPostResponse);
 

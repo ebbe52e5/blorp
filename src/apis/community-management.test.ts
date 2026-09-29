@@ -4,6 +4,7 @@ import { LemmyV4Api } from "./lemmy-v4";
 import { LemmyV3Api } from "./lemmy-v3";
 import { PieFedApi } from "./piefed";
 import { Errors } from "./api-blueprint";
+import { getCommunityTagColors } from "../lib/community-tag-colors";
 
 manageFetchMockGlobally();
 
@@ -549,6 +550,184 @@ describe("LemmyV4Api community settings", () => {
     expect(lastRequest().method).toBe("delete");
     expect(lastBody()).toEqual({ tag_id: TAG.id, delete: true });
     expect(tag.id).toBe(TAG.id);
+  });
+});
+
+describe("LemmyV4Api post tags", () => {
+  let api: LemmyV4Api;
+
+  const TAG = {
+    id: 4,
+    ap_id: `${INSTANCE}/c/cats/tag/help`,
+    name: "help",
+    display_name: "Help",
+    community_id: COMMUNITY.id,
+    published_at: "2026-09-29T00:00:00Z",
+    deleted: false,
+    color: "color03",
+  };
+  const DELETED_TAG = {
+    ...TAG,
+    id: 5,
+    ap_id: `${INSTANCE}/c/cats/tag/old`,
+    name: "old",
+    display_name: undefined,
+    deleted: true,
+    color: "color09",
+  };
+
+  const POST = {
+    id: 9,
+    name: "Hello",
+    ap_id: `${INSTANCE}/post/9`,
+    published_at: "2026-09-29T00:00:00Z",
+    upvotes: 1,
+    downvotes: 0,
+    comments: 0,
+    deleted: false,
+    removed: false,
+    locked: false,
+    nsfw: false,
+    featured_community: false,
+    featured_local: false,
+  };
+
+  const postView = {
+    post: POST,
+    community: COMMUNITY,
+    creator: PERSON,
+    creator_banned_from_community: false,
+    tags: [TAG],
+  };
+
+  const EMPTY_POST_FORM = {
+    communityHandle: "cats@lemmy.example",
+    title: "Hello",
+    url: null,
+    body: null,
+    nsfw: null,
+    thumbnailUrl: null,
+    altText: null,
+  } satisfies Parameters<LemmyV4Api["createPost"]>[0];
+
+  const communityResponse = {
+    community_view: { community: COMMUNITY, tags: [TAG, DELETED_TAG] },
+    moderators: [],
+    discussion_languages: [],
+  };
+
+  const mockRoute = (path: string, body: unknown, method?: string) =>
+    fetchMock
+      .mockGlobal()
+      .route(
+        ({ url, options }) =>
+          url.split("?")[0]!.endsWith(path) &&
+          (!method || options.method === method),
+        JSON.stringify(body),
+      );
+
+  const lastCallTo = (path: string) =>
+    fetchMock.callHistory
+      .calls()
+      .filter((c) => c.url.split("?")[0]!.endsWith(path))
+      .at(-1);
+
+  beforeEach(() => {
+    fetchMock.removeRoutes().clearHistory();
+    api = new LemmyV4Api({
+      instance: INSTANCE,
+      jwt: "jwt",
+      softwareVersion: "1.0.0",
+    });
+  });
+
+  test("getPosts shows post tags as flairs", async () => {
+    mockRoute("/api/v4/post/list", { items: [postView] });
+
+    const { posts } = await api.getPosts({ type: "All" }, {});
+
+    expect(posts[0]?.post.flairs).toEqual([{ id: TAG.id }]);
+    expect(posts[0]?.flairs).toEqual([
+      {
+        id: TAG.id,
+        apId: TAG.ap_id,
+        title: "Help",
+        backgroundColor: "#06b6d4",
+        color: "#000000",
+      },
+    ]);
+  });
+
+  test("getCommunity offers only non-deleted tags", async () => {
+    mockRoute("/api/v4/community", communityResponse);
+
+    const { flairs } = await api.getCommunity(
+      { handle: "cats@lemmy.example" },
+      {},
+    );
+
+    expect(flairs.map((f) => f.id)).toEqual([TAG.id]);
+  });
+
+  test("unknown tag colors fall back to the default badge", () => {
+    expect(getCommunityTagColors("color09")).toEqual({
+      backgroundColor: null,
+      color: null,
+    });
+    expect(getCommunityTagColors(undefined)).toEqual({
+      backgroundColor: null,
+      color: null,
+    });
+  });
+
+  test("createPost sends the picked tags' ids", async () => {
+    mockRoute("/api/v4/community", communityResponse, "get");
+    mockRoute("/api/v4/post", { post_view: postView }, "post");
+
+    await api.createPost({
+      ...EMPTY_POST_FORM,
+      flairs: [{ title: "Help", apId: TAG.ap_id }],
+    });
+
+    const call = lastCallTo("/api/v4/post");
+    expect(call?.options.method).toBe("post");
+    expect(JSON.parse(String(call?.options.body)).tags).toEqual([TAG.id]);
+  });
+
+  test("createPost leaves tags out when none were picked", async () => {
+    mockRoute("/api/v4/community", communityResponse, "get");
+    mockRoute("/api/v4/post", { post_view: postView }, "post");
+
+    await api.createPost(EMPTY_POST_FORM);
+
+    const call = lastCallTo("/api/v4/post");
+    expect(JSON.parse(String(call?.options.body))).not.toHaveProperty("tags");
+  });
+
+  test("editPost sends tags only when the form has flairs", async () => {
+    mockRoute(
+      "/api/v4/post",
+      { post_view: postView, community_view: communityResponse.community_view },
+      "get",
+    );
+    mockRoute("/api/v4/post", { post_view: postView }, "put");
+
+    await api.editPost({
+      apId: POST.ap_id,
+      title: "Hello",
+      flairs: [],
+    } as unknown as Parameters<LemmyV4Api["editPost"]>[0]);
+    let call = lastCallTo("/api/v4/post");
+    expect(call?.options.method).toBe("put");
+    expect(JSON.parse(String(call?.options.body)).tags).toEqual([]);
+
+    fetchMock.clearHistory();
+    await api.editPost({
+      apId: POST.ap_id,
+      title: "Hello",
+    } as unknown as Parameters<LemmyV4Api["editPost"]>[0]);
+    call = lastCallTo("/api/v4/post");
+    expect(JSON.parse(String(call?.options.body))).not.toHaveProperty("tags");
   });
 });
 

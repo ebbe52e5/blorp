@@ -353,6 +353,8 @@ function CommunitySidebarInner({
   );
 
   const flairs = useFlairs(data?.flairs?.map((f) => f.id));
+  // Lemmy v4 community tags come through as flairs; only Lemmy sets tags
+  const flairsLabel = data?.communityView.tags ? "TAGS" : "FLAIRS";
 
   const aboutOpen = useSidebarStore((s) => s.communityAboutExpanded);
   const setAboutOpen = useSidebarStore((s) => s.setCommunityAboutExpanded);
@@ -462,7 +464,7 @@ function CommunitySidebarInner({
                   onOpenChange={setFlairsOpen}
                 >
                   <CollapsibleTrigger className="uppercase text-xs font-medium text-muted-foreground flex items-center justify-between w-full">
-                    <span>FLAIRS</span>
+                    <span>{flairsLabel}</span>
                     <ChevronsUpDown className="h-4 w-4" />
                   </CollapsibleTrigger>
                   <CollapsibleContent className="pb-1 pt-3">
