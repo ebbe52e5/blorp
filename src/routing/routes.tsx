@@ -54,6 +54,7 @@ export const routeDefs = {
   ...buildRoute("/home/sidebar"),
   ...buildRoute("/home/f/:apId", feedApIdSchema),
   ...buildRoute("/home/f/:apId/sidebar", feedApIdSchema),
+  ...buildRoute("/home/f/:apId/settings", feedApIdSchema),
   ...buildRoute("/home/c/:communityHandle", communityHandleSchema),
   ...buildRoute("/home/c/:communityHandle/s", searchSchema),
   ...buildRoute("/home/c/:communityHandle/sidebar", communityHandleSchema),
@@ -79,6 +80,7 @@ export const routeDefs = {
   ...buildRoute("/communities/sidebar"),
   ...buildRoute("/communities/f/:apId", feedApIdSchema),
   ...buildRoute("/communities/f/:apId/sidebar", feedApIdSchema),
+  ...buildRoute("/communities/f/:apId/settings", feedApIdSchema),
   ...buildRoute("/communities/c/:communityHandle", communityHandleSchema),
   ...buildRoute("/communities/c/:communityHandle/s", searchSchema),
   ...buildRoute(
@@ -115,6 +117,7 @@ export const routeDefs = {
   ...buildRoute("/inbox/sidebar"),
   ...buildRoute("/inbox/f/:apId", feedApIdSchema),
   ...buildRoute("/inbox/f/:apId/sidebar", feedApIdSchema),
+  ...buildRoute("/inbox/f/:apId/settings", feedApIdSchema),
   ...buildRoute("/inbox/c/:communityHandle", communityHandleSchema),
   ...buildRoute("/inbox/c/:communityHandle/s", searchSchema),
   ...buildRoute("/inbox/c/:communityHandle/sidebar", communityHandleSchema),

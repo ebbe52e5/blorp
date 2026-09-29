@@ -177,6 +177,9 @@ export const multiCommunityFeedSchema = z.object({
   ownerId: z.number().nullable().optional(),
   ownerApId: z.string().nullable().optional(),
   ownerHandle: handleSchema.nullable().optional(),
+  // Lemmy v4 only
+  title: z.string().nullable().optional(),
+  deleted: z.boolean().optional(),
 });
 export const siteSchema = z.object({
   privateInstance: z.boolean(),
@@ -698,6 +701,22 @@ export namespace Forms {
     summary?: string;
   };
 
+  export type EditMultiCommunityFeed = {
+    feedId: number;
+    title?: string;
+    summary?: string;
+    deleted?: boolean;
+  };
+
+  export type MultiCommunityFeedEntry = {
+    feedId: number;
+    communityId: number;
+  };
+
+  export type SearchCommunitiesForFeed = {
+    q: string;
+  };
+
   export type DeleteImage = {
     url: string;
   };
@@ -1026,6 +1045,23 @@ export abstract class ApiBlueprint<C> {
   abstract createMultiCommunityFeed(
     form: Forms.CreateMultiCommunityFeed,
   ): Promise<Schemas.MultiCommunityFeed>;
+
+  abstract editMultiCommunityFeed(
+    form: Forms.EditMultiCommunityFeed,
+  ): Promise<Schemas.MultiCommunityFeed>;
+
+  abstract addMultiCommunityFeedEntry(
+    form: Forms.MultiCommunityFeedEntry,
+  ): Promise<Schemas.Community>;
+
+  abstract removeMultiCommunityFeedEntry(
+    form: Forms.MultiCommunityFeedEntry,
+  ): Promise<void>;
+
+  abstract searchCommunitiesForFeed(
+    form: Forms.SearchCommunitiesForFeed,
+    options: RequestOptions,
+  ): Promise<Schemas.Community[]>;
 
   abstract logout(): Promise<void>;
 

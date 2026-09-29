@@ -3,7 +3,7 @@ import localizedFormat from "dayjs/plugin/localizedFormat";
 import { MarkdownRenderer } from "../markdown/renderer";
 import { useLinkContext } from "@/src/hooks/navigation-hooks";
 import { LuCakeSlice } from "react-icons/lu";
-import { Link, resolveRoute } from "@/src/routing/index";
+import { Link, resolveRoute, useHistory } from "@/src/routing/index";
 import { ActionMenuProps, EllipsisActionMenu } from "../adaptable/action-menu";
 import {
   Avatar,
@@ -31,6 +31,9 @@ import {
   CommunityCardSkeleton,
 } from "../communities/community-card";
 import { encodeApId } from "@/src/apis/utils";
+import { supportsCreateCommunity } from "@/src/apis/support";
+import { useSoftware } from "@/src/queries";
+import { getAccountActorId, useAuth } from "@/src/stores/auth";
 import { FeedJoinButton } from "./feed-join-button";
 import { PersonCard } from "../person/person-card";
 
@@ -179,7 +182,27 @@ function useMultiCommunityActions({
     route,
     apId,
   });
-  return [...shareActions];
+  const history = useHistory();
+  const feed = useMultiCommunityFeedFromStore(apId)?.feedView;
+  const myApId = useAuth((s) => getAccountActorId(s.getSelectedAccount()));
+  const canEdit =
+    supportsCreateCommunity(useSoftware()) &&
+    !!feed?.ownerApId &&
+    feed.ownerApId === myApId;
+  return [
+    ...(canEdit
+      ? [
+          {
+            text: "Settings",
+            onClick: () =>
+              history.push(`${linkCtx.root}f/:apId/settings`, {
+                apId: encodeApId(apId),
+              }),
+          },
+        ]
+      : []),
+    ...shareActions,
+  ];
 }
 
 export function FeedSidebar({

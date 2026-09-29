@@ -649,14 +649,17 @@ function convertFeed(
       subscriberCount: multi.subscribers,
       communityCount: multi.communities,
       nsfw: false,
-      communityHandles:
-        communities?.map((c) =>
-          createHandle({ apId: c.community.ap_id, name: c.community.name }),
-        ) ?? [],
+      // Leave undefined when the caller didn't load the communities (e.g. the
+      // list endpoint) so the cached list isn't wiped
+      communityHandles: communities?.map((c) =>
+        createHandle({ apId: c.community.ap_id, name: c.community.name }),
+      ),
       subscribed: follow_state ? follow_state === "accepted" : null,
       ownerId: ownerPerson.id,
       ownerApId: ownerPerson.apId,
       ownerHandle: ownerPerson.handle,
+      title: multi.title ?? null,
+      deleted: multi.deleted,
     },
     owner: ownerPerson,
   };
@@ -1294,6 +1297,68 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
       createMultiCommunityResponse,
     );
     return convertFeed(multi_community_view).feed;
+  }
+
+  async editMultiCommunityFeed(form: Forms.EditMultiCommunityFeed) {
+    const editMultiCommunityResponse = await this.client.editMultiCommunity({
+      id: form.feedId,
+      title: form.title,
+      summary: form.summary,
+      deleted: form.deleted,
+    });
+    const { multi_community_view } = unwrapResponsData(
+      editMultiCommunityResponse,
+    );
+    // The edit response doesn't include the feed's communities
+    return _.omit(convertFeed(multi_community_view).feed, "communityHandles");
+  }
+
+  async addMultiCommunityFeedEntry(form: Forms.MultiCommunityFeedEntry) {
+    const createEntryResponse = await this.client.createMultiCommunityEntry({
+      id: form.feedId,
+      community_id: form.communityId,
+    });
+    const { community_view } = unwrapResponsData(createEntryResponse);
+    return convertCommunity(community_view);
+  }
+
+  async removeMultiCommunityFeedEntry(form: Forms.MultiCommunityFeedEntry) {
+    unwrapResponsData(
+      await this.client.deleteMultiCommunityEntry({
+        id: form.feedId,
+        community_id: form.communityId,
+      }),
+    );
+  }
+
+  // Same query and filtering as lemmy-ui's "Add a community" box
+  // (searchCommunities + filterCommunitySelection)
+  async searchCommunitiesForFeed(
+    form: Forms.SearchCommunitiesForFeed,
+    options: RequestOptions,
+  ) {
+    const listCommunitiesResponse = await this.client.listCommunities(
+      {
+        search_term: form.q,
+        sort: "active_monthly",
+        type_: "all",
+        search_title_only: true,
+      },
+      options,
+    );
+    const { items } = unwrapResponsData(listCommunitiesResponse);
+    return items
+      .filter((c) => !c.community.posting_restricted_to_mods || c.can_mod)
+      .filter((c) => {
+        // lemmy-ui checks the user's follows, which include pending follows
+        const followState = c.community_actions?.follow_state;
+        return (
+          c.community.visibility !== "private" ||
+          followState === "accepted" ||
+          followState === "pending"
+        );
+      })
+      .map(convertCommunity);
   }
 
   async followCommunity(form: Forms.FollowCommunity) {

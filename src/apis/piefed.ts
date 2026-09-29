@@ -1005,6 +1005,22 @@ export class PieFedApi
     throw Errors.NOT_IMPLEMENTED;
   }
 
+  async editMultiCommunityFeed(): Promise<Schemas.MultiCommunityFeed> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
+  async addMultiCommunityFeedEntry(): Promise<Schemas.Community> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
+  async removeMultiCommunityFeedEntry(): Promise<void> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
+  async searchCommunitiesForFeed(): Promise<Schemas.Community[]> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
   async deleteImage(): Promise<void> {
     throw Errors.NOT_IMPLEMENTED;
   }

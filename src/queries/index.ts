@@ -2590,6 +2590,143 @@ export function useCreateMultiCommunityFeedMutation() {
   });
 }
 
+function useInvalidateMultiCommunityFeed() {
+  const { queryKeyPrefix } = useApiClients();
+  const queryClient = useQueryClient();
+  return (apId: string) => {
+    queryClient.invalidateQueries({
+      queryKey: [...queryKeyPrefix, "getMultiCommunityFeed", apId],
+    });
+    queryClient.invalidateQueries({
+      queryKey: [...queryKeyPrefix, "getMultiCommunityFeeds"],
+    });
+    // The feed's posts change with its communities
+    queryClient.invalidateQueries({
+      predicate: ({ queryKey }) =>
+        _.isEqual(queryKey.slice(0, queryKeyPrefix.length), queryKeyPrefix) &&
+        queryKey.some(
+          (part) =>
+            _.isPlainObject(part) &&
+            (part as { multiCommunityFeedApId?: unknown })
+              .multiCommunityFeedApId === apId,
+        ),
+    });
+  };
+}
+
+export function useEditMultiCommunityFeedMutation() {
+  const { api } = useApiClients();
+  const getCachePrefixer = useAuth((s) => s.getCachePrefixer);
+  const patchFeed = useMultiCommunityFeedStore((s) => s.patchFeed);
+  const invalidateFeed = useInvalidateMultiCommunityFeed();
+  return useMutation({
+    mutationFn: async (form: Forms.EditMultiCommunityFeed) =>
+      (await api).editMultiCommunityFeed(form),
+    onSuccess: (feed, form) => {
+      patchFeed(feed.apId, getCachePrefixer(), feed);
+      invalidateFeed(feed.apId);
+      if (form.deleted !== undefined) {
+        toast.success(
+          form.deleted ? "Deleted multi-community" : "Restored multi-community",
+        );
+      } else {
+        toast.success("Saved");
+      }
+    },
+    onError: (err) => {
+      if (isErrorLike(err)) {
+        toast.error(extractErrorContent(err));
+      } else {
+        toast.error("Couldn't update multi-community");
+      }
+    },
+  });
+}
+
+export function useAddMultiCommunityFeedEntryMutation() {
+  const { api } = useApiClients();
+  const getCachePrefixer = useAuth((s) => s.getCachePrefixer);
+  const cacheCommunities = useCommunitiesStore((s) => s.cacheCommunities);
+  const invalidateFeed = useInvalidateMultiCommunityFeed();
+  return useMutation({
+    mutationFn: async ({
+      feed,
+      communityId,
+    }: {
+      feed: Schemas.MultiCommunityFeed;
+      communityId: number;
+    }) =>
+      (await api).addMultiCommunityFeedEntry({
+        feedId: feed.id,
+        communityId,
+      }),
+    onSuccess: (community, { feed }) => {
+      cacheCommunities(getCachePrefixer(), [{ communityView: community }]);
+      // Like lemmy-ui, re-fetch the feed to rebuild its community list
+      invalidateFeed(feed.apId);
+      toast.success("Community added");
+    },
+    onError: (err) => {
+      if (isErrorLike(err)) {
+        toast.error(extractErrorContent(err));
+      } else {
+        toast.error("Couldn't add community");
+      }
+    },
+  });
+}
+
+export function useRemoveMultiCommunityFeedEntryMutation() {
+  const { api } = useApiClients();
+  const invalidateFeed = useInvalidateMultiCommunityFeed();
+  return useMutation({
+    mutationFn: async ({
+      feed,
+      communityId,
+    }: {
+      feed: Schemas.MultiCommunityFeed;
+      communityId: number;
+    }) =>
+      (await api).removeMultiCommunityFeedEntry({
+        feedId: feed.id,
+        communityId,
+      }),
+    onSuccess: (_data, { feed }) => {
+      invalidateFeed(feed.apId);
+      toast.success("Community removed");
+    },
+    onError: (err) => {
+      if (isErrorLike(err)) {
+        toast.error(extractErrorContent(err));
+      } else {
+        toast.error("Couldn't remove community");
+      }
+    },
+  });
+}
+
+export function useSearchCommunitiesForFeedQuery(
+  form: Forms.SearchCommunitiesForFeed,
+) {
+  const { api, queryKeyPrefix } = useApiClients();
+  const getCachePrefixer = useAuth((s) => s.getCachePrefixer);
+  const cacheCommunities = useCommunitiesStore((s) => s.cacheCommunities);
+  return useQuery({
+    queryKey: [...queryKeyPrefix, "searchCommunitiesForFeed", form.q],
+    queryFn: async ({ signal }) => {
+      const communities = await (
+        await api
+      ).searchCommunitiesForFeed(form, { signal });
+      cacheCommunities(
+        getCachePrefixer(),
+        communities.map((communityView) => ({ communityView })),
+      );
+      return communities.map((c) => c.handle);
+    },
+    enabled: form.q.length > 0,
+  });
+}
+
 export function useDeleteImageMutation() {
   const { api } = useApiClients();
   return useMutation({
