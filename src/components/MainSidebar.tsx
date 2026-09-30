@@ -419,7 +419,7 @@ export function MainSidebar() {
             <Separator className="my-2" />
 
             <section className="md:hidden">
-              <h2 className="text-muted-foreground px-4 pt-1 pb-3 text-sm uppercase">
+              <h2 className="text-muted-foreground px-3 pt-1 pb-3 text-sm uppercase">
                 {instanceHost}
               </h2>
 
@@ -468,20 +468,21 @@ function SidebarLink<T extends RoutePath>({
   icon: React.ReactNode;
   children: string;
 }) {
+  const pathname = usePathname();
+  const isActive = pathname.startsWith(to);
+  // Matches the TABS buttons at the top of the sidebar
   return (
-    <IonMenuToggle
-      className="mt-3"
-      menu={LEFT_SIDEBAR_MENU_ID}
-      autoHide={false}
-    >
+    <IonMenuToggle menu={LEFT_SIDEBAR_MENU_ID} autoHide={false}>
       <Link
         to={to}
         params={params as any}
-        className="text-muted-foreground flex flex-row items-center gap-2 px-4"
+        className={cn(
+          "text-md hover:bg-accent flex flex-row items-center px-3 py-2 md:rounded-md",
+          isActive ? "bg-accent" : "text-muted-foreground",
+        )}
       >
-        <>
-          {icon} {children}
-        </>
+        <span className="flex text-2xl">{icon}</span>
+        <span className="ml-2 text-sm">{children}</span>
       </Link>
     </IonMenuToggle>
   );
