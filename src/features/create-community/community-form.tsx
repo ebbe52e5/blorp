@@ -17,6 +17,7 @@ import { ImageDropzone } from "./image-dropzone";
 import {
   ACTOR_NAME_PATTERN,
   ACTOR_NAME_REQUIREMENTS,
+  LANGUAGE_SELECT_SUMMARY,
   NO_FOCUS_RING,
   VISIBILITY_OPTIONS,
   useSiteLanguageOptions,
@@ -220,6 +221,7 @@ export function CommunityForm() {
             keyExtractor={(v) => v}
             renderOption={(opt) => <span>{opt.label}</span>}
             buttonClassName="h-auto min-h-9 flex-wrap justify-start gap-x-2"
+            {...LANGUAGE_SELECT_SUMMARY}
           />
         </div>
       )}

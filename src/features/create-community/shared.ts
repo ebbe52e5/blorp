@@ -28,6 +28,13 @@ export const VISIBILITY_OPTIONS: {
   { value: "private", label: "Private" },
 ];
 
+// A new community copies its creator's languages, which is often every
+// language, so the picker's button summarizes long selections
+export const LANGUAGE_SELECT_SUMMARY = {
+  maxSelectedShown: 3,
+  allSelectedLabel: "All languages",
+};
+
 /**
  * Languages a community can pick from: the site's discussion languages, or
  * all languages when the site doesn't restrict them (lemmy-ui's

@@ -10,6 +10,7 @@ import { SimpleSelect } from "@/src/components/ui/simple-select";
 import { ImageDropzone } from "@/src/features/create-community/image-dropzone";
 import {
   DELETE_BUTTON_CLASS,
+  LANGUAGE_SELECT_SUMMARY,
   NO_FOCUS_RING,
   VISIBILITY_OPTIONS,
   useSiteLanguageOptions,
@@ -212,6 +213,7 @@ export function CommunityTab({ community }: { community: Schemas.Community }) {
               keyExtractor={(v) => v}
               renderOption={(opt) => <span>{opt.label}</span>}
               buttonClassName="h-auto min-h-9 flex-wrap justify-start gap-x-2"
+              {...LANGUAGE_SELECT_SUMMARY}
             />
           </div>
         )}

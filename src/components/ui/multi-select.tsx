@@ -9,6 +9,7 @@ import { ChevronDown } from "lucide-react";
 import { cn, isNotNil } from "@/src/lib/utils";
 import { Fragment } from "react/jsx-runtime";
 import { ComponentProps } from "react";
+import _ from "lodash";
 
 interface Option<V> {
   value: V;
@@ -25,6 +26,13 @@ interface MultiSelectProps<V> {
   buttonVariant?: ComponentProps<typeof Button>["variant"];
   buttonClassName?: string;
   id?: string;
+  /**
+   * Show at most this many selected options on the button, then "+N more".
+   * Keeps long selections (e.g. every language) from flooding the page.
+   */
+  maxSelectedShown?: number;
+  /** Shown on the button instead of the options when all are selected */
+  allSelectedLabel?: string;
 }
 
 export function MultiSelect<V>({
@@ -37,12 +45,22 @@ export function MultiSelect<V>({
   buttonVariant = "outline",
   buttonClassName,
   id,
+  maxSelectedShown,
+  allSelectedLabel,
 }: MultiSelectProps<V>) {
   const selected = value
     .map((value) =>
       options.find((opt) => keyExtractor(opt.value) === keyExtractor(value)),
     )
     .filter(isNotNil);
+  const allSelected =
+    !!allSelectedLabel &&
+    options.length > 0 &&
+    selected.length === options.length;
+  const shown = _.isNumber(maxSelectedShown)
+    ? selected.slice(0, maxSelectedShown)
+    : selected;
+  const hiddenCount = selected.length - shown.length;
 
   return (
     <DropdownMenu>
@@ -57,11 +75,22 @@ export function MultiSelect<V>({
               {placeholder}
             </span>
           )}
-          {selected.map((option) => (
-            <Fragment key={keyExtractor(option.value)}>
-              {renderOption?.(option)}
-            </Fragment>
-          ))}
+          {allSelected ? (
+            <span className="font-normal">{allSelectedLabel}</span>
+          ) : (
+            <>
+              {shown.map((option) => (
+                <Fragment key={keyExtractor(option.value)}>
+                  {renderOption?.(option)}
+                </Fragment>
+              ))}
+              {hiddenCount > 0 && (
+                <span className="text-muted-foreground font-normal">
+                  +{hiddenCount} more
+                </span>
+              )}
+            </>
+          )}
           <div className="flex-1" />
           <ChevronDown className="h-4 w-4 opacity-50" />
         </Button>
