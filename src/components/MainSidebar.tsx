@@ -42,6 +42,8 @@ import { useMedia } from "../hooks";
 import { usePathname } from "@/src/hooks/use-pathname";
 import { Skeleton } from "./ui/skeleton";
 import { Tooltip, TooltipTrigger, TooltipContent } from "./ui/tooltip";
+import BrandMarkLight from "@/assets/brand/zhifou-mark-small.svg";
+import BrandMarkDark from "@/assets/brand/zhifou-mark-dark.svg";
 
 function useMainSidebarCollapsed() {
   const media = useMedia();
@@ -153,11 +155,25 @@ function SiteTitle() {
         >
           {sites.toReversed().map((site, index) => (
             <div key={index} className="flex h-9 items-center">
-              {site?.icon && (
+              {site?.icon ? (
                 <img
                   src={site.icon}
                   className="aspect-square h-7.5 rounded-sm object-cover"
                 />
+              ) : (
+                // zhifou.io has no site icon, so show the app's logo instead
+                <>
+                  <img
+                    src={BrandMarkLight}
+                    alt=""
+                    className="h-7.5 w-7.5 object-contain dark:hidden"
+                  />
+                  <img
+                    src={BrandMarkDark}
+                    alt=""
+                    className="hidden h-7.5 w-7.5 object-contain dark:block"
+                  />
+                </>
               )}
             </div>
           ))}
