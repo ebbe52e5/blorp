@@ -15,6 +15,7 @@ const persistedSchema = z.object({
   communityFlairsExpanded: z.boolean(),
   communityModsExpanded: z.boolean(),
   personBioExpanded: z.boolean(),
+  personCreatedExpanded: z.boolean(),
   personModeratesExpanded: z.boolean(),
   personFeedsExpanded: z.boolean(),
   recentSearchesExpanded: z.boolean(),
@@ -39,6 +40,7 @@ type SidebarStore = {
 
   // User sidebar
   setPersonBioExpanded: (val: boolean) => void;
+  setPersonCreatedExpanded: (val: boolean) => void;
   setPersonModeratesExpanded: (val: boolean) => void;
   setPersonFeedsExpanded: (val: boolean) => void;
 
@@ -59,6 +61,7 @@ const INIT_STATE: z.infer<typeof persistedSchema> = {
   communityFlairsExpanded: true,
   communityModsExpanded: true,
   personBioExpanded: true,
+  personCreatedExpanded: true,
   personModeratesExpanded: true,
   personFeedsExpanded: true,
   recentSearchesExpanded: true,
@@ -93,6 +96,8 @@ export const useSidebarStore = create<SidebarStore>()(
       // User sidebar
       setPersonBioExpanded: (personBioExpanded: boolean) =>
         set({ personBioExpanded }),
+      setPersonCreatedExpanded: (personCreatedExpanded: boolean) =>
+        set({ personCreatedExpanded }),
       setPersonModeratesExpanded: (personModeratesExpanded: boolean) =>
         set({ personModeratesExpanded }),
       setPersonFeedsExpanded: (personFeedsExpanded: boolean) =>

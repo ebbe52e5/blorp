@@ -959,6 +959,8 @@ export class LemmyV3Api implements ApiBlueprint<lemmyV3.LemmyHttp> {
         options,
       );
       return {
+        // Only the zhifou.io Lemmy fork records community creators
+        created: [],
         moderates: moderates.map(({ community }) =>
           convertCommunity({ community }),
         ),

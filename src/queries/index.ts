@@ -197,18 +197,19 @@ export function usePersonCommunitiesQuery({ personId }: { personId?: number }) {
       if (_.isNil(personId)) {
         throw new Error("personId undefined");
       }
-      const { moderates, feeds } = await (
+      const { created, moderates, feeds } = await (
         await api
       ).getPersonCommunities({ personId }, { signal });
       cacheCommunities(
         getCachePrefixer(),
-        moderates.map((communityView) => ({ communityView })),
+        [...created, ...moderates].map((communityView) => ({ communityView })),
       );
       cacheFeeds(
         getCachePrefixer(),
         feeds.map((feedView) => ({ feedView })),
       );
       return {
+        createdHandles: created.map((c) => c.handle),
         communityHandles: moderates.map((c) => c.handle),
         feedApIds: feeds.map((f) => f.apId),
       };

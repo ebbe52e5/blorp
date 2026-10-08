@@ -1525,6 +1525,8 @@ export class PieFedApi
       options,
     );
     return {
+      // Only the zhifou.io Lemmy fork records community creators
+      created: [],
       moderates: data.moderates.map(({ community }) =>
         convertCommunity({ community }, "partial"),
       ),

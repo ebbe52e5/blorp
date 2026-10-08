@@ -353,6 +353,11 @@ const HTTP_DELETE = "DELETE" as Parameters<lemmyV4.LemmyHttp["wrapper"]>[0];
 const LISTING_TYPE_FOLLOWING = "following" as lemmyV4.ListingType;
 // People in multi-communities are only in the zhifou.io Lemmy fork, which
 // adds `persons` to this response. Stock Lemmy omits it.
+// The zhifou.io Lemmy fork records community creators and adds
+// `communities_created` to this response. Stock Lemmy omits it.
+type ForkGetPersonDetailsResponse = lemmyV4.GetPersonDetailsResponse & {
+  communities_created?: lemmyV4.Community[];
+};
 type ForkGetMultiCommunityResponse = lemmyV4.GetMultiCommunityResponse & {
   persons?: ForkPerson[];
 };
@@ -979,10 +984,14 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
       { person_id: form.personId },
       options,
     );
-    const { moderates, multi_communities_created } = unwrapResponsData(
-      getPersonDetailsResponse,
-    );
+    const { moderates, multi_communities_created, communities_created } =
+      unwrapResponsData(
+        getPersonDetailsResponse,
+      ) as ForkGetPersonDetailsResponse;
     return {
+      created: (communities_created ?? []).map((community) =>
+        convertCommunity({ community }),
+      ),
       moderates: moderates.map(({ community }) =>
         convertCommunity({ community }),
       ),

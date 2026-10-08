@@ -1155,13 +1155,15 @@ export abstract class ApiBlueprint<C> {
     options: RequestOptions,
   ): Promise<Schemas.Person>;
 
-  // The communities a person moderates and the multi-community feeds they
-  // created, for their profile sidebar. `feeds` is empty where the backend
-  // has no multi-communities.
+  // The communities a person created and moderates, and the multi-community
+  // feeds they created, for their profile sidebar. `feeds` is empty where the
+  // backend has no multi-communities. `created` is only known to the zhifou.io
+  // Lemmy fork, and is empty elsewhere.
   abstract getPersonCommunities(
     form: Forms.GetPersonCommunities,
     options: RequestOptions,
   ): Promise<{
+    created: Schemas.Community[];
     moderates: Schemas.Community[];
     feeds: Schemas.MultiCommunityFeed[];
   }>;
