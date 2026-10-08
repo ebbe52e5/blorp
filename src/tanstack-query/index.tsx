@@ -11,8 +11,9 @@ import { queryClient } from "./query-client";
 import { env } from "@/src/env";
 
 // List the last reason for bumping the key:
-// Change slug to handle for posts, communities, and users
-const REACT_QUERY_CACHE_VERSON = 13;
+// getPersonCommunities gained createdHandles, and the cached results without
+// it crashed profiles
+const REACT_QUERY_CACHE_VERSON = 14;
 
 function pruneInfinitePages(client: PersistedClient): PersistedClient {
   const cacheState = client.clientState;

@@ -49,6 +49,8 @@ Blorp is a single React codebase that ships to three targets: web (Vite), mobile
 
 **Query/store split.** `src/queries/` holds hooks that fetch data and normalize it into per-entity Zustand stores under `src/stores/` (`posts.ts`, `comments.ts`, `communities.ts`, `profiles.ts`, ...). Components should read entities via selector hooks (e.g. `usePostFromStore()`) rather than indexing store maps directly — also enforced by a local ESLint rule (`eslint/restricted-syntax.js`).
 
+**Query results are persisted.** `src/tanstack-query/index.tsx` saves the React Query cache to IndexedDB and restores it on load, so a new build first renders whatever an older build cached. If you change the shape a `queryFn` returns (add, rename or remove a field), bump `REACT_QUERY_CACHE_VERSON` there, or change the query key. Otherwise code that reads the new field gets `undefined` from the old cache. A fresh browser never shows the problem, only one that ran the previous build. This blanked profiles on zhifou.io once, after `getPersonCommunities` gained `createdHandles`.
+
 **Custom ESLint rules encode real invariants** (`eslint/rules.js`, `zustand.js`, `restricted-imports.js`, `restricted-syntax.js`) — worth reading before a large refactor touching queries, stores, or auth:
 
 - `query-hook-naming` / `mutation-hook-naming` / `no-query-hooks-in-components` — `useQuery`/`useMutation` may only be called inside a hook named `useXQuery`/`useXMutation`, and components can't import hooks ending in `Query`. This keeps "does this touch the network" visible in the hook name and keeps data-fetching out of `src/components`.
