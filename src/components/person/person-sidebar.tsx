@@ -32,10 +32,21 @@ import { parseHandle } from "@/src/lib/handle";
 
 dayjs.extend(localizedFormat);
 
-export function SmallScreenSidebar({ person }: { person?: Schemas.Person }) {
+export function SmallScreenSidebar({
+  person,
+  children,
+  hasDetails = false,
+}: {
+  person?: Schemas.Person;
+  // Extra sections shown with the bio when expanded, e.g. the communities
+  // they moderate. Set `hasDetails` when `children` has anything to show.
+  children?: React.ReactNode;
+  hasDetails?: boolean;
+}) {
   const [expanded, setExpanded] = useState(false);
 
   const isBlocked = useIsPersonBlocked(person?.apId);
+  const hasBio = !!person?.bio && !isBlocked;
 
   return (
     <div className={cn("p-4 py-1.5", !expanded && "md:hidden")}>
@@ -89,13 +100,15 @@ export function SmallScreenSidebar({ person }: { person?: Schemas.Person }) {
         </div>
       )}
 
-      {person?.bio && !isBlocked && (
+      {expanded && !isBlocked && children}
+
+      {(hasBio || (hasDetails && !isBlocked)) && (
         <Button
           variant="link"
           className="-ml-4 text-brand"
           onClick={() => setExpanded(!expanded)}
         >
-          {expanded ? "Hide" : "Show"} bio
+          {expanded ? "Hide" : "Show"} {hasDetails ? "details" : "bio"}
         </Button>
       )}
     </div>

@@ -33,7 +33,10 @@ import {
   PersonSidebar,
   SmallScreenSidebar,
 } from "../components/person/person-sidebar";
-import { PersonCommunitiesSections } from "./person-communities";
+import {
+  PersonCommunitiesSections,
+  useHasPersonCommunities,
+} from "./person-communities";
 import { useHistory } from "react-router";
 import { ToolbarBackButton } from "../components/toolbar/toolbar-back-button";
 import { ToolbarTitle } from "../components/toolbar/toolbar-title";
@@ -154,6 +157,7 @@ export default function User() {
   const person = useProfileFromStore(actorId);
 
   const isBlocked = useIsPersonBlocked(person?.apId);
+  const hasPersonCommunities = useHasPersonCommunities(person);
 
   const postsPagination = usePagination({
     pages: queryData?.pages,
@@ -218,7 +222,13 @@ export default function User() {
             scrollHost
             data={data}
             header={[
-              <SmallScreenSidebar key="small-screen-sidebar" person={person} />,
+              <SmallScreenSidebar
+                key="small-screen-sidebar"
+                person={person}
+                hasDetails={hasPersonCommunities}
+              >
+                <PersonCommunitiesSections person={person} compact />
+              </SmallScreenSidebar>,
               <StickyFilterBar
                 key="header-type-select"
                 innerClassName="max-md:h-auto max-md:pb-2"
