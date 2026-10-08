@@ -744,9 +744,13 @@ export function useCommunityQuery({
           communityView: res.community,
           mods: res.mods,
           flairs: res.flairs,
+          creatorApId: res.creator?.apId ?? null,
         },
       ]);
-      cacheProfiles(getCachePrefixer(), res.mods);
+      cacheProfiles(
+        getCachePrefixer(),
+        _.uniqBy(res.creator ? [...res.mods, res.creator] : res.mods, "apId"),
+      );
       if (res.flairs) {
         cacheFlairs(getCachePrefixer(), res.flairs);
       }

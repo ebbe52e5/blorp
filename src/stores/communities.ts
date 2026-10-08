@@ -21,6 +21,9 @@ const cachedCommunitySchema = z.object({
     communityView: communitySchema,
     mods: z.array(personSchema).optional(),
     flairs: z.array(z.object({ id: z.number() })).optional(),
+    // Who created the community (zhifou.io Lemmy fork). null when unknown,
+    // undefined when not loaded yet. The person is in the profiles store.
+    creatorApId: z.string().nullable().optional(),
   }),
   lastUsed: z.number(),
 });

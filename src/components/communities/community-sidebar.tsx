@@ -212,6 +212,17 @@ export function SmallScreenSidebar({
               Modlog
             </Link>
           </section>
+
+          {/* Only the zhifou.io Lemmy fork records community creators */}
+          {community?.creatorApId && (
+            <>
+              <Separator />
+              <section className="p-3 flex flex-col gap-2">
+                <h2>CREATED BY</h2>
+                <PersonCard actorId={community.creatorApId} size="sm" />
+              </section>
+            </>
+          )}
         </>
       )}
     </div>
@@ -502,6 +513,19 @@ function CommunitySidebarInner({
                 </Link>
               </CollapsibleContent>
             </Collapsible>
+
+            {/* Only the zhifou.io Lemmy fork records community creators */}
+            {data.creatorApId && (
+              <>
+                <Separator />
+                <section className="p-4 flex flex-col gap-2">
+                  <span className="uppercase text-xs font-medium text-muted-foreground">
+                    Created by
+                  </span>
+                  <PersonCard actorId={data.creatorApId} size="sm" />
+                </section>
+              </>
+            )}
           </>
         )}
       </EasterEggBox>

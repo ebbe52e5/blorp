@@ -353,6 +353,9 @@ const HTTP_DELETE = "DELETE" as Parameters<lemmyV4.LemmyHttp["wrapper"]>[0];
 const LISTING_TYPE_FOLLOWING = "following" as lemmyV4.ListingType;
 // People in multi-communities are only in the zhifou.io Lemmy fork, which
 // adds `persons` to this response. Stock Lemmy omits it.
+// The zhifou.io Lemmy fork records who created a local community. Stock
+// Lemmy, remote communities and older ones have no creator_id.
+type ForkCommunity = lemmyV4.Community & { creator_id?: number | null };
 // The zhifou.io Lemmy fork records community creators and adds
 // `communities_created` to this response. Stock Lemmy omits it.
 type ForkGetPersonDetailsResponse = lemmyV4.GetPersonDetailsResponse & {
@@ -1247,19 +1250,55 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
     );
     const { community_view, moderators, discussion_languages } =
       unwrapResponsData(getCommunityResponse);
+    // Lemmy keeps moderators in rank order, so mods[0] is the top mod
+    const mods = moderators.map((m) => convertPerson({ person: m.moderator }));
     return {
       community: {
         ...convertCommunity(community_view),
         discussionLanguages: discussion_languages,
       },
-      // Lemmy keeps moderators in rank order, so mods[0] is the top mod
-      mods: moderators.map((m) => convertPerson({ person: m.moderator })),
+      mods,
+      creator: await this.getCommunityCreator(
+        (community_view.community as ForkCommunity).creator_id,
+        mods,
+        options,
+      ),
       // The tags posts can use. Mods also get deleted tags back, which
       // lemmy-ui leaves out of its picker too.
       flairs: community_view.tags
         .filter((t) => !t.deleted)
         .map(convertTagToFlair),
     };
+  }
+
+  // The community's creator (zhifou.io Lemmy fork). Creators are almost always
+  // still mods, so this only fetches them when they aren't. A failed fetch
+  // just hides the creator rather than failing the community.
+  private async getCommunityCreator(
+    creatorId: number | null | undefined,
+    mods: Schemas.Person[],
+    options?: RequestOptions,
+  ) {
+    if (_.isNil(creatorId)) {
+      return null;
+    }
+    const mod = mods.find((m) => m.id === creatorId);
+    if (mod) {
+      return mod;
+    }
+    try {
+      const getPersonDetailsResponse = await this.client.getPersonDetails(
+        { person_id: creatorId },
+        options,
+      );
+      const { person_view } = unwrapResponsData(getPersonDetailsResponse);
+      return convertPerson(person_view);
+    } catch (err) {
+      if (options?.signal?.aborted) {
+        throw err;
+      }
+      return null;
+    }
   }
 
   // Resolves the post form's flairs ({title, apId} from the draft) to the

@@ -1121,6 +1121,9 @@ export abstract class ApiBlueprint<C> {
     community: Schemas.Community;
     mods: Schemas.Person[];
     flairs?: Schemas.Flair[];
+    // Who created the community. Only the zhifou.io Lemmy fork records this,
+    // and only for its own communities, so it's often absent or null.
+    creator?: Schemas.Person | null;
   }>;
 
   abstract getCommunities(
