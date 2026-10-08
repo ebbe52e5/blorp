@@ -42,7 +42,7 @@ import { useMedia } from "../hooks";
 import { usePathname } from "@/src/hooks/use-pathname";
 import { Skeleton } from "./ui/skeleton";
 import { Tooltip, TooltipTrigger, TooltipContent } from "./ui/tooltip";
-import BrandMarkLight from "@/assets/brand/zhifou-mark-small.svg";
+import BrandMarkLight from "@/assets/brand/zhifou-mark.svg";
 import BrandMarkDark from "@/assets/brand/zhifou-mark-dark.svg";
 
 function useMainSidebarCollapsed() {
