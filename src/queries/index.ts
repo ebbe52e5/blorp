@@ -662,8 +662,9 @@ export function useMultiCommunityFeedQuery(
         getCachePrefixer(),
         res.communities.map((communityView) => ({ communityView })),
       );
-      if (res.owner) {
-        cacheProfiles(getCachePrefixer(), [res.owner]);
+      const profiles = res.owner ? [res.owner, ...res.persons] : res.persons;
+      if (profiles.length > 0) {
+        cacheProfiles(getCachePrefixer(), profiles);
       }
       return res.feed.apId;
     },
@@ -2703,6 +2704,71 @@ export function useRemoveMultiCommunityFeedEntryMutation() {
         toast.error("Couldn't remove community");
       }
     },
+  });
+}
+
+// People in multi-community feeds are a zhifou.io Lemmy fork feature
+export function useAddMultiCommunityFeedPersonEntryMutation() {
+  const { api } = useApiClients();
+  const getCachePrefixer = useAuth((s) => s.getCachePrefixer);
+  const cacheProfiles = useProfilesStore((s) => s.cacheProfiles);
+  const invalidateFeed = useInvalidateMultiCommunityFeed();
+  return useMutation({
+    mutationFn: async ({
+      feed,
+      personId,
+    }: {
+      feed: Schemas.MultiCommunityFeed;
+      personId: number;
+    }) =>
+      (await api).addMultiCommunityFeedPersonEntry({
+        feedId: feed.id,
+        personId,
+      }),
+    onSuccess: (person, { feed }) => {
+      cacheProfiles(getCachePrefixer(), [person]);
+      invalidateFeed(feed.apId);
+      toast.success("Person added");
+    },
+    onError: toastMutationError("Couldn't add person"),
+  });
+}
+
+export function useRemoveMultiCommunityFeedPersonEntryMutation() {
+  const { api } = useApiClients();
+  const invalidateFeed = useInvalidateMultiCommunityFeed();
+  return useMutation({
+    mutationFn: async ({
+      feed,
+      personId,
+    }: {
+      feed: Schemas.MultiCommunityFeed;
+      personId: number;
+    }) =>
+      (await api).removeMultiCommunityFeedPersonEntry({
+        feedId: feed.id,
+        personId,
+      }),
+    onSuccess: (_data, { feed }) => {
+      invalidateFeed(feed.apId);
+      toast.success("Person removed");
+    },
+    onError: toastMutationError("Couldn't remove person"),
+  });
+}
+
+export function useSearchPersonsForFeedQuery(form: Forms.SearchPersonsForFeed) {
+  const { api, queryKeyPrefix } = useApiClients();
+  const getCachePrefixer = useAuth((s) => s.getCachePrefixer);
+  const cacheProfiles = useProfilesStore((s) => s.cacheProfiles);
+  return useQuery({
+    queryKey: [...queryKeyPrefix, "searchPersonsForFeed", form.q],
+    queryFn: async ({ signal }) => {
+      const persons = await (await api).searchPersonsForFeed(form, { signal });
+      cacheProfiles(getCachePrefixer(), persons);
+      return persons.map((p) => p.apId);
+    },
+    enabled: form.q.length > 0,
   });
 }
 

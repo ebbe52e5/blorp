@@ -1137,6 +1137,18 @@ export class LemmyV3Api implements ApiBlueprint<lemmyV3.LemmyHttp> {
     throw Errors.NOT_IMPLEMENTED;
   }
 
+  async addMultiCommunityFeedPersonEntry(): Promise<Schemas.Person> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
+  async removeMultiCommunityFeedPersonEntry(): Promise<void> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
+  async searchPersonsForFeed(): Promise<Schemas.Person[]> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
   async editCommunity(): Promise<Schemas.Community> {
     throw Errors.NOT_IMPLEMENTED;
   }

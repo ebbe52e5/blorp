@@ -204,6 +204,10 @@ export const multiCommunityFeedSchema = z.object({
   subscriberCount: z.number(),
   description: z.string().nullable(),
   communityHandles: z.array(handleSchema).optional(),
+  // People in the feed are a zhifou.io Lemmy fork feature. Only set when
+  // the feed was loaded from a backend that supports it, so the UI can hide
+  // the feature elsewhere.
+  personApIds: z.array(z.string()).optional(),
   subscribed: z.boolean().nullish(),
   optimisticSubscribed: z
     .enum(["Subscribed", "NotSubscribed", "Pending"])
@@ -751,6 +755,15 @@ export namespace Forms {
     communityId: number;
   };
 
+  export type MultiCommunityFeedPersonEntry = {
+    feedId: number;
+    personId: number;
+  };
+
+  export type SearchPersonsForFeed = {
+    q: string;
+  };
+
   export type SearchCommunitiesForFeed = {
     q: string;
   };
@@ -1128,6 +1141,8 @@ export abstract class ApiBlueprint<C> {
   ): Promise<{
     feed: Schemas.MultiCommunityFeed;
     communities: Schemas.Community[];
+    // Only from the zhifou.io Lemmy fork
+    persons: Schemas.Person[];
     owner: Schemas.Person | null;
   }>;
 
@@ -1220,6 +1235,21 @@ export abstract class ApiBlueprint<C> {
     form: Forms.SearchCommunitiesForFeed,
     options: RequestOptions,
   ): Promise<Schemas.Community[]>;
+
+  // People in multi-community feeds. Only the zhifou.io Lemmy fork supports
+  // these.
+  abstract addMultiCommunityFeedPersonEntry(
+    form: Forms.MultiCommunityFeedPersonEntry,
+  ): Promise<Schemas.Person>;
+
+  abstract removeMultiCommunityFeedPersonEntry(
+    form: Forms.MultiCommunityFeedPersonEntry,
+  ): Promise<void>;
+
+  abstract searchPersonsForFeed(
+    form: Forms.SearchPersonsForFeed,
+    options: RequestOptions,
+  ): Promise<Schemas.Person[]>;
 
   abstract logout(): Promise<void>;
 

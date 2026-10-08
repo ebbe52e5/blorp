@@ -984,6 +984,7 @@ export class PieFedApi
       return {
         feed: this.convertFeed(feed, owner),
         communities,
+        persons: [],
         owner,
       };
     } catch (err) {
@@ -1018,6 +1019,18 @@ export class PieFedApi
   }
 
   async searchCommunitiesForFeed(): Promise<Schemas.Community[]> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
+  async addMultiCommunityFeedPersonEntry(): Promise<Schemas.Person> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
+  async removeMultiCommunityFeedPersonEntry(): Promise<void> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
+  async searchPersonsForFeed(): Promise<Schemas.Person[]> {
     throw Errors.NOT_IMPLEMENTED;
   }
 

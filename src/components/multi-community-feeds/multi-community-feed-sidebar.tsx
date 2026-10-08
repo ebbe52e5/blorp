@@ -79,6 +79,8 @@ export function SmallScreenSidebar({
           aggregates={{
             Subscribers: feed?.subscriberCount,
             Communities: feed?.communityCount,
+            // zhifou.io Lemmy fork only
+            People: feed?.personApIds?.length || undefined,
           }}
         />
 
@@ -289,6 +291,8 @@ export function FeedSidebar({
                   aggregates={{
                     Subscribers: feed?.subscriberCount,
                     Communities: feed?.communityCount,
+                    // zhifou.io Lemmy fork only
+                    People: feed.personApIds?.length || undefined,
                   }}
                 />
               </CollapsibleContent>

@@ -347,9 +347,15 @@ type ForkPersonView = lemmyV4.PersonView & {
 // lemmy-js-client doesn't export its HttpType enum, but its
 // values are just the HTTP method names.
 const HTTP_POST = "POST" as Parameters<lemmyV4.LemmyHttp["wrapper"]>[0];
+const HTTP_DELETE = "DELETE" as Parameters<lemmyV4.LemmyHttp["wrapper"]>[0];
 
 // The fork's Following listing type isn't in lemmy-js-client's ListingType.
 const LISTING_TYPE_FOLLOWING = "following" as lemmyV4.ListingType;
+// People in multi-communities are only in the zhifou.io Lemmy fork, which
+// adds `persons` to this response. Stock Lemmy omits it.
+type ForkGetMultiCommunityResponse = lemmyV4.GetMultiCommunityResponse & {
+  persons?: ForkPerson[];
+};
 
 function convertCommunityTag(tag: lemmyV4.CommunityTag): Schemas.CommunityTag {
   return {
@@ -675,6 +681,7 @@ function convertCommentReport(
 function convertFeed(
   multiCommunity: lemmyV4.MultiCommunityView,
   communities?: lemmyV4.CommunityView[],
+  persons?: ForkPerson[],
 ): { feed: Schemas.MultiCommunityFeed; owner: Schemas.Person | null } {
   const { multi, owner, follow_state } = multiCommunity;
   const ownerPerson = convertPerson({ person: owner });
@@ -699,6 +706,9 @@ function convertFeed(
       communityHandles: communities?.map((c) =>
         createHandle({ apId: c.community.ap_id, name: c.community.name }),
       ),
+      // Omit the key when the backend didn't send people (stock Lemmy, or the
+      // list endpoint), so a cached list isn't wiped
+      ...(persons ? { personApIds: persons.map((p) => p.ap_id) } : null),
       subscribed: follow_state ? follow_state === "accepted" : null,
       ownerId: ownerPerson.id,
       ownerApId: ownerPerson.apId,
@@ -1297,13 +1307,18 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
       const getMultiCommunityResponse = await this.client.getMultiCommunity({
         id: multi_community_id,
       });
-      const { multi_community_view, communities } = unwrapResponsData(
+      const { multi_community_view, communities, persons } = unwrapResponsData(
         getMultiCommunityResponse,
+      ) as ForkGetMultiCommunityResponse;
+      const { feed, owner } = convertFeed(
+        multi_community_view,
+        communities,
+        persons,
       );
-      const { feed, owner } = convertFeed(multi_community_view, communities);
       return {
         feed,
         communities: communities.map((c) => convertCommunity(c)),
+        persons: (persons ?? []).map((person) => convertPerson({ person })),
         owner,
       };
     });
@@ -1556,6 +1571,56 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
         community_id: form.communityId,
       }),
     );
+  }
+
+  // People in multi-communities are a zhifou.io Lemmy fork feature
+  async addMultiCommunityFeedPersonEntry(
+    form: Forms.MultiCommunityFeedPersonEntry,
+  ) {
+    const createEntryResponse = await this.client.wrapper<
+      { id: number; person_id: number },
+      { person_view: ForkPersonView }
+    >(
+      HTTP_POST,
+      "/multi_community/person_entry",
+      { id: form.feedId, person_id: form.personId },
+      undefined,
+    );
+    const { person_view } = unwrapResponsData(createEntryResponse);
+    return convertPerson(person_view);
+  }
+
+  async removeMultiCommunityFeedPersonEntry(
+    form: Forms.MultiCommunityFeedPersonEntry,
+  ) {
+    unwrapResponsData(
+      await this.client.wrapper<
+        { id: number; person_id: number },
+        lemmyV4.SuccessResponse
+      >(
+        HTTP_DELETE,
+        "/multi_community/person_entry",
+        { id: form.feedId, person_id: form.personId },
+        undefined,
+      ),
+    );
+  }
+
+  // Only local people can be added to a multi-community
+  async searchPersonsForFeed(
+    form: Forms.SearchPersonsForFeed,
+    options: RequestOptions,
+  ) {
+    const listPersonsResponse = await this.client.listPersons(
+      {
+        search_term: form.q,
+        sort: "comment_score",
+        type_: "local",
+      },
+      options,
+    );
+    const { items } = unwrapResponsData(listPersonsResponse);
+    return items.map(convertPerson);
   }
 
   // Same query and filtering as lemmy-ui's "Add a community" box

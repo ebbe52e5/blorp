@@ -5,6 +5,7 @@ import { Schemas } from "@/src/apis/api-blueprint";
 import { supportsCreateCommunity } from "@/src/apis/support";
 import { decodeApId } from "@/src/apis/utils";
 import { CommunityCard } from "@/src/components/communities/community-card";
+import { PersonCard } from "@/src/components/person/person-card";
 import { ContentGutters } from "@/src/components/gutters";
 import { UserDropdown } from "@/src/components/nav";
 import { Page } from "@/src/components/page";
@@ -19,16 +20,20 @@ import { useConfirmationAlert, useDebouncedState } from "@/src/hooks";
 import { useLinkContext } from "@/src/hooks/navigation-hooks";
 import {
   useAddMultiCommunityFeedEntryMutation,
+  useAddMultiCommunityFeedPersonEntryMutation,
   useEditMultiCommunityFeedMutation,
   useMultiCommunityFeedQuery,
   useRemoveMultiCommunityFeedEntryMutation,
+  useRemoveMultiCommunityFeedPersonEntryMutation,
   useSearchCommunitiesForFeedQuery,
+  useSearchPersonsForFeedQuery,
   useSoftware,
 } from "@/src/queries";
 import { useParams } from "@/src/routing";
 import { getAccountActorId, useAuth } from "@/src/stores/auth";
 import { useCommunityFromStore } from "@/src/stores/communities";
 import { useMultiCommunityFeedFromStore } from "@/src/stores/multi-community-feeds";
+import { useProfileFromStore } from "@/src/stores/profiles";
 import {
   DELETE_BUTTON_CLASS,
   NO_FOCUS_RING,
@@ -200,6 +205,96 @@ function AddCommunity({ feed }: { feed: Schemas.MultiCommunityFeed }) {
   );
 }
 
+// People in a multi-community are a zhifou.io Lemmy fork feature. Their posts
+// in any community show in the feed.
+function PersonEntryRow({
+  feed,
+  personApId,
+  canRemove,
+}: {
+  feed: Schemas.MultiCommunityFeed;
+  personApId: string;
+  canRemove: boolean;
+}) {
+  const person = useProfileFromStore(personApId);
+  const removeEntry = useRemoveMultiCommunityFeedPersonEntryMutation();
+
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <PersonCard actorId={personApId} size="sm" />
+      {canRemove && person && (
+        <Button
+          size="icon"
+          variant="ghost"
+          aria-label={`Remove ${person.handle}`}
+          disabled={removeEntry.isPending}
+          onClick={() => removeEntry.mutate({ feed, personId: person.id })}
+        >
+          <IoClose className="text-destructive" />
+        </Button>
+      )}
+    </div>
+  );
+}
+
+function PersonSearchResultRow({
+  feed,
+  personApId,
+}: {
+  feed: Schemas.MultiCommunityFeed;
+  personApId: string;
+}) {
+  const person = useProfileFromStore(personApId);
+  const addEntry = useAddMultiCommunityFeedPersonEntryMutation();
+
+  return (
+    <button
+      type="button"
+      className="flex items-center text-left py-1 disabled:opacity-50"
+      disabled={!person || addEntry.isPending}
+      onClick={() => person && addEntry.mutate({ feed, personId: person.id })}
+    >
+      <PersonCard actorId={personApId} size="sm" disableLink />
+    </button>
+  );
+}
+
+function AddPerson({ feed }: { feed: Schemas.MultiCommunityFeed }) {
+  const id = useId();
+  const [text, setText] = useState("");
+  // Same debounce as the community search
+  const search = useDebouncedState("", 1000);
+  const q = search.value.trim();
+
+  const results = useSearchPersonsForFeedQuery({ q });
+  const existing = feed.personApIds ?? [];
+  const apIds = (results.data ?? []).filter((a) => !existing.includes(a));
+
+  return (
+    <div className="flex flex-col gap-2">
+      <Label htmlFor={`${id}-add-person`}>Add a person</Label>
+      <Input
+        wrapperClassName={NO_FOCUS_RING}
+        id={`${id}-add-person`}
+        placeholder="Search people on this instance"
+        value={text}
+        onChange={(e) => {
+          setText(e.target.value);
+          search.setValue(e.target.value);
+        }}
+      />
+      {q.length > 0 && !results.isFetching && apIds.length === 0 && (
+        <p className="text-sm text-muted-foreground">No results.</p>
+      )}
+      <div className="flex flex-col">
+        {apIds.map((apId) => (
+          <PersonSearchResultRow key={apId} feed={feed} personApId={apId} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function MultiCommunityFeedSettings() {
   const linkCtx = useLinkContext();
   const { apId: encodedApId } = useParams(`${linkCtx.root}f/:apId/settings`);
@@ -261,6 +356,28 @@ export default function MultiCommunityFeedSettings() {
                 )}
                 {isOwner && <AddCommunity feed={feed} />}
               </div>
+
+              {/* Only the zhifou.io Lemmy fork sends people */}
+              {feed.personApIds && (
+                <div className="flex flex-col gap-3">
+                  <h2 className="font-bold">People</h2>
+                  {feed.personApIds.length ? (
+                    feed.personApIds.map((apId) => (
+                      <PersonEntryRow
+                        key={apId}
+                        feed={feed}
+                        personApId={apId}
+                        canRemove={isOwner}
+                      />
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      No people yet.
+                    </p>
+                  )}
+                  {isOwner && <AddPerson feed={feed} />}
+                </div>
+              )}
             </div>
           )}
         </ContentGutters>
