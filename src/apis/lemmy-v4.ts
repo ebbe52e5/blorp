@@ -971,6 +971,25 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
     return convertPerson(person);
   }
 
+  async getPersonCommunities(
+    form: Forms.GetPersonCommunities,
+    options: RequestOptions,
+  ) {
+    const getPersonDetailsResponse = await this.client.getPersonDetails(
+      { person_id: form.personId },
+      options,
+    );
+    const { moderates, multi_communities_created } = unwrapResponsData(
+      getPersonDetailsResponse,
+    );
+    return {
+      moderates: moderates.map(({ community }) =>
+        convertCommunity({ community }),
+      ),
+      feeds: multi_communities_created.map((view) => convertFeed(view).feed),
+    };
+  }
+
   async getPersonContent(
     form: Forms.GetPersonContent,
     options: RequestOptions,

@@ -186,6 +186,37 @@ export function usePersonDetailsQuery({
   });
 }
 
+export function usePersonCommunitiesQuery({ personId }: { personId?: number }) {
+  const { api, queryKeyPrefix } = useApiClients();
+  const getCachePrefixer = useAuth((s) => s.getCachePrefixer);
+  const cacheCommunities = useCommunitiesStore((s) => s.cacheCommunities);
+  const cacheFeeds = useMultiCommunityFeedStore((s) => s.cacheFeeds);
+  return useQuery({
+    queryKey: [...queryKeyPrefix, "getPersonCommunities", personId],
+    queryFn: async ({ signal }) => {
+      if (_.isNil(personId)) {
+        throw new Error("personId undefined");
+      }
+      const { moderates, feeds } = await (
+        await api
+      ).getPersonCommunities({ personId }, { signal });
+      cacheCommunities(
+        getCachePrefixer(),
+        moderates.map((communityView) => ({ communityView })),
+      );
+      cacheFeeds(
+        getCachePrefixer(),
+        feeds.map((feedView) => ({ feedView })),
+      );
+      return {
+        communityHandles: moderates.map((c) => c.handle),
+        feedApIds: feeds.map((f) => f.apId),
+      };
+    },
+    enabled: !_.isNil(personId),
+  });
+}
+
 function usePersonFeedKey({
   apIdOrUsername,
   type,

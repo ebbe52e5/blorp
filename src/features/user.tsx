@@ -33,6 +33,7 @@ import {
   PersonSidebar,
   SmallScreenSidebar,
 } from "../components/person/person-sidebar";
+import { PersonCommunitiesSections } from "./person-communities";
 import { useHistory } from "react-router";
 import { ToolbarBackButton } from "../components/toolbar/toolbar-back-button";
 import { ToolbarTitle } from "../components/toolbar/toolbar-title";
@@ -268,7 +269,9 @@ export default function User() {
 
         <ContentGutters className="max-md:hidden absolute top-0 right-0 left-0 z-10">
           <div className="flex-1" />
-          <PersonSidebar person={person} />
+          <PersonSidebar person={person}>
+            <PersonCommunitiesSections person={person} />
+          </PersonSidebar>
         </ContentGutters>
       </IonContent>
     </Page>

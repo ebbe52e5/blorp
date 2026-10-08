@@ -102,7 +102,14 @@ export function SmallScreenSidebar({ person }: { person?: Schemas.Person }) {
   );
 }
 
-function PersonSidebarInner({ person }: { person?: Schemas.Person }) {
+function PersonSidebarInner({
+  person,
+  children,
+}: {
+  person?: Schemas.Person;
+  // Extra sections below the bio, e.g. the communities they moderate
+  children?: React.ReactNode;
+}) {
   const open = useSidebarStore((s) => s.personBioExpanded);
   const setOpen = useSidebarStore((s) => s.setPersonBioExpanded);
 
@@ -183,6 +190,8 @@ function PersonSidebarInner({ person }: { person?: Schemas.Person }) {
           </Collapsible>
         </>
       )}
+
+      {children}
     </SidebarContent>
   );
 }

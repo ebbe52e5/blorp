@@ -1516,6 +1516,23 @@ export class PieFedApi
     }
   }
 
+  async getPersonCommunities(
+    form: Forms.GetPersonCommunities,
+    options: RequestOptions,
+  ) {
+    const data = await this.client.getApiAlphaUser(
+      { person_id: form.personId },
+      options,
+    );
+    return {
+      moderates: data.moderates.map(({ community }) =>
+        convertCommunity({ community }, "partial"),
+      ),
+      // Blorp doesn't list PieFed's feeds per person
+      feeds: [],
+    };
+  }
+
   async getPersonContent(
     form: Forms.GetPersonContent,
     options: RequestOptions,

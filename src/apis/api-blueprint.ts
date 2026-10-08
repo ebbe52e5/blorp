@@ -755,6 +755,10 @@ export namespace Forms {
     communityId: number;
   };
 
+  export type GetPersonCommunities = {
+    personId: number;
+  };
+
   export type MultiCommunityFeedPersonEntry = {
     feedId: number;
     personId: number;
@@ -1150,6 +1154,17 @@ export abstract class ApiBlueprint<C> {
     form: Forms.GetPerson,
     options: RequestOptions,
   ): Promise<Schemas.Person>;
+
+  // The communities a person moderates and the multi-community feeds they
+  // created, for their profile sidebar. `feeds` is empty where the backend
+  // has no multi-communities.
+  abstract getPersonCommunities(
+    form: Forms.GetPersonCommunities,
+    options: RequestOptions,
+  ): Promise<{
+    moderates: Schemas.Community[];
+    feeds: Schemas.MultiCommunityFeed[];
+  }>;
 
   abstract followCommunity(
     form: Forms.FollowCommunity,

@@ -10,6 +10,8 @@ exports[`persisted state snapshot > sidebar store initial shape 1`] = `
   "mainSidebarRecent": true,
   "mainSidebarSubscribed": true,
   "personBioExpanded": true,
+  "personFeedsExpanded": true,
+  "personModeratesExpanded": true,
   "recentSearchesExpanded": true,
   "siteAboutExpanded": true,
   "siteAdminsExpanded": true,

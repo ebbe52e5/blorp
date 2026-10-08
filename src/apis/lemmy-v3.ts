@@ -949,6 +949,25 @@ export class LemmyV3Api implements ApiBlueprint<lemmyV3.LemmyHttp> {
     });
   }
 
+  async getPersonCommunities(
+    form: Forms.GetPersonCommunities,
+    options: RequestOptions,
+  ) {
+    return translateErrors(async () => {
+      const { moderates } = await this.client.getPersonDetails(
+        { person_id: form.personId },
+        options,
+      );
+      return {
+        moderates: moderates.map(({ community }) =>
+          convertCommunity({ community }),
+        ),
+        // Lemmy v3 has no multi-communities
+        feeds: [],
+      };
+    });
+  }
+
   async getPersonContent(
     form: Forms.GetPersonContent,
     options: RequestOptions,
