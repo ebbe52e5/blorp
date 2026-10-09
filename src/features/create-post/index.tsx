@@ -637,7 +637,9 @@ function CreatePostInner() {
                   placeholder="Title"
                   value={title}
                   aria-multiline="false"
-                  className="md:text-2xl! font-bold resize-none"
+                  // No focus glow, like the inputs (NO_FOCUS_RING). Textarea
+                  // uses focus-visible rather than focus-within.
+                  className="md:text-2xl! font-bold resize-none focus-visible:ring-0"
                   variant="ghost"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.nativeEvent.isComposing) {
