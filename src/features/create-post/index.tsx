@@ -637,10 +637,12 @@ function CreatePostInner() {
                   placeholder="Title"
                   value={title}
                   aria-multiline="false"
-                  // No focus glow, like the inputs (NO_FOCUS_RING). Textarea
-                  // uses focus-visible rather than focus-within.
-                  className="md:text-2xl! font-bold resize-none focus-visible:ring-0"
-                  variant="ghost"
+                  // Styled like the Link Input: same border, text size and
+                  // 36px single-line height, but it still grows when a long
+                  // title wraps. No focus glow, like the inputs
+                  // (NO_FOCUS_RING); Textarea uses focus-visible rather than
+                  // focus-within.
+                  className="min-h-9 py-[5px] md:py-[7px] dark:bg-transparent resize-none focus-visible:ring-0"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.nativeEvent.isComposing) {
                       e.preventDefault();
