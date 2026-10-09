@@ -9,6 +9,15 @@ export const ACTOR_NAME_PATTERN =
 // lemmy-ui's "community_reqs" string
 export const ACTOR_NAME_REQUIREMENTS = "lowercase, underscores, and no spaces.";
 
+// Same limits the backend enforces (lemmy/crates/utils/src/utils/validation.rs):
+// is_valid_actor_name allows 2-20 characters, and is_valid_display_name up to
+// 50 with at least 2 visible ones. The zhifou.io Lemmy fork lowered that
+// minimum from 3 to 2, so two-character Chinese names fit.
+export const ACTOR_NAME_MIN_LENGTH = 2;
+export const ACTOR_NAME_MAX_LENGTH = 20;
+export const DISPLAY_NAME_MIN_LENGTH = 2;
+export const DISPLAY_NAME_MAX_LENGTH = 50;
+
 // These forms drop the Input's focus glow; the border still changes on focus
 export const NO_FOCUS_RING = "focus-within:ring-0";
 

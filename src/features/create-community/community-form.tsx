@@ -15,9 +15,13 @@ import {
 import { getAccountSite, useAuth } from "@/src/stores/auth";
 import { ImageDropzone } from "./image-dropzone";
 import {
+  ACTOR_NAME_MAX_LENGTH,
+  ACTOR_NAME_MIN_LENGTH,
   ACTOR_NAME_PATTERN,
   ACTOR_NAME_REQUIREMENTS,
   LANGUAGE_SELECT_SUMMARY,
+  DISPLAY_NAME_MAX_LENGTH,
+  DISPLAY_NAME_MIN_LENGTH,
   NO_FOCUS_RING,
   VISIBILITY_OPTIONS,
   useSiteLanguageOptions,
@@ -112,7 +116,8 @@ export function CommunityForm() {
           value={form.name ?? ""}
           onChange={(e) => patchForm({ name: e.target.value })}
           required
-          minLength={2}
+          minLength={ACTOR_NAME_MIN_LENGTH}
+          maxLength={ACTOR_NAME_MAX_LENGTH}
           pattern={ACTOR_NAME_PATTERN}
           title={ACTOR_NAME_REQUIREMENTS}
         />
@@ -126,8 +131,8 @@ export function CommunityForm() {
           placeholder="Shown in place of the name"
           value={form.title ?? ""}
           onChange={(e) => patchForm({ title: e.target.value })}
-          minLength={3}
-          maxLength={100}
+          minLength={DISPLAY_NAME_MIN_LENGTH}
+          maxLength={DISPLAY_NAME_MAX_LENGTH}
         />
       </div>
 

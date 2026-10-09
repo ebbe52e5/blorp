@@ -5,8 +5,12 @@ import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
 import { useCreateMultiCommunityFeedMutation } from "@/src/queries";
 import {
+  ACTOR_NAME_MAX_LENGTH,
+  ACTOR_NAME_MIN_LENGTH,
   ACTOR_NAME_PATTERN,
   ACTOR_NAME_REQUIREMENTS,
+  DISPLAY_NAME_MAX_LENGTH,
+  DISPLAY_NAME_MIN_LENGTH,
   NO_FOCUS_RING,
 } from "./shared";
 
@@ -48,7 +52,8 @@ export function MultiCommunityForm() {
           value={form.name ?? ""}
           onChange={(e) => patchForm({ name: e.target.value })}
           required
-          minLength={2}
+          minLength={ACTOR_NAME_MIN_LENGTH}
+          maxLength={ACTOR_NAME_MAX_LENGTH}
           pattern={ACTOR_NAME_PATTERN}
           title={ACTOR_NAME_REQUIREMENTS}
         />
@@ -62,8 +67,8 @@ export function MultiCommunityForm() {
           placeholder="Shown in place of the name"
           value={form.title ?? ""}
           onChange={(e) => patchForm({ title: e.target.value })}
-          minLength={3}
-          maxLength={100}
+          minLength={DISPLAY_NAME_MIN_LENGTH}
+          maxLength={DISPLAY_NAME_MAX_LENGTH}
         />
       </div>
 

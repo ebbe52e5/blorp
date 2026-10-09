@@ -36,6 +36,8 @@ import { useMultiCommunityFeedFromStore } from "@/src/stores/multi-community-fee
 import { useProfileFromStore } from "@/src/stores/profiles";
 import {
   DELETE_BUTTON_CLASS,
+  DISPLAY_NAME_MAX_LENGTH,
+  DISPLAY_NAME_MIN_LENGTH,
   NO_FOCUS_RING,
 } from "@/src/features/create-community/shared";
 
@@ -63,8 +65,8 @@ function EditForm({ feed }: { feed: Schemas.MultiCommunityFeed }) {
           id={`${id}-title`}
           value={title ?? ""}
           onChange={(e) => setTitle(e.target.value)}
-          minLength={3}
-          maxLength={100}
+          minLength={DISPLAY_NAME_MIN_LENGTH}
+          maxLength={DISPLAY_NAME_MAX_LENGTH}
         />
       </div>
 

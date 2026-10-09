@@ -11,6 +11,8 @@ import { ImageDropzone } from "@/src/features/create-community/image-dropzone";
 import {
   DELETE_BUTTON_CLASS,
   LANGUAGE_SELECT_SUMMARY,
+  DISPLAY_NAME_MAX_LENGTH,
+  DISPLAY_NAME_MIN_LENGTH,
   NO_FOCUS_RING,
   VISIBILITY_OPTIONS,
   useSiteLanguageOptions,
@@ -116,8 +118,8 @@ export function CommunityTab({ community }: { community: Schemas.Community }) {
             id={`${id}-title`}
             value={form.title ?? ""}
             onChange={(e) => patchForm({ title: e.target.value })}
-            minLength={3}
-            maxLength={100}
+            minLength={DISPLAY_NAME_MIN_LENGTH}
+            maxLength={DISPLAY_NAME_MAX_LENGTH}
           />
         </div>
 
