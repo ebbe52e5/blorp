@@ -52,7 +52,9 @@ export function SectionItem({
       to={to as any}
       {...rest}
       className={cn(
-        "py-2 text-start first:rounded-t-md last:rounded-b-md",
+        // text-sm like the site's other form labels and the selects in these
+        // rows; the inherited 16px looked oversized next to them
+        "py-2 text-sm text-start first:rounded-t-md last:rounded-b-md",
         (to || rest.href || rest.onClick) && "hover:bg-secondary -mx-3 px-3",
         !unstyled && "flex items-center justify-between",
       )}

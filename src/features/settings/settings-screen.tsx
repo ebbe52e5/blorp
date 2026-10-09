@@ -397,7 +397,7 @@ export default function SettingsPage() {
             <Section title="ACCESSIBILITY">
               <SectionItem>
                 <IonToggle
-                  className="flex-1 font-light"
+                  className="flex-1"
                   checked={leftHandedMode}
                   onIonChange={(e) => setLeftHandedMode(e.detail.checked)}
                 >
@@ -406,7 +406,7 @@ export default function SettingsPage() {
               </SectionItem>
               <SectionItem>
                 <IonToggle
-                  className="flex-1 font-light"
+                  className="flex-1"
                   checked={reduceMotion || reduceMotionSystemSetting}
                   onIonChange={(e) => setReduceMotion(e.detail.checked)}
                   disabled={reduceMotionSystemSetting}
@@ -417,7 +417,7 @@ export default function SettingsPage() {
               </SectionItem>
               <SectionItem>
                 <IonToggle
-                  className="flex-1 font-light"
+                  className="flex-1"
                   checked={disableHaptics}
                   onIonChange={(e) => setDisableHaptics(e.detail.checked)}
                 >
@@ -563,7 +563,7 @@ export default function SettingsPage() {
               </SectionItem>
               <SectionItem>
                 <IonToggle
-                  className="flex-1 font-light"
+                  className="flex-1"
                   checked={collapseRemovedComments}
                   onIonChange={(e) =>
                     setCollapseRemovedComments(e.detail.checked)
@@ -577,7 +577,7 @@ export default function SettingsPage() {
             <Section title="GLOBAL FILTERS">
               <SectionItem>
                 <IonToggle
-                  className="flex-1 font-light"
+                  className="flex-1"
                   checked={hideRead}
                   onIonChange={(e) => setHideRead(e.detail.checked)}
                 >
@@ -586,7 +586,7 @@ export default function SettingsPage() {
               </SectionItem>
               <SectionItem>
                 <IonToggle
-                  className="flex-1 font-light"
+                  className="flex-1"
                   checked={hideBotPosts}
                   onIonChange={(e) => setHideBotPosts(e.detail.checked)}
                 >
@@ -595,7 +595,7 @@ export default function SettingsPage() {
               </SectionItem>
               <SectionItem>
                 <IonToggle
-                  className="flex-1 font-light"
+                  className="flex-1"
                   checked={hideSubscribedFromLocalAll}
                   onIonChange={(e) =>
                     setHideSubscribedFromLocalAll(e.detail.checked)
