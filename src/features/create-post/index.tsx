@@ -72,6 +72,7 @@ import { useShallow } from "zustand/shallow";
 import { useContextSelector } from "use-context-selector";
 import { parseHandle } from "../../apis/utils";
 import { Textarea } from "@/src/components/ui/textarea";
+import { NO_FOCUS_RING } from "@/src/features/create-community/shared";
 
 dayjs.extend(localizedFormat);
 
@@ -617,6 +618,7 @@ function CreatePostInner() {
                 <div className="gap-1 flex flex-col">
                   <Label htmlFor={`${id}-link`}>Link</Label>
                   <Input
+                    wrapperClassName={NO_FOCUS_RING}
                     id={`${id}-link`}
                     placeholder="Link"
                     className="border-b border-border"
@@ -688,6 +690,7 @@ function CreatePostInner() {
                     <>
                       <Label htmlFor={`${id}-alt-text`}>Alt text</Label>
                       <Input
+                        wrapperClassName={NO_FOCUS_RING}
                         id={`${id}-alt-text`}
                         data-testid="create-post-alt-text"
                         placeholder="Describe the image for screen readers"
@@ -715,6 +718,7 @@ function CreatePostInner() {
                         onChange={(e) => patchPollChoice(i, e.target.value)}
                         wrapperClassName={cn(
                           "rounded-none h-10 pr-0.5 -mb-px bg-background focus-within:z-1",
+                          NO_FOCUS_RING,
                           i === 0 && "rounded-t-lg",
                         )}
                         endAdornment={
@@ -766,6 +770,7 @@ function CreatePostInner() {
                       <div className="flex gap-2">
                         {draft.poll?.endUnit !== "permanent" && (
                           <Input
+                            wrapperClassName={NO_FOCUS_RING}
                             type="number"
                             min="1"
                             step="any"
@@ -935,6 +940,7 @@ const ChooseCommunityMemoed = memo(function ChooseCommunity({
             <ContentGutters className="bg-background" key="header-search">
               <div className="border-b-[.5px] py-2">
                 <Input
+                  wrapperClassName={NO_FOCUS_RING}
                   placeholder="Search communities"
                   defaultValue={search}
                   onChange={(e) => debouncedSetSearch(e.target.value)}
