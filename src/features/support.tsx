@@ -1,5 +1,8 @@
 import { ContentGutters } from "@/src/components/gutters";
-import { IonContent, IonHeader, IonTitle, IonToolbar } from "@ionic/react";
+import { IonContent, IonHeader, IonToolbar } from "@ionic/react";
+import { MenuButton, UserDropdown } from "@/src/components/nav";
+import { ToolbarButtons } from "@/src/components/toolbar/toolbar-buttons";
+import { ToolbarTitle } from "@/src/components/toolbar/toolbar-title";
 import { PageTitle } from "../components/page-title";
 import { Page } from "../components/page";
 
@@ -8,13 +11,20 @@ export default function Support() {
     <Page>
       <PageTitle>Support</PageTitle>
       <IonHeader>
-        <IonToolbar>
-          <IonTitle>Support</IonTitle>
+        {/* Same header as the other pages (e.g. settings), not IonTitle */}
+        <IonToolbar data-tauri-drag-region>
+          <ToolbarButtons side="left">
+            <MenuButton />
+            <ToolbarTitle numRightIcons={1}>Support</ToolbarTitle>
+          </ToolbarButtons>
+          <ToolbarButtons side="right">
+            <UserDropdown />
+          </ToolbarButtons>
         </IonToolbar>
       </IonHeader>
       <IonContent>
         <ContentGutters>
-          <div className="flex flex-col flex-1 py-8 markdown-content">
+          <div className="flex flex-col flex-1 py-8 markdown-content markdown-document">
             <h2>Need Help? We're Here for You!</h2>
 
             <p>

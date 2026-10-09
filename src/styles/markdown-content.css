@@ -131,3 +131,17 @@ details > summary::-webkit-details-marker {
 .markdown-content details > summary::-webkit-details-marker {
   display: revert;
 }
+
+/*
+ * Document pages (privacy, terms, support, CSAE) are plain text pages, not
+ * posts. Their section headings use one size that fits under the 18px page
+ * title, and a leading "Last updated" line is small and muted. Two class
+ * names so this beats the .markdown-content h1-h6 sizes above.
+ */
+.markdown-content.markdown-document :is(h1, h2, h3, h4, h5, h6) {
+  @apply text-base font-semibold;
+}
+
+.markdown-content.markdown-document > p:first-child {
+  @apply text-xs text-muted-foreground;
+}

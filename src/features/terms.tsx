@@ -1,11 +1,13 @@
 import { ContentGutters } from "@/src/components/gutters";
 import { MarkdownRenderer } from "../components/markdown/renderer";
-import { IonContent, IonHeader, IonTitle, IonToolbar } from "@ionic/react";
+import { IonContent, IonHeader, IonToolbar } from "@ionic/react";
+import { MenuButton, UserDropdown } from "@/src/components/nav";
+import { ToolbarButtons } from "@/src/components/toolbar/toolbar-buttons";
+import { ToolbarTitle } from "@/src/components/toolbar/toolbar-title";
 import { PageTitle } from "../components/page-title";
 import { Page } from "../components/page";
 
 const TERMS = `
-**Terms of Use for Blorp**  
 _Last updated: April 29, 2025_
 
 By using Blorp (“App”), a Lemmy-compatible client for iOS and other platforms maintained by the developer (“I,” “me,” or “Developer”), you agree to these Terms of Use (“Terms”). Please read them carefully.
@@ -94,7 +96,7 @@ These Terms are governed by the laws of the State of New Jersey, USA. Any disput
 
 ---
 
-**Contact & Support**  
+## Contact & Support
 For support, bug reports, or feature requests, email **support@blorpblorp.xyz**.  
 
 _By using Blorp, you acknowledge that you have read, understood, and agree to these Terms of Use._
@@ -105,13 +107,23 @@ export default function Privacy() {
     <Page>
       <PageTitle>Terms of Use</PageTitle>
       <IonHeader>
-        <IonToolbar>
-          <IonTitle>Terms of Use</IonTitle>
+        {/* Same header as the other pages (e.g. settings), not IonTitle */}
+        <IonToolbar data-tauri-drag-region>
+          <ToolbarButtons side="left">
+            <MenuButton />
+            <ToolbarTitle numRightIcons={1}>Terms of Use</ToolbarTitle>
+          </ToolbarButtons>
+          <ToolbarButtons side="right">
+            <UserDropdown />
+          </ToolbarButtons>
         </IonToolbar>
       </IonHeader>
       <IonContent>
         <ContentGutters>
-          <MarkdownRenderer markdown={TERMS} className="flex-1 py-8" />
+          <MarkdownRenderer
+            markdown={TERMS}
+            className="flex-1 py-8 markdown-document"
+          />
         </ContentGutters>
       </IonContent>
     </Page>

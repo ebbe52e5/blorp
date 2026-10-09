@@ -1,6 +1,9 @@
 import { ContentGutters } from "@/src/components/gutters";
 import { MarkdownRenderer } from "../components/markdown/renderer";
-import { IonContent, IonHeader, IonTitle, IonToolbar } from "@ionic/react";
+import { IonContent, IonHeader, IonToolbar } from "@ionic/react";
+import { MenuButton, UserDropdown } from "@/src/components/nav";
+import { ToolbarButtons } from "@/src/components/toolbar/toolbar-buttons";
+import { ToolbarTitle } from "@/src/components/toolbar/toolbar-title";
 import { PageTitle } from "../components/page-title";
 import { Page } from "../components/page";
 
@@ -59,13 +62,23 @@ export default function CSAE() {
     <Page>
       <PageTitle>Privacy</PageTitle>
       <IonHeader>
-        <IonToolbar>
-          <IonTitle>CSAE</IonTitle>
+        {/* Same header as the other pages (e.g. settings), not IonTitle */}
+        <IonToolbar data-tauri-drag-region>
+          <ToolbarButtons side="left">
+            <MenuButton />
+            <ToolbarTitle numRightIcons={1}>CSAE</ToolbarTitle>
+          </ToolbarButtons>
+          <ToolbarButtons side="right">
+            <UserDropdown />
+          </ToolbarButtons>
         </IonToolbar>
       </IonHeader>
       <IonContent>
         <ContentGutters>
-          <MarkdownRenderer markdown={POLICY} className="flex-1 py-8" />
+          <MarkdownRenderer
+            markdown={POLICY}
+            className="flex-1 py-8 markdown-document"
+          />
         </ContentGutters>
       </IonContent>
     </Page>
