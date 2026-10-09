@@ -788,9 +788,12 @@ export function SmallPostCard({
         />
       )}
 
+      {/* min-w-0 rather than overflow-hidden: the byline's actions button
+          sticks out 8px (fixRightAlignment), and clipping it cut off its
+          hover background. Long text is truncated by the children. */}
       <div
         className={cn(
-          "relative flex-1 flex flex-col gap-0.5 md:gap-1 overflow-hidden max-md:py-2 max-md:pr-3.5",
+          "relative flex-1 flex flex-col gap-0.5 md:gap-1 min-w-0 max-md:py-2 max-md:pr-3.5",
           !showImage && !showArticle && "max-md:pl-3.5",
         )}
       >
@@ -840,7 +843,7 @@ export function SmallPostCard({
             post: encodedApId,
           }}
           className={cn(
-            "gap-2 flex flex-col flex-1 font-medium text-lg max-md:text-md leading-tight after:absolute after:inset-0 md:after:-inset-x-2 after:content-[''] after:z-[1]",
+            "gap-2 flex flex-col flex-1 font-medium text-lg max-md:text-md leading-tight after:absolute after:inset-0 after:content-[''] after:z-[1]",
             !detailView && post.read && "text-muted-foreground",
           )}
           onClick={() => post.nsfw && revealPost(apId)}
