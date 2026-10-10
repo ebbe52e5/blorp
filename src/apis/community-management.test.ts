@@ -527,7 +527,14 @@ describe("LemmyV4Api community settings", () => {
 
   test("getMultiCommunityFeedFollowers lists persons by multi_community_id", async () => {
     mockRoute("/api/v4/person/list", {
-      items: [{ person: PERSON, is_admin: false, banned: false }],
+      items: [
+        {
+          person: PERSON,
+          is_admin: false,
+          banned: false,
+          multi_community_follow: { followed_at: "2026-10-10T00:00:00Z" },
+        },
+      ],
       next_page: "cursor2",
     });
 
@@ -540,6 +547,14 @@ describe("LemmyV4Api community settings", () => {
     expect(url.searchParams.get("multi_community_id")).toBe("7");
     expect(url.searchParams.get("community_id")).toBeNull();
     expect(url.searchParams.get("page_cursor")).toBe("cursor1");
+    expect(res.followers).toEqual([
+      {
+        personApId: PERSON.ap_id,
+        followedAt: "2026-10-10T00:00:00Z",
+        isBanned: false,
+        isBannedFromCommunity: false,
+      },
+    ]);
     expect(res.persons.map((p) => p.apId)).toEqual([PERSON.ap_id]);
     expect(res.nextCursor).toBe("cursor2");
   });

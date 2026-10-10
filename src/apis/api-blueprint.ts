@@ -1241,6 +1241,7 @@ export abstract class ApiBlueprint<C> {
     form: Forms.GetMultiCommunityFeedFollowers,
     options: RequestOptions,
   ): Promise<{
+    followers: Schemas.CommunityFollower[];
     persons: Schemas.Person[];
     nextCursor: string | null;
   }>;

@@ -1609,8 +1609,19 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
       options,
     );
     const { items, next_page } = unwrapResponsData(listPersonsResponse);
+    // PersonView.multi_community_follow is also fork-only. Its followed_at is
+    // null for follows from before the fork recorded it.
+    const views = items as (lemmyV4.PersonView & {
+      multi_community_follow?: { followed_at?: string | null };
+    })[];
     return {
-      persons: items.map(convertPerson),
+      followers: views.map((view) => ({
+        personApId: view.person.ap_id,
+        followedAt: view.multi_community_follow?.followed_at ?? null,
+        isBanned: view.banned,
+        isBannedFromCommunity: false,
+      })),
+      persons: views.map(convertPerson),
       nextCursor: next_page ?? null,
     };
   }

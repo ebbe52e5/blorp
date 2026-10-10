@@ -12,6 +12,7 @@ import { PageTitle } from "../components/page-title";
 import { VirtualList } from "../components/virtual-list";
 import { usePagination } from "../components/pagination/use-pagination";
 import { FollowerRow } from "../components/person/follower-row";
+import { CommunitySidebar } from "../components/communities/community-sidebar";
 import { Schemas } from "../apis/api-blueprint";
 import { ContentGutters } from "../components/gutters";
 import { decodeCommunityHandle, parseHandle } from "../lib/handle";
@@ -32,7 +33,8 @@ export default function CommunityFollowers() {
   );
 
   const communityQuery = useCommunityQuery({ name: communityHandle });
-  const communityId = useCommunityFromStore(communityHandle)?.communityView.id;
+  const community = useCommunityFromStore(communityHandle);
+  const communityId = community?.communityView.id;
 
   const followersQuery = useCommunityFollowersQuery({ communityId });
 
@@ -114,6 +116,16 @@ export default function CommunityFollowers() {
             </ContentGutters>
           )}
         />
+
+        <ContentGutters className="max-md:hidden absolute top-0 right-0 left-0 z-10">
+          <div className="flex-1" />
+          {communityHandle && (
+            <CommunitySidebar
+              communityHandle={communityHandle}
+              actorId={community?.communityView.apId}
+            />
+          )}
+        </ContentGutters>
       </IonContent>
     </Page>
   );

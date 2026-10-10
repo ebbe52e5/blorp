@@ -3030,14 +3030,14 @@ export function useMultiCommunityFeedFollowersQuery({
   return useThrottledInfiniteQuery({
     queryKey: [...queryKeyPrefix, "getMultiCommunityFeedFollowers", feedId],
     queryFn: async ({ pageParam, signal }) => {
-      const { persons, nextCursor } = await (
+      const { followers, persons, nextCursor } = await (
         await api
       ).getMultiCommunityFeedFollowers(
         { feedId: feedId!, pageCursor: pageParam },
         { signal },
       );
       cacheProfiles(getCachePrefixer(), persons);
-      return { personApIds: persons.map((p) => p.apId), nextCursor };
+      return { followers, nextCursor };
     },
     initialPageParam: INIT_PAGE_TOKEN,
     getNextPageParam: (prev) => prev.nextCursor,

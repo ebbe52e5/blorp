@@ -1074,6 +1074,7 @@ export class PieFedApi
   }
 
   async getMultiCommunityFeedFollowers(): Promise<{
+    followers: Schemas.CommunityFollower[];
     persons: Schemas.Person[];
     nextCursor: string | null;
   }> {

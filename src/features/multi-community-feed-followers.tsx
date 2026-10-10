@@ -14,7 +14,9 @@ import { Page } from "../components/page";
 import { PageTitle } from "../components/page-title";
 import { VirtualList } from "../components/virtual-list";
 import { usePagination } from "../components/pagination/use-pagination";
-import { PersonCard } from "../components/person/person-card";
+import { FollowerRow } from "../components/person/follower-row";
+import { FeedSidebar } from "../components/multi-community-feeds/multi-community-feed-sidebar";
+import { Schemas } from "../apis/api-blueprint";
 import { ContentGutters } from "../components/gutters";
 import { decodeApId } from "../apis/utils";
 import { useMultiCommunityFeedFromStore } from "../stores/multi-community-feeds";
@@ -36,7 +38,7 @@ export default function MultiCommunityFeedFollowers() {
 
   const { flatData, onEndReached, paginationControls } = usePagination({
     pages: followersQuery.data?.pages,
-    getItems: (p) => p.personApIds,
+    getItems: (p) => p.followers,
     fetchNextPage: followersQuery.fetchNextPage,
     hasNextPage: followersQuery.hasNextPage,
     isFetchingNextPage: followersQuery.isFetchingNextPage,
@@ -62,7 +64,7 @@ export default function MultiCommunityFeedFollowers() {
         </IonToolbar>
       </IonHeader>
       <IonContent scrollY={false}>
-        <VirtualList<string>
+        <VirtualList<Schemas.CommunityFollower>
           data={flatData}
           estimatedItemSize={56}
           scrollHost
@@ -83,12 +85,17 @@ export default function MultiCommunityFeedFollowers() {
           renderItem={({ item }) => (
             <ContentGutters>
               <div className="py-2">
-                <PersonCard actorId={item} size="sm" />
+                <FollowerRow follower={item} />
               </div>
               <></>
             </ContentGutters>
           )}
         />
+
+        <ContentGutters className="max-md:hidden absolute top-0 right-0 left-0 z-10">
+          <div className="flex-1" />
+          <FeedSidebar apId={apId} />
+        </ContentGutters>
       </IonContent>
     </Page>
   );

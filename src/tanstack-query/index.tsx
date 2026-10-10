@@ -11,9 +11,9 @@ import { queryClient } from "./query-client";
 import { env } from "@/src/env";
 
 // List the last reason for bumping the key:
-// getPersonCommunities gained createdHandles, and the cached results without
-// it crashed profiles
-const REACT_QUERY_CACHE_VERSON = 14;
+// getMultiCommunityFeedFollowers returns followers (with their follow time)
+// instead of personApIds
+const REACT_QUERY_CACHE_VERSON = 15;
 
 function pruneInfinitePages(client: PersistedClient): PersistedClient {
   const cacheState = client.clientState;
