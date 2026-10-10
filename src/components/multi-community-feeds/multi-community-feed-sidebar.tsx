@@ -33,11 +33,57 @@ import {
 import { encodeApId } from "@/src/apis/utils";
 import { supportsCreateCommunity } from "@/src/apis/support";
 import { useSoftware } from "@/src/queries";
-import { getAccountActorId, useAuth } from "@/src/stores/auth";
+import {
+  getAccountActorId,
+  parseAccountInfo,
+  useAmIAdmin,
+  useAuth,
+} from "@/src/stores/auth";
+import { parseHandle } from "@/src/lib/handle";
 import { FeedJoinButton } from "./feed-join-button";
 import { PersonCard } from "../person/person-card";
 
 dayjs.extend(localizedFormat);
+
+/**
+ * The Subscribers badge links to the follower list. Only the zhifou.io Lemmy
+ * fork lists feed followers (it sends personApIds, so that's how we detect
+ * it), and only to the feed's creator, or admins for a local feed. The same
+ * users can edit the feed.
+ */
+function useSubscribersLink(apId: string) {
+  const linkCtx = useLinkContext();
+  const feed = useMultiCommunityFeedFromStore(apId)?.feedView;
+  const software = useSoftware();
+  const myApId = useAuth((s) => getAccountActorId(s.getSelectedAccount()));
+  const myInstance = useAuth(
+    (s) => parseAccountInfo(s.getSelectedAccount()).instance,
+  );
+  const isAdmin = useAmIAdmin();
+  if (
+    !feed ||
+    !supportsCreateCommunity(software) ||
+    feed.personApIds === undefined
+  ) {
+    return undefined;
+  }
+  const isOwner = !!myApId && feed.ownerApId === myApId;
+  const isLocalAdmin =
+    !!isAdmin && parseHandle(feed.handle).host === myInstance;
+  if (!isOwner && !isLocalAdmin) {
+    return undefined;
+  }
+  return {
+    Subscribers: (badge: React.ReactNode) => (
+      <Link
+        to={`${linkCtx.root}f/:apId/followers`}
+        params={{ apId: encodeApId(apId) }}
+      >
+        {badge}
+      </Link>
+    ),
+  };
+}
 
 export function SmallScreenSidebar({
   apId,
@@ -53,6 +99,7 @@ export function SmallScreenSidebar({
   const actions = useMultiCommunityActions({
     apId,
   });
+  const subscribersLink = useSubscribersLink(apId);
 
   const createdAt = (
     <div className="flex items-center gap-1.5 text-sm h-5 text-muted-foreground">
@@ -76,6 +123,7 @@ export function SmallScreenSidebar({
         )}
       >
         <AggregateBadges
+          links={subscribersLink}
           aggregates={{
             Subscribers: feed?.subscriberCount,
             Communities: feed?.communityCount,
@@ -226,6 +274,7 @@ export function FeedSidebar({
   const actions = useMultiCommunityActions({
     apId,
   });
+  const subscribersLink = useSubscribersLink(apId);
 
   if (!feed) {
     return null;
@@ -288,6 +337,7 @@ export function FeedSidebar({
 
                 <AggregateBadges
                   className="mt-2"
+                  links={subscribersLink}
                   aggregates={{
                     Subscribers: feed?.subscriberCount,
                     Communities: feed?.communityCount,

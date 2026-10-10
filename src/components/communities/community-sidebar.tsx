@@ -54,6 +54,37 @@ import { DateTime } from "../datetime";
 
 dayjs.extend(localizedFormat);
 
+/**
+ * The Subscribers badge links to the subscriber list, which only mods and
+ * admins can load. Same request and condition as the Followers tab in
+ * community settings.
+ */
+function useSubscribersLink(
+  communityHandle: Handle,
+  communityView?: Schemas.Community,
+) {
+  const linkCtx = useLinkContext();
+  const isLoggedIn = useAuth((s) => s.isLoggedIn());
+  const software = useSoftware();
+  if (
+    !isLoggedIn ||
+    !supportsCreateCommunity(software) ||
+    !communityView?.canMod
+  ) {
+    return undefined;
+  }
+  return {
+    Subscribers: (badge: React.ReactNode) => (
+      <Link
+        to={`${linkCtx.root}c/:communityHandle/followers`}
+        params={{ communityHandle }}
+      >
+        {badge}
+      </Link>
+    ),
+  };
+}
+
 export function SmallScreenSidebar({
   communityHandle,
   actorId,
@@ -77,6 +108,7 @@ export function SmallScreenSidebar({
     actorId,
     showSettings: true,
   });
+  const subscribersLink = useSubscribersLink(communityHandle, communityView);
 
   const createdAt = (
     <div className="flex items-center gap-1.5 text-sm h-5 text-muted-foreground">
@@ -116,6 +148,7 @@ export function SmallScreenSidebar({
         )}
 
         <AggregateBadges
+          links={subscribersLink}
           aggregates={{
             ...(expanded
               ? {
@@ -382,6 +415,10 @@ function CommunitySidebarInner({
     actorId,
     showSettings: true,
   });
+  const subscribersLink = useSubscribersLink(
+    communityHandle,
+    data?.communityView,
+  );
 
   if (!data) {
     return null;
@@ -451,6 +488,7 @@ function CommunitySidebarInner({
 
                 <AggregateBadges
                   className="mt-2"
+                  links={subscribersLink}
                   aggregates={{
                     "users / day": communityView?.usersActiveDayCount,
                     "users / week": communityView?.usersActiveWeekCount,

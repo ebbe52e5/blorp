@@ -1593,6 +1593,28 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
     };
   }
 
+  async getMultiCommunityFeedFollowers(
+    form: Forms.GetMultiCommunityFeedFollowers,
+    options: RequestOptions,
+  ) {
+    // ListPersons.multi_community_id only exists in the zhifou.io Lemmy fork.
+    // Like community_id, only the feed's creator and admins can use it.
+    const listPersonsResponse = await this.client.listPersons(
+      {
+        multi_community_id: form.feedId,
+        page_cursor:
+          form.pageCursor === INIT_PAGE_TOKEN ? undefined : form.pageCursor,
+        limit: this.limit,
+      } as lemmyV4.ListPersons,
+      options,
+    );
+    const { items, next_page } = unwrapResponsData(listPersonsResponse);
+    return {
+      persons: items.map(convertPerson),
+      nextCursor: next_page ?? null,
+    };
+  }
+
   async createCommunityTag(form: Forms.CreateCommunityTag) {
     const createTagResponse = await this.client.createCommunityTag({
       community_id: form.communityId,

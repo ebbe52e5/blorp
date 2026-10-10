@@ -1073,6 +1073,13 @@ export class PieFedApi
     throw Errors.NOT_IMPLEMENTED;
   }
 
+  async getMultiCommunityFeedFollowers(): Promise<{
+    persons: Schemas.Person[];
+    nextCursor: string | null;
+  }> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
   async createCommunityTag(): Promise<Schemas.CommunityTag> {
     throw Errors.NOT_IMPLEMENTED;
   }

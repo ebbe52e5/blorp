@@ -79,6 +79,12 @@ const MultiCommunityFeedSettings = lazy(
 const CommunityFeed = lazy(() => import("@/src/features/community-posts"));
 const CommunitySidebar = lazy(() => import("@/src/features/community-sidebar"));
 const CommunityModlog = lazy(() => import("@/src/features/community-modlog"));
+const CommunityFollowers = lazy(
+  () => import("@/src/features/community-followers"),
+);
+const MultiCommunityFeedFollowers = lazy(
+  () => import("@/src/features/multi-community-feed-followers"),
+);
 const CommunitySettings = lazy(
   () => import("@/src/features/community-settings"),
 );
@@ -177,6 +183,9 @@ const HOME_STACK = [
   <Route key="/home/f/:apId/sidebar" exact path="/home/f/:apId/sidebar">
     <MultiCommunityFeedSidebar />
   </Route>,
+  <Route key="/home/f/:apId/followers" exact path="/home/f/:apId/followers">
+    <MultiCommunityFeedFollowers />
+  </Route>,
   <Route key="/home/f/:apId/settings" exact path="/home/f/:apId/settings">
     <MultiCommunityFeedSettings />
   </Route>,
@@ -209,6 +218,13 @@ const HOME_STACK = [
     path="/home/c/:communityHandle/modlog"
   >
     <CommunityModlog />
+  </Route>,
+  <Route
+    key="/home/c/:communityHandle/followers"
+    exact
+    path="/home/c/:communityHandle/followers"
+  >
+    <CommunityFollowers />
   </Route>,
   <Route
     key="/home/c/:communityHandle/settings"
@@ -305,6 +321,13 @@ const COMMUNITIES_STACK = [
     <MultiCommunityFeedSidebar />
   </Route>,
   <Route
+    key="/communities/f/:apId/followers"
+    exact
+    path="/communities/f/:apId/followers"
+  >
+    <MultiCommunityFeedFollowers />
+  </Route>,
+  <Route
     key="/communities/f/:apId/settings"
     exact
     path="/communities/f/:apId/settings"
@@ -338,6 +361,13 @@ const COMMUNITIES_STACK = [
     path="/communities/c/:communityHandle/modlog"
   >
     <CommunityModlog />
+  </Route>,
+  <Route
+    key="/communities/c/:communityHandle/followers"
+    exact
+    path="/communities/c/:communityHandle/followers"
+  >
+    <CommunityFollowers />
   </Route>,
   <Route
     key="/communities/c/:communityHandle/settings"
@@ -408,6 +438,9 @@ const INBOX_STACK = [
   <Route key="/inbox/f/:apId/sidebar" exact path="/inbox/f/:apId/sidebar">
     <MultiCommunityFeedSidebar />
   </Route>,
+  <Route key="/inbox/f/:apId/followers" exact path="/inbox/f/:apId/followers">
+    <MultiCommunityFeedFollowers />
+  </Route>,
   <Route key="/inbox/f/:apId/settings" exact path="/inbox/f/:apId/settings">
     <MultiCommunityFeedSettings />
   </Route>,
@@ -440,6 +473,13 @@ const INBOX_STACK = [
     path="/inbox/c/:communityHandle/modlog"
   >
     <CommunityModlog />
+  </Route>,
+  <Route
+    key="/inbox/c/:communityHandle/followers"
+    exact
+    path="/inbox/c/:communityHandle/followers"
+  >
+    <CommunityFollowers />
   </Route>,
   <Route
     key="/inbox/c/:communityHandle/settings"

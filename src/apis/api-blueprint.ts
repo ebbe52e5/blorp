@@ -822,6 +822,12 @@ export namespace Forms {
     pageCursor?: string;
   };
 
+  // Only the zhifou.io Lemmy fork lists multi-community feed followers
+  export type GetMultiCommunityFeedFollowers = {
+    feedId: number;
+    pageCursor?: string;
+  };
+
   export type CreateCommunityTag = {
     communityId: number;
     name: string;
@@ -1227,6 +1233,14 @@ export abstract class ApiBlueprint<C> {
     options: RequestOptions,
   ): Promise<{
     followers: Schemas.CommunityFollower[];
+    persons: Schemas.Person[];
+    nextCursor: string | null;
+  }>;
+
+  abstract getMultiCommunityFeedFollowers(
+    form: Forms.GetMultiCommunityFeedFollowers,
+    options: RequestOptions,
+  ): Promise<{
     persons: Schemas.Person[];
     nextCursor: string | null;
   }>;

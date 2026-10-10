@@ -3018,6 +3018,33 @@ export function useCommunityFollowersQuery({
   });
 }
 
+// Only the zhifou.io Lemmy fork lists multi-community feed followers
+export function useMultiCommunityFeedFollowersQuery({
+  feedId,
+}: {
+  feedId?: number;
+}) {
+  const { api, queryKeyPrefix } = useApiClients();
+  const getCachePrefixer = useAuth((s) => s.getCachePrefixer);
+  const cacheProfiles = useProfilesStore((s) => s.cacheProfiles);
+  return useThrottledInfiniteQuery({
+    queryKey: [...queryKeyPrefix, "getMultiCommunityFeedFollowers", feedId],
+    queryFn: async ({ pageParam, signal }) => {
+      const { persons, nextCursor } = await (
+        await api
+      ).getMultiCommunityFeedFollowers(
+        { feedId: feedId!, pageCursor: pageParam },
+        { signal },
+      );
+      cacheProfiles(getCachePrefixer(), persons);
+      return { personApIds: persons.map((p) => p.apId), nextCursor };
+    },
+    initialPageParam: INIT_PAGE_TOKEN,
+    getNextPageParam: (prev) => prev.nextCursor,
+    enabled: _.isNumber(feedId),
+  });
+}
+
 function useCommunityTagMutation<F>(
   handle: Handle,
   fn: (api: ApiBlueprint<any>, form: F) => Promise<Schemas.CommunityTag>,

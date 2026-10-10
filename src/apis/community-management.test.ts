@@ -525,6 +525,25 @@ describe("LemmyV4Api community settings", () => {
     expect(res.nextCursor).toBe("cursor2");
   });
 
+  test("getMultiCommunityFeedFollowers lists persons by multi_community_id", async () => {
+    mockRoute("/api/v4/person/list", {
+      items: [{ person: PERSON, is_admin: false, banned: false }],
+      next_page: "cursor2",
+    });
+
+    const res = await api.getMultiCommunityFeedFollowers(
+      { feedId: 7, pageCursor: "cursor1" },
+      {},
+    );
+
+    const url = new URL(String(lastRequest().url));
+    expect(url.searchParams.get("multi_community_id")).toBe("7");
+    expect(url.searchParams.get("community_id")).toBeNull();
+    expect(url.searchParams.get("page_cursor")).toBe("cursor1");
+    expect(res.persons.map((p) => p.apId)).toEqual([PERSON.ap_id]);
+    expect(res.nextCursor).toBe("cursor2");
+  });
+
   test("community tag create, edit and delete", async () => {
     mockRoute("/api/v4/community/tag", TAG);
 
