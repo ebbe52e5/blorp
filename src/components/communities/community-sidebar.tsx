@@ -290,7 +290,7 @@ export function useCommunityActions({
     communityHandle,
   });
   const blockInstance = useBlockInstanceMutation();
-  const purgeCommunity = usePurgeCommunityMutation();
+  const purgeCommunity = usePurgeCommunityMutation(communityHandle);
   const amIAdmin = !!useAmIAdmin();
   const isBlocked = useIsCommunityBlocked(communityHandle);
   const communityInstanceId = communityView?.instanceId;

@@ -16,6 +16,43 @@ afterEach(() => {
 });
 
 describe("useRecentCommunitiesStore", () => {
+  test("drops a community once a visit finds it deleted or removed", () => {
+    const deleted = api.getCommunity({ id: 1 });
+    const removed = api.getCommunity({ id: 2 });
+    const kept = api.getCommunity({ id: 3 });
+
+    const { result } = renderHook(() => useRecentCommunitiesStore());
+
+    act(() => {
+      result.current.update(deleted);
+      result.current.update(removed);
+      result.current.update(kept);
+    });
+    expect(result.current.recentlyVisited).toHaveLength(3);
+
+    act(() => {
+      result.current.update({ ...deleted, deleted: true });
+      result.current.update({ ...removed, removed: true });
+    });
+
+    expect(result.current.recentlyVisited.map((c) => c.id)).toEqual([3]);
+  });
+
+  test("remove drops a community by handle", () => {
+    const c1 = api.getCommunity({ id: 1 });
+    const c2 = api.getCommunity({ id: 2 });
+
+    const { result } = renderHook(() => useRecentCommunitiesStore());
+
+    act(() => {
+      result.current.update(c1);
+      result.current.update(c2);
+      result.current.remove(c1.handle);
+    });
+
+    expect(result.current.recentlyVisited.map((c) => c.id)).toEqual([2]);
+  });
+
   test("omits duplicate communities", () => {
     const community = api.getCommunity();
 

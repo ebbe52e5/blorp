@@ -57,6 +57,7 @@ import { confetti } from "@/src/lib/confetti";
 import { resolveRoute, useHistory } from "@/src/routing";
 import { getPostEmbed } from "../apis/post-embed";
 import { useMultiCommunityFeedStore } from "@/src/stores/multi-community-feeds";
+import { useRecentCommunitiesStore } from "@/src/stores/recent-communities";
 import { useShouldShowNsfw } from "../hooks/nsfw";
 import pTimeout from "p-timeout";
 
@@ -719,6 +720,8 @@ export function useCommunityQuery({
   const cacheCommunities = useCommunitiesStore((s) => s.cacheCommunities);
   const cacheProfiles = useProfilesStore((s) => s.cacheProfiles);
   const cacheFlairs = useFlairsStore((s) => s.cacheFlairs);
+  const patchCommunity = useCommunitiesStore((s) => s.patchCommunity);
+  const removeRecent = useRecentCommunitiesStore((s) => s.remove);
 
   const queryKey = [
     ...queryKeyPrefix,
@@ -731,14 +734,30 @@ export function useCommunityQuery({
     queryFn: async ({ signal }) => {
       const res = await (
         await api
-      ).getCommunity(
-        {
-          handle: form.name,
-        },
-        {
-          signal,
-        },
-      );
+      )
+        .getCommunity(
+          {
+            handle: form.name,
+          },
+          {
+            signal,
+          },
+        )
+        .catch((err: unknown) => {
+          // Purged, or deleted while we're not a mod, so stop listing it
+          // under Recent. Also mark the cached copy deleted, or the page
+          // would add that copy back to Recent on the next visit.
+          if (form.name && isNotFoundError(err)) {
+            removeRecent(form.name);
+            const prefix = getCachePrefixer();
+            if (useCommunitiesStore.getState().communities[prefix(form.name)]) {
+              patchCommunity(form.name, prefix, {
+                communityView: { deleted: true },
+              });
+            }
+          }
+          throw err;
+        });
       cacheCommunities(getCachePrefixer(), [
         {
           communityView: res.community,
@@ -758,6 +777,20 @@ export function useCommunityQuery({
     },
     enabled: !!form.name && enabled,
   });
+}
+
+const NOT_FOUND_ERRORS = [
+  "not_found",
+  "couldnt_find_community",
+  Errors.OBJECT_NOT_FOUND.message,
+];
+
+function isNotFoundError(err: unknown) {
+  return (
+    err instanceof Error &&
+    (NOT_FOUND_ERRORS.includes(err.name) ||
+      NOT_FOUND_ERRORS.includes(err.message))
+  );
 }
 
 function is2faError(err?: Error | null) {
@@ -2888,27 +2921,33 @@ export function useEditCommunityMutation(handle: Handle) {
 export function useDeleteCommunityMutation(handle: Handle) {
   const { api } = useApiClients();
   const updateCachedCommunity = useUpdateCachedCommunity();
+  const removeRecent = useRecentCommunitiesStore((s) => s.remove);
   return useMutation({
     mutationFn: async (form: Forms.DeleteCommunity) =>
       (await api).deleteCommunity(form),
     onSuccess: (community, form) => {
       updateCachedCommunity(handle, { community });
+      if (form.deleted) {
+        removeRecent(handle);
+      }
       toast.success(form.deleted ? "Deleted community" : "Restored community");
     },
     onError: toastMutationError("Couldn't update community"),
   });
 }
 
-export function usePurgeCommunityMutation() {
+export function usePurgeCommunityMutation(handle: Handle) {
   const { api, queryKeyPrefix } = useApiClients();
   const queryClient = useQueryClient();
   const refreshAuthKey = useRefreshAuthKey();
   const history = useHistory();
+  const removeRecent = useRecentCommunitiesStore((s) => s.remove);
   return useMutation({
     mutationFn: async (form: Forms.PurgeCommunity) =>
       (await api).purgeCommunity(form),
     onSuccess: () => {
       toast.success("Purged community");
+      removeRecent(handle);
       // Its posts and comments are gone too, so refetch every cached list,
       // and the site so it drops out of the moderates list
       queryClient.invalidateQueries({ queryKey: queryKeyPrefix });

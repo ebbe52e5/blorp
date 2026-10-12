@@ -3,7 +3,7 @@ import { persist } from "zustand/middleware";
 import { createStorage, sync } from "./storage";
 import _ from "lodash";
 import z from "zod";
-import { communitySchema, Schemas } from "../apis/api-blueprint";
+import { communitySchema, Handle, Schemas } from "../apis/api-blueprint";
 import { isTest } from "../lib/device";
 import { mergeCacheArray } from "./utils";
 
@@ -13,6 +13,7 @@ const persistedSchema = z.object({
 
 type RecentCommunityStore = z.infer<typeof persistedSchema> & {
   update: (c: Schemas.Community) => void;
+  remove: (handle: Handle) => void;
   reset: () => void;
 };
 
@@ -22,9 +23,15 @@ const INIT_STATE = {
   recentlyVisited: [],
 };
 
+/**
+ * Dedupe before dropping deleted and removed communities, so a visit that
+ * finds a community deleted also drops the older copy saved before that.
+ */
 function pruneCommunitites(communities: Schemas.Community[]) {
   return _.slice(
-    _.uniqBy(communities, (c) => c.apId),
+    _.uniqBy(communities, (c) => c.apId).filter(
+      (c) => !c.deleted && !c.removed,
+    ),
     0,
     MAX_VISITED,
   );
@@ -62,6 +69,13 @@ export const useRecentCommunitiesStore = create<RecentCommunityStore>()(
         const prev = get().recentlyVisited;
         set({
           recentlyVisited: pruneCommunitites([community, ...prev]),
+        });
+      },
+      remove: (handle) => {
+        set({
+          recentlyVisited: get().recentlyVisited.filter(
+            (c) => c.handle !== handle,
+          ),
         });
       },
       reset: () => {
