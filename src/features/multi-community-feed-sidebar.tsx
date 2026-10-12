@@ -36,7 +36,6 @@ export default function MultiCommunitySidebar() {
   return (
     <Page
       notFound={software.software !== undefined && !supportsFeeds(software)}
-      notFoundApId={apId}
     >
       <PageTitle>{apId}</PageTitle>
       <IonHeader>

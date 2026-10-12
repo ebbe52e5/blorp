@@ -58,10 +58,7 @@ export default function CommunityFollowers() {
   const title = `Subscribers — ${communityHandle ?? ""}`;
 
   return (
-    <Page
-      notFound={communityQuery.isError}
-      notFoundCommunityHandle={communityHandle}
-    >
+    <Page notFound={communityQuery.isError}>
       <PageTitle>{title}</PageTitle>
       <IonHeader>
         <IonToolbar>

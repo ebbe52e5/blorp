@@ -173,7 +173,6 @@ export default function CommunityPosts() {
         (communityQuery.isError &&
           (!community || isNotFoundError(communityQuery.error)))
       }
-      notFoundCommunityHandle={communityHandle}
     >
       <PageTitle>{communityHandle}</PageTitle>
       <IonHeader>

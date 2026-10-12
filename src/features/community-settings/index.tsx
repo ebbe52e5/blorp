@@ -59,7 +59,6 @@ export default function CommunitySettings() {
     <Page
       requireLogin
       notFound={isUnsupported || cantMod || communityQuery.isError}
-      notFoundApId={community?.apId}
     >
       <PageTitle>{`${community?.title ?? communityHandle} settings`}</PageTitle>
       <IonHeader>

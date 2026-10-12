@@ -358,7 +358,6 @@ export default function Post() {
     <Page
       ref={pageElement.ref}
       notFound={!decodedApId || (postQuery.isError && !post)}
-      notFoundApId={decodedApId}
     >
       <PageTitle>{post?.title ?? "Post"}</PageTitle>
       <IonHeader>

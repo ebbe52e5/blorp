@@ -48,7 +48,7 @@ export default function MultiCommunityFeedFollowers() {
   const title = `Subscribers — ${feed?.title || feed?.name || apId}`;
 
   return (
-    <Page notFound={feedQuery.isError} notFoundApId={apId}>
+    <Page notFound={feedQuery.isError}>
       <PageTitle>{title}</PageTitle>
       <IonHeader>
         <IonToolbar>

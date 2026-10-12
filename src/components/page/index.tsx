@@ -27,7 +27,6 @@ import {
 import { useSettingsStore } from "@/src/stores/settings";
 import { useIsContentWarningActive } from "@/src/hooks/nsfw";
 import { ContentWarningPageContent } from "./content-warning";
-import { Handle } from "@/src/lib/handle";
 
 function PageErrorFallback({
   error,
@@ -154,8 +153,6 @@ export function Page({
   children,
   requireLogin,
   notFound,
-  notFoundApId,
-  notFoundCommunityHandle,
   ref,
   ...props
 }: {
@@ -163,8 +160,6 @@ export function Page({
   children?: React.ReactNode;
   requireLogin?: boolean;
   notFound?: boolean;
-  notFoundApId?: string;
-  notFoundCommunityHandle?: Handle;
   ref?: React.Ref<HTMLElement | undefined | null>;
 }) {
   const isLoggedIn = useAuth((s) => s.isLoggedIn());
@@ -183,10 +178,7 @@ export function Page({
         ) : needsContentWarning ? (
           <ContentWarningPageContent />
         ) : notFound ? (
-          <NotFoundPageContent
-            apId={notFoundApId}
-            communityHandle={notFoundCommunityHandle}
-          />
+          <NotFoundPageContent />
         ) : (
           children
         )}

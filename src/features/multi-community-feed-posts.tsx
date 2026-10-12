@@ -128,7 +128,6 @@ export default function MultiCommunityFeedPosts() {
         (software.software !== undefined && !supportsFeeds(software)) ||
         (feedQuery.isError && !feed)
       }
-      notFoundApId={apId}
     >
       <PageTitle>{feed?.handle ?? apId}</PageTitle>
       <IonHeader>

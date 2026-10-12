@@ -39,10 +39,7 @@ export default function CommunityModlog() {
   });
 
   return (
-    <Page
-      notFound={communityQuery.isError}
-      notFoundCommunityHandle={communityHandle}
-    >
+    <Page notFound={communityQuery.isError}>
       <IonHeader>
         <IonToolbar>
           <ToolbarButtons side="left">

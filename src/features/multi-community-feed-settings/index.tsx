@@ -315,11 +315,7 @@ export default function MultiCommunityFeedSettings() {
     software.software !== undefined && !supportsCreateCommunity(software);
 
   return (
-    <Page
-      requireLogin
-      notFound={isUnsupported || feedQuery.isError}
-      notFoundApId={apId}
-    >
+    <Page requireLogin notFound={isUnsupported || feedQuery.isError}>
       <PageTitle>Multi-community settings</PageTitle>
       <IonHeader>
         <IonToolbar data-tauri-drag-region>

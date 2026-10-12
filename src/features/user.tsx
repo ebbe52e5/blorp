@@ -191,7 +191,7 @@ export default function User() {
   }, [type, postsPagination.flatData, commentsPagination.flatData]);
 
   return (
-    <Page notFound={personQuery.isError && !person} notFoundApId={actorId}>
+    <Page notFound={personQuery.isError && !person}>
       <PageTitle>{person?.handle ?? "Person"}</PageTitle>
       <IonHeader>
         <IonToolbar

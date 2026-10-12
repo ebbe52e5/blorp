@@ -3585,53 +3585,6 @@ export function useResolveObjectQuery(
   });
 }
 
-export function useResolveObjectAcrossAccountsQuery(apId: string | undefined) {
-  const { apis } = useApiClients();
-  const selectedAccountUuid = useAuth((s) => s.getSelectedAccount().uuid);
-  const accounts = useAuth((s) => s.accounts);
-
-  const queryKey = [
-    "resolveObjectAcrossAccounts",
-    apId,
-    ...apis.map((a) => a.queryKeyPrefix.join("_")),
-  ];
-
-  return useQuery({
-    queryKey,
-    queryFn: async () => {
-      if (!apId) {
-        throw new Error("This shouldn't happen");
-      }
-      const results = await Promise.allSettled(
-        apis.map(async (apiEntry) => {
-          if (apiEntry.account.uuid === selectedAccountUuid) {
-            throw new Error("Skip current account");
-          }
-          const resolved = await (
-            await apiEntry.api
-          ).resolveObject({ q: apId });
-          return {
-            account: apiEntry.account,
-            result: resolved,
-          };
-        }),
-      );
-      return results
-        .filter(
-          (
-            r,
-          ): r is PromiseFulfilledResult<{
-            account: Account;
-            result: Schemas.ResolveObject;
-          }> => r.status === "fulfilled",
-        )
-        .map((r) => r.value);
-    },
-    enabled: !!apId && accounts.length > 1,
-    retry: false,
-  });
-}
-
 export function useLinkMetadataMutation() {
   const { api } = useApiClients();
   return useMutation({

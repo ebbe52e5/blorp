@@ -45,10 +45,7 @@ export default function CommunityFeed() {
   useUpdateRecentCommunity(community);
 
   return (
-    <Page
-      notFound={!communityHandle || (communityQuery.isError && !community)}
-      notFoundCommunityHandle={communityHandle}
-    >
+    <Page notFound={!communityHandle || (communityQuery.isError && !community)}>
       <PageTitle>{communityHandle}</PageTitle>
       <IonHeader>
         <IonToolbar
