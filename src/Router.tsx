@@ -168,7 +168,11 @@ export function Route<Path extends RoutePath>({
 }
 
 const HOME_STACK = [
-  <Route key="/home/*" path="/home/*">
+  // Each tab's catch-all needs a :param. Ionic reuses a mounted view whose
+  // route matches the new URL, and only compares the URL itself when the
+  // route has a param, so a param-less /home/* not found view would take
+  // over every later /home/... link.
+  <Route key="/home/*" path="/home/:notFound*">
     <NotFound />
   </Route>,
   <Route key="/home" exact path="/home">
@@ -282,7 +286,7 @@ const HOME_STACK = [
 ];
 
 const CREATE_POST_STACK = [
-  <Route key="/create/*" path="/create_post/*">
+  <Route key="/create/*" path="/create_post/:notFound*">
     <NotFound />
   </Route>,
   <Route key="/create" exact path="/create_post" component={CreatePost} />,
@@ -292,7 +296,7 @@ const CREATE_POST_STACK = [
 ];
 
 const COMMUNITIES_STACK = [
-  <Route key="/communities/*" path="/communities/*">
+  <Route key="/communities/*" path="/communities/:notFound*">
     <NotFound />
   </Route>,
   <Route key="/communities" exact path="/communities">
@@ -423,7 +427,7 @@ const COMMUNITIES_STACK = [
 ];
 
 const INBOX_STACK = [
-  <Route key="/inbox/*" path="/inbox/*">
+  <Route key="/inbox/*" path="/inbox/:notFound*">
     <NotFound />
   </Route>,
   <Route key="/inbox" exact path="/inbox">
@@ -531,7 +535,7 @@ const INBOX_STACK = [
 ];
 
 const MESSAGES_STACK = [
-  <Route key="/messages/*" path="/messages/*">
+  <Route key="/messages/*" path="/messages/:notFound*">
     <NotFound />
   </Route>,
   <Route key="/message" exact path="/messages">
@@ -543,7 +547,7 @@ const MESSAGES_STACK = [
 ];
 
 const SETTINGS = [
-  <Route key="/settings/*" path="/settings/*">
+  <Route key="/settings/*" path="/settings/:notFound*">
     <NotFound />
   </Route>,
   <Route key="/settings" exact path="/settings">

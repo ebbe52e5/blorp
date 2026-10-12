@@ -49,7 +49,7 @@ export const routeDefs = {
   ...buildRoute("/c/:id", idSchema),
   // Home
   ...buildRoute("/home"),
-  ...buildRoute("/home/*"),
+  ...buildRoute("/home/:notFound*"),
   ...buildRoute("/home/s"),
   ...buildRoute("/home/sidebar"),
   ...buildRoute("/home/f/:apId", feedApIdSchema),
@@ -78,7 +78,7 @@ export const routeDefs = {
   // Communities
   ...buildRoute("/communities"),
   ...buildRoute("/communities/sort/:sort", z.object({ sort: z.string() })),
-  ...buildRoute("/communities/*"),
+  ...buildRoute("/communities/:notFound*"),
   ...buildRoute("/communities/s"),
   ...buildRoute("/communities/sidebar"),
   ...buildRoute("/communities/f/:apId", feedApIdSchema),
@@ -119,12 +119,12 @@ export const routeDefs = {
   ...buildRoute("/communities/c/:communityHandle/lightbox", lightBoxFeedSchema),
   ...buildRoute("/communities/lightbox/:imgUrl", lightBoxSchema),
   // Messages
-  ...buildRoute("/messages/*"),
+  ...buildRoute("/messages/:notFound*"),
   ...buildRoute("/messages"),
   ...buildRoute("/messages/chat/:userId", userSchema),
   // Inbox
   ...buildRoute("/inbox"),
-  ...buildRoute("/inbox/*"),
+  ...buildRoute("/inbox/:notFound*"),
   ...buildRoute("/inbox/s"),
   ...buildRoute("/inbox/sidebar"),
   ...buildRoute("/inbox/f/:apId", feedApIdSchema),
@@ -151,13 +151,13 @@ export const routeDefs = {
   ...buildRoute("/inbox/lightbox/:imgUrl", lightBoxSchema),
   // Create
   ...buildRoute("/create_post"),
-  ...buildRoute("/create_post/*"),
+  ...buildRoute("/create_post/:notFound*"),
   ...buildRoute("/create_community"),
   // Settings
   ...buildRoute("/settings"),
   ...buildRoute("/settings/manage-blocks/:index", manageAccountSchema),
   ...buildRoute("/settings/update-profile/:index", manageAccountSchema),
-  ...buildRoute("/settings/*"),
+  ...buildRoute("/settings/:notFound*"),
   // Other
   ...buildRoute("/support"),
   ...buildRoute("/privacy"),
