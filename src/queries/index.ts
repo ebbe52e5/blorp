@@ -28,6 +28,7 @@ import { useCommunitiesStore } from "../stores/communities";
 import {
   encodeApId,
   extractErrorContent,
+  isFeedVisibleTo,
   isNotFoundError,
   lemmyTimestamp,
 } from "../apis/utils";
@@ -664,16 +665,34 @@ export function useListMultiCommunityFeedsQuery(
   const { api, queryKeyPrefix } = useApiClients();
   const getCachePrefixer = useAuth((s) => s.getCachePrefixer);
   const cacheFeeds = useMultiCommunityFeedStore((s) => s.cacheFeeds);
-  const queryKey = [...queryKeyPrefix, "getMultiCommunityFeeds", form];
+  const myApId = useAuth(
+    (s) => getAccountSite(s.getSelectedAccount())?.me?.apId,
+  );
+  const isAdmin = useAuth((s) => {
+    const site = getAccountSite(s.getSelectedAccount());
+    return !!site?.me?.apId && !!site.admins?.includes(site.me.apId);
+  });
+  // The viewer decides which deleted feeds show, and the site (who we are,
+  // who the admins are) can load after the first fetch
+  const queryKey = [
+    ...queryKeyPrefix,
+    "getMultiCommunityFeeds",
+    form,
+    myApId ?? null,
+    isAdmin,
+  ];
   return useThrottledInfiniteQuery({
     queryKey,
     queryFn: async ({ signal }) => {
       const res = await (await api).getMultiCommunityFeeds(form, { signal });
+      const feeds = res.multiCommunityFeeds.filter((feed) =>
+        isFeedVisibleTo(feed, { apId: myApId, isAdmin }),
+      );
       cacheFeeds(
         getCachePrefixer(),
-        res.multiCommunityFeeds.map((feedView) => ({ feedView })),
+        feeds.map((feedView) => ({ feedView })),
       );
-      return res.multiCommunityFeeds.map((f) => f.apId);
+      return feeds.map((f) => f.apId);
     },
     getNextPageParam: () => null,
     initialPageParam: INIT_PAGE_TOKEN,

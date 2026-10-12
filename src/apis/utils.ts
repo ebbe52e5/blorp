@@ -158,3 +158,18 @@ export function getFlairLookup(flairs?: Schemas.Flair[] | null) {
     }
   };
 }
+
+/**
+ * Lemmy lists deleted multi-communities like any other. Only their creator
+ * and admins should still see one (to restore it); hide it from everyone
+ * else.
+ */
+export function isFeedVisibleTo(
+  feed: Schemas.MultiCommunityFeed,
+  viewer: { apId?: string | null; isAdmin: boolean },
+) {
+  if (!feed.deleted) {
+    return true;
+  }
+  return viewer.isAdmin || (!!viewer.apId && feed.ownerApId === viewer.apId);
+}
