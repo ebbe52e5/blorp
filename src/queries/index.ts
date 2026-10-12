@@ -2107,6 +2107,119 @@ export function useApproveRegistrationApplicationMutation() {
   });
 }
 
+function useInvitationsKey(account?: Account) {
+  const { queryKeyPrefix } = useApiClients(account);
+  return [...queryKeyPrefix, "getInvitations", account?.uuid ?? null];
+}
+
+/** Admin only: invite codes this account created that are still unused */
+export function useInvitationsQuery({ account }: { account?: Account }) {
+  const { api } = useApiClients(account);
+  const queryKey = useInvitationsKey(account);
+  return useThrottledInfiniteQuery({
+    queryKey,
+    queryFn: async ({ pageParam, signal }) =>
+      (await api).getInvitations({ pageCursor: pageParam }, { signal }),
+    initialPageParam: INIT_PAGE_TOKEN,
+    getNextPageParam: (prev) => prev.nextCursor,
+    enabled: !!account && accountIsAdmin(account),
+  });
+}
+
+export function useCreateInvitationMutation({
+  account,
+}: {
+  account?: Account;
+}) {
+  const { api } = useApiClients(account);
+  const queryClient = useQueryClient();
+  const queryKey = useInvitationsKey(account);
+  return useMutation({
+    mutationFn: async () => (await api).createInvitation(),
+    onSuccess: (invitation) => {
+      // Show it right away; the list refetch is throttled
+      const prev =
+        queryClient.getQueryData<
+          InfiniteData<{ invitations: Schemas.Invitation[] }, unknown>
+        >(queryKey);
+      if (prev?.pages[0]) {
+        queryClient.setQueryData(
+          queryKey,
+          produce(prev, (draft) => {
+            draft.pages[0]!.invitations.unshift(invitation);
+          }),
+        );
+      }
+      queryClient.invalidateQueries({ queryKey });
+    },
+    onError: toastMutationError("Couldn't create invite code"),
+  });
+}
+
+export function useRevokeInvitationMutation({
+  account,
+}: {
+  account?: Account;
+}) {
+  const { api } = useApiClients(account);
+  const queryClient = useQueryClient();
+  const queryKey = useInvitationsKey(account);
+  return useMutation({
+    mutationFn: async (form: Forms.RevokeInvitation) =>
+      (await api).revokeInvitation(form),
+    onMutate: ({ token }) => {
+      const prev =
+        queryClient.getQueryData<
+          InfiniteData<{ invitations: Schemas.Invitation[] }, unknown>
+        >(queryKey);
+      if (prev) {
+        queryClient.setQueryData(
+          queryKey,
+          produce(prev, (draft) => {
+            for (const page of draft.pages) {
+              page.invitations = page.invitations.filter(
+                (i) => i.token !== token,
+              );
+            }
+          }),
+        );
+      }
+    },
+    onSuccess: () => {
+      toast.success("Invite code revoked");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey });
+    },
+    onError: toastMutationError("Couldn't revoke invite code"),
+  });
+}
+
+export function useSetRegistrationModeMutation({
+  account,
+}: {
+  account?: Account;
+}) {
+  const { api } = useApiClients(account);
+  const queryClient = useQueryClient();
+  const refreshAuthKey = useRefreshAuthKey();
+  return useMutation({
+    mutationFn: async (form: Forms.SetRegistrationMode) =>
+      (await api).setRegistrationMode(form),
+    onSuccess: () => {
+      toast.success("Registration setting saved");
+      // The account's site and the signup form's site both show the mode
+      queryClient.invalidateQueries({ queryKey: refreshAuthKey });
+      if (account) {
+        queryClient.invalidateQueries({
+          queryKey: ["getSite", account.instance],
+        });
+      }
+    },
+    onError: toastMutationError("Couldn't save registration setting"),
+  });
+}
+
 export function useCommentReportsQuery() {
   const isLoggedIn = useAuth((s) => s.isLoggedIn());
   const canModerate = useCanModerate();

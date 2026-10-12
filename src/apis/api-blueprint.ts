@@ -246,7 +246,12 @@ export const siteSchema = z.object({
   icon: z.string().nullable(),
   title: z.string().nullable(),
   applicationQuestion: z.string().nullable(),
-  registrationMode: z.enum(["Closed", "RequireApplication", "Open"]),
+  registrationMode: z.enum([
+    "Closed",
+    "RequireApplication",
+    "RequireInvitation",
+    "Open",
+  ]),
   // Optional so site data saved by an older build still parses
   captchaEnabled: z.boolean().optional(),
   showNsfw: z.boolean(),
@@ -437,6 +442,13 @@ export const registrationApplicationSchema = z.object({
   denyReason: z.string().nullable(),
 });
 
+export const invitationSchema = z.object({
+  token: z.string(),
+  createdAt: z.string(),
+  usesCount: z.number(),
+  maxUses: z.number().nullable(),
+});
+
 export const modlogItemSchema = z.object({
   id: z.number(),
   actionType: z.string(),
@@ -528,6 +540,7 @@ export namespace Schemas {
   export type RegistrationApplication = z.infer<
     typeof registrationApplicationSchema
   >;
+  export type Invitation = z.infer<typeof invitationSchema>;
   export type ModlogItem = z.infer<typeof modlogItemSchema>;
 }
 
@@ -674,6 +687,18 @@ export namespace Forms {
     id: number;
     approve: boolean;
     denyReason?: string;
+  };
+
+  export type GetInvitations = {
+    pageCursor?: string;
+  };
+
+  export type RevokeInvitation = {
+    token: string;
+  };
+
+  export type SetRegistrationMode = {
+    mode: Schemas.Site["registrationMode"];
   };
 
   export type MarkPostRead = {
@@ -1046,6 +1071,8 @@ export namespace Forms {
     captchaUuid?: string;
     captchaAnswer?: string;
     answer?: string;
+    /** Required when the server's registration mode is RequireInvitation */
+    inviteCode?: string;
   };
 
   export type SaveUserSettings = {
@@ -1503,6 +1530,20 @@ export abstract class ApiBlueprint<C> {
   abstract approveRegistrationApplication(
     form: Forms.ApproveRegistrationApplication,
   ): Promise<void>;
+
+  /** The invite codes the logged in user created and nobody used up yet */
+  abstract getInvitations(
+    form: Forms.GetInvitations,
+    options?: RequestOptions,
+  ): Promise<Paginated & { invitations: Schemas.Invitation[] }>;
+
+  /** Admin only in the zhifou.io Lemmy fork. Creates a single-use code. */
+  abstract createInvitation(): Promise<Schemas.Invitation>;
+
+  abstract revokeInvitation(form: Forms.RevokeInvitation): Promise<void>;
+
+  /** Admin only */
+  abstract setRegistrationMode(form: Forms.SetRegistrationMode): Promise<void>;
 
   abstract resolveObject(
     form: Forms.ResolveObject,

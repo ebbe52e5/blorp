@@ -598,6 +598,7 @@ function SignupForm({
   const [verifyPassword, setVerifyPassword] = useState("");
   const [answer, setAnswer] = useState("");
   const [captchaAnswer, setCaptchaAnswer] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
 
   const register = useRegisterMutation({
     addAccount,
@@ -614,7 +615,8 @@ function SignupForm({
         repeatPassword: verifyPassword,
         captchaUuid: captcha.data?.uuid,
         captchaAnswer,
-        answer,
+        answer: requireApplication ? answer : undefined,
+        inviteCode: requireInvitation ? inviteCode : undefined,
       })
       .then(() => {
         onSuccess();
@@ -624,9 +626,13 @@ function SignupForm({
         setVerifyPassword("");
         setAnswer("");
         setCaptchaAnswer("");
+        setInviteCode("");
       });
   };
 
+  const registrationMode = site.data?.site.registrationMode;
+  const requireApplication = registrationMode === "RequireApplication";
+  const requireInvitation = registrationMode === "RequireInvitation";
   const applicationQuestion = site.data?.site.applicationQuestion;
 
   return (
@@ -725,6 +731,30 @@ function SignupForm({
           />
         </Field>
 
+        {requireInvitation && (
+          <Field>
+            <FieldLabel required htmlFor="invite-code">
+              Invite code
+            </FieldLabel>
+            <Input
+              id="invite-code"
+              placeholder="8 letters and digits"
+              value={inviteCode}
+              onChange={(e) => setInviteCode(e.target.value.trim())}
+              // Codes are case sensitive
+              autoCapitalize="none"
+              autoCorrect="off"
+              autoComplete="off"
+              spellCheck={false}
+              minLength={8}
+              maxLength={8}
+              pattern="[A-Za-z0-9]{8}"
+              title="8 letters and digits, case sensitive"
+              required
+            />
+          </Field>
+        )}
+
         {captcha.isLoading && <LuLoaderCircle className="animate-spin" />}
 
         {captcha.data && (
@@ -765,22 +795,26 @@ function SignupForm({
           </Field>
         )}
 
-        {applicationQuestion && (
+        {requireApplication && (
           <>
-            <div className="bg-amber-100 text-amber-800 border-amber-800 border p-2 rounded-md">
-              To join this server, you need to fill out the application below,
-              and wait to be accepted.
-            </div>
-            <MarkdownRenderer markdown={applicationQuestion} />
+            {applicationQuestion && (
+              <>
+                <div className="bg-amber-100 text-amber-800 border-amber-800 border p-2 rounded-md">
+                  To join this server, you need to fill out the application
+                  below, and wait to be accepted.
+                </div>
+                <MarkdownRenderer markdown={applicationQuestion} />
+              </>
+            )}
+
+            <Textarea
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
+              required
+              placeholder="Application answer"
+            />
           </>
         )}
-
-        <Textarea
-          value={answer}
-          onChange={(e) => setAnswer(e.target.value)}
-          required
-          placeholder="Application answer"
-        />
 
         <Button type="submit">
           Sign up

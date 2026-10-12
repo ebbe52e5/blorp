@@ -351,6 +351,29 @@ type ForkPersonView = lemmyV4.PersonView & {
 const HTTP_POST = "POST" as Parameters<lemmyV4.LemmyHttp["wrapper"]>[0];
 const HTTP_DELETE = "DELETE" as Parameters<lemmyV4.LemmyHttp["wrapper"]>[0];
 
+// Invitations (and the require_invitation registration mode) are newer than
+// the pinned lemmy-js-client, so they're typed by hand. Upstream Lemmy has
+// them; the zhifou.io Lemmy fork makes codes 8 characters and admin-only.
+type LemmyInvitation = {
+  token: string;
+  max_uses?: number;
+  uses_count: number;
+  expires_at?: string;
+  published_at: string;
+};
+const HTTP_GET = "GET" as Parameters<lemmyV4.LemmyHttp["wrapper"]>[0];
+const REGISTRATION_MODE_REQUIRE_INVITATION =
+  "require_invitation" as lemmyV4.RegistrationMode;
+
+function convertInvitation(invitation: LemmyInvitation): Schemas.Invitation {
+  return {
+    token: invitation.token,
+    createdAt: invitation.published_at,
+    usesCount: invitation.uses_count,
+    maxUses: invitation.max_uses ?? null,
+  };
+}
+
 // The fork's Following listing type isn't in lemmy-js-client's ListingType.
 const LISTING_TYPE_FOLLOWING = "following" as lemmyV4.ListingType;
 // People in multi-communities are only in the zhifou.io Lemmy fork, which
@@ -885,6 +908,7 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
         {
           closed: "Closed",
           require_application: "RequireApplication",
+          [REGISTRATION_MODE_REQUIRE_INVITATION]: "RequireInvitation",
           open: "Open",
         } as const,
       ),
@@ -2303,6 +2327,8 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
       captcha_answer: form.captchaAnswer,
       answer: form.answer,
       stay_logged_in: true,
+      // Not in the pinned lemmy-js-client's Register type
+      ...({ token: form.inviteCode } as object),
     });
     const { jwt, registration_created, verify_email_sent } =
       unwrapResponsData(registerResponse);
@@ -2529,6 +2555,59 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
         id: form.id,
         approve: form.approve,
         deny_reason: form.denyReason,
+      }),
+    );
+  }
+
+  async getInvitations(form: Forms.GetInvitations, options?: RequestOptions) {
+    const response = await this.client.wrapper<
+      { page_cursor?: string; limit: number },
+      { items: LemmyInvitation[]; next_page?: string }
+    >(
+      HTTP_GET,
+      "/account/invite/list",
+      {
+        page_cursor:
+          form.pageCursor === INIT_PAGE_TOKEN ? undefined : form.pageCursor,
+        limit: this.limit,
+      },
+      options,
+    );
+    const { items, next_page } = unwrapResponsData(response);
+    return {
+      invitations: items.map(convertInvitation),
+      nextCursor: next_page ?? null,
+    };
+  }
+
+  async createInvitation() {
+    const response = await this.client.wrapper<
+      { max_uses: number },
+      { invite: LemmyInvitation }
+    >(HTTP_POST, "/account/invite", { max_uses: 1 }, undefined);
+    return convertInvitation(unwrapResponsData(response).invite);
+  }
+
+  async revokeInvitation(form: Forms.RevokeInvitation) {
+    unwrapResponsData(
+      await this.client.wrapper<{ token: string }, unknown>(
+        HTTP_DELETE,
+        "/account/invite",
+        { token: form.token },
+        undefined,
+      ),
+    );
+  }
+
+  async setRegistrationMode(form: Forms.SetRegistrationMode) {
+    unwrapResponsData(
+      await this.client.editSite({
+        registration_mode: remapEnum(form.mode, {
+          Closed: "closed",
+          RequireApplication: "require_application",
+          RequireInvitation: REGISTRATION_MODE_REQUIRE_INVITATION,
+          Open: "open",
+        } as const),
       }),
     );
   }

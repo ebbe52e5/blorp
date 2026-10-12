@@ -157,6 +157,7 @@ export const routeDefs = {
   ...buildRoute("/settings"),
   ...buildRoute("/settings/manage-blocks/:index", manageAccountSchema),
   ...buildRoute("/settings/update-profile/:index", manageAccountSchema),
+  ...buildRoute("/settings/invites/:index", manageAccountSchema),
   ...buildRoute("/settings/:notFound*"),
   // Other
   ...buildRoute("/support"),

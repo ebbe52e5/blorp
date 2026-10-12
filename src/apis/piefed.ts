@@ -2080,6 +2080,24 @@ export class PieFedApi
     throw Errors.NOT_IMPLEMENTED;
   }
 
+  async getInvitations() {
+    throw Errors.NOT_IMPLEMENTED;
+    return {} as any;
+  }
+
+  async createInvitation() {
+    throw Errors.NOT_IMPLEMENTED;
+    return {} as any;
+  }
+
+  async revokeInvitation() {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
+  async setRegistrationMode() {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
   async resolveObject(form: Forms.ResolveObject, options: RequestOptions) {
     try {
       const { post, community, person, comment, feed } =

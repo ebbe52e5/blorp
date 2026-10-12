@@ -14,10 +14,12 @@ import {
 import { useLogoutMutation, useSoftware } from "@/src/queries/index";
 import {
   Account,
+  accountIsAdmin,
   getAccountSite,
   parseAccountInfo,
   useAuth,
 } from "@/src/stores/auth";
+import { supportsInvitations } from "@/src/apis/support";
 import { Badge } from "@/src/components/ui/badge";
 import { ContentGutters } from "@/src/components/gutters";
 import _ from "lodash";
@@ -79,7 +81,7 @@ function AccountCard({
   const logoutZustand = useAuth((s) => s.logout);
   const { person, instance } = parseAccountInfo(account);
   const isLoggedIn = Boolean(account.jwt);
-  const { software } = useSoftware(account);
+  const { software, softwareVersion } = useSoftware(account);
 
   return (
     <Section title={`ACCOUNT ${accountIndex + 1}`}>
@@ -117,6 +119,18 @@ function AccountCard({
             Manage Blocks
             <FiChevronRight className="text-xl" />
           </SectionItem>
+
+          {accountIsAdmin(account) &&
+            supportsInvitations({ software, softwareVersion }) && (
+              <SectionItem
+                to={resolveRoute("/settings/invites/:index", {
+                  index: String(accountIndex),
+                })}
+              >
+                Invite codes
+                <FiChevronRight className="text-xl" />
+              </SectionItem>
+            )}
 
           <SectionItem
             onClick={() => {

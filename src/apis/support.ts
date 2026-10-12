@@ -44,6 +44,11 @@ export function supportsRegistrationApplications(software: Software) {
   return supportsCreateCommunity(software);
 }
 
+// Invite codes need Lemmy v4 (upstream added them for 1.0)
+export function supportsInvitations(software: Software) {
+  return supportsCreateCommunity(software);
+}
+
 export function supportsMarkCommentAsAnswer({ software }: Software) {
   return software === "piefed";
 }

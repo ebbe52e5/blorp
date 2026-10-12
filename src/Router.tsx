@@ -66,6 +66,7 @@ const ManageBlocks = lazy(
 const UpdateProfile = lazy(
   () => import("@/src/features/settings/update-profile-screen"),
 );
+const Invites = lazy(() => import("@/src/features/settings/invites-screen"));
 const CreateCommunity = lazy(() => import("@/src/features/create-community"));
 const MultiCommunityFeedPosts = lazy(
   () => import("@/src/features/multi-community-feed-posts"),
@@ -566,6 +567,9 @@ const SETTINGS = [
     path="/settings/update-profile/:index"
   >
     <UpdateProfile />
+  </Route>,
+  <Route key="/settings/invites/:index" exact path="/settings/invites/:index">
+    <Invites />
   </Route>,
 ];
 
