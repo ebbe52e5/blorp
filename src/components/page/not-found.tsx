@@ -14,9 +14,9 @@ import { useLinkContext } from "@/src/hooks/navigation-hooks";
  */
 export function NotFoundPageContent() {
   const router = useIonRouter();
-  const root = useLinkContext().root;
+  const { rootHref } = useLinkContext();
 
-  const goHome = () => router.push(root, "root", "replace");
+  const goHome = () => router.push(rootHref, "root", "replace");
   const goBack = () => (router.canGoBack() ? router.goBack() : goHome());
 
   return (

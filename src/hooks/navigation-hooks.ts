@@ -50,9 +50,16 @@ export function useHideTabBarOnMount() {
 }
 
 type Root = "/home/" | "/communities/" | "/inbox/";
+type RootHref = "/home" | "/communities" | "/inbox";
 
+/**
+ * `root` is the tab's path prefix (`${root}c/...`). To go to the tab itself,
+ * use `rootHref`: each tab's catch-all `/home/*` route comes first and also
+ * matches `/home/`, so navigating to `root` lands on the not found page.
+ */
 export function useLinkContext(): {
   root: Root;
+  rootHref: RootHref;
 } {
   try {
     const pathname = useIonRouter().routeInfo.pathname;
@@ -67,10 +74,12 @@ export function useLinkContext(): {
 
     return {
       root,
+      rootHref: root.slice(0, -1) as RootHref,
     };
   } catch {
     return {
       root: "/home/",
+      rootHref: "/home",
     };
   }
 }
