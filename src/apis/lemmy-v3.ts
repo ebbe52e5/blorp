@@ -1178,6 +1178,10 @@ export class LemmyV3Api implements ApiBlueprint<lemmyV3.LemmyHttp> {
     throw Errors.NOT_IMPLEMENTED;
   }
 
+  async purgeCommunity(): Promise<void> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
   async uploadCommunityImage(): Promise<Schemas.UploadImageResponse> {
     throw Errors.NOT_IMPLEMENTED;
   }

@@ -1499,6 +1499,15 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
     return convertCommunity(community_view);
   }
 
+  async purgeCommunity(form: Forms.PurgeCommunity) {
+    unwrapResponsData(
+      await this.client.purgeCommunity({
+        community_id: form.communityId,
+        reason: form.reason,
+      }),
+    );
+  }
+
   async uploadCommunityImage(form: Forms.UploadCommunityImage) {
     const query = { id: form.communityId };
     const image = { image: form.image };

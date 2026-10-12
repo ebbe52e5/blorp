@@ -402,6 +402,18 @@ describe("LemmyV4Api community settings", () => {
     expect(lastBody()).toEqual({ community_id: COMMUNITY.id, deleted: true });
   });
 
+  test("purgeCommunity", async () => {
+    mockRoute("/api/v4/admin/purge/community", { success: true });
+
+    await api.purgeCommunity({ communityId: COMMUNITY.id, reason: "spam" });
+
+    expect(lastRequest()).toEqual({
+      url: `${INSTANCE}/api/v4/admin/purge/community`,
+      method: "post",
+    });
+    expect(lastBody()).toEqual({ community_id: COMMUNITY.id, reason: "spam" });
+  });
+
   test("uploadCommunityImage posts to /community/icon with the id", async () => {
     mockRoute("/api/v4/community/icon", {
       image_url: `${INSTANCE}/pictrs/image/a.png`,
@@ -795,6 +807,7 @@ describe("community creation on other backends", () => {
       Errors.NOT_IMPLEMENTED,
     );
     await expect(api.editCommunity()).rejects.toBe(Errors.NOT_IMPLEMENTED);
+    await expect(api.purgeCommunity()).rejects.toBe(Errors.NOT_IMPLEMENTED);
     await expect(api.addCommunityMod()).rejects.toBe(Errors.NOT_IMPLEMENTED);
     await expect(api.createCommunityTag()).rejects.toBe(Errors.NOT_IMPLEMENTED);
   });
@@ -812,6 +825,7 @@ describe("community creation on other backends", () => {
       Errors.NOT_IMPLEMENTED,
     );
     await expect(api.editCommunity()).rejects.toBe(Errors.NOT_IMPLEMENTED);
+    await expect(api.purgeCommunity()).rejects.toBe(Errors.NOT_IMPLEMENTED);
     await expect(api.addCommunityMod()).rejects.toBe(Errors.NOT_IMPLEMENTED);
     await expect(api.createCommunityTag()).rejects.toBe(Errors.NOT_IMPLEMENTED);
   });

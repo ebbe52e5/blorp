@@ -1042,6 +1042,10 @@ export class PieFedApi
     throw Errors.NOT_IMPLEMENTED;
   }
 
+  async purgeCommunity(): Promise<void> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
   async uploadCommunityImage(): Promise<Schemas.UploadImageResponse> {
     throw Errors.NOT_IMPLEMENTED;
   }

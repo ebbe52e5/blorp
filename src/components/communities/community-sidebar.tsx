@@ -2,9 +2,11 @@ import _ from "lodash";
 import {
   useBlockCommunityMutation,
   useBlockInstanceMutation,
+  usePurgeCommunityMutation,
   useSoftware,
 } from "@/src/queries/index";
 import dayjs from "dayjs";
+import { z } from "zod";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import { MarkdownRenderer } from "../markdown/renderer";
 import { CommunityJoinButton } from "./community-join-button";
@@ -14,6 +16,7 @@ import { LuCakeSlice } from "react-icons/lu";
 import { Link, resolveRoute, useHistory } from "@/src/routing/index";
 import { supportsCreateCommunity } from "@/src/apis/support";
 import {
+  useAmIAdmin,
   useAuth,
   useIsCommunityBlocked,
   useIsInstanceBlocked,
@@ -287,6 +290,8 @@ export function useCommunityActions({
     communityHandle,
   });
   const blockInstance = useBlockInstanceMutation();
+  const purgeCommunity = usePurgeCommunityMutation();
+  const amIAdmin = !!useAmIAdmin();
   const isBlocked = useIsCommunityBlocked(communityHandle);
   const communityInstanceId = communityView?.instanceId;
   const communityApId = communityView?.apId;
@@ -378,6 +383,33 @@ export function useCommunityActions({
                 }),
               );
             },
+          },
+        ]
+      : []),
+    // Same admin-only action as lemmy-ui's Purge in the community sidebar
+    ...(isLoggedIn &&
+    amIAdmin &&
+    supportsCreateCommunity(software) &&
+    communityView
+      ? [
+          {
+            text: "Purge community",
+            danger: true,
+            onClick: () =>
+              getConfirmation({
+                header: `Purge ${communityHandle}?`,
+                message:
+                  "This permanently deletes the community with all its posts and comments. It can't be undone.",
+                confirmText: "Purge",
+                danger: true,
+                inputs: [{ name: "reason", placeholder: "Reason" }],
+                schema: z.object({ reason: z.string() }),
+              }).then(({ reason }) =>
+                purgeCommunity.mutate({
+                  communityId: communityView.id,
+                  reason,
+                }),
+              ),
           },
         ]
       : []),

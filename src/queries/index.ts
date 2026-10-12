@@ -2899,6 +2899,26 @@ export function useDeleteCommunityMutation(handle: Handle) {
   });
 }
 
+export function usePurgeCommunityMutation() {
+  const { api, queryKeyPrefix } = useApiClients();
+  const queryClient = useQueryClient();
+  const refreshAuthKey = useRefreshAuthKey();
+  const history = useHistory();
+  return useMutation({
+    mutationFn: async (form: Forms.PurgeCommunity) =>
+      (await api).purgeCommunity(form),
+    onSuccess: () => {
+      toast.success("Purged community");
+      // Its posts and comments are gone too, so refetch every cached list,
+      // and the site so it drops out of the moderates list
+      queryClient.invalidateQueries({ queryKey: queryKeyPrefix });
+      queryClient.invalidateQueries({ queryKey: refreshAuthKey });
+      history.replace("/home");
+    },
+    onError: toastMutationError("Couldn't purge community"),
+  });
+}
+
 export function useUploadCommunityImageMutation(handle: Handle) {
   const { api } = useApiClients();
   const updateCachedCommunity = useUpdateCachedCommunity();

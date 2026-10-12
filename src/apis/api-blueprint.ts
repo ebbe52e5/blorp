@@ -789,6 +789,11 @@ export namespace Forms {
     deleted: boolean;
   };
 
+  export type PurgeCommunity = {
+    communityId: number;
+    reason: string;
+  };
+
   export type CommunityImageKind = "icon" | "banner";
 
   export type UploadCommunityImage = {
@@ -1204,6 +1209,9 @@ export abstract class ApiBlueprint<C> {
   abstract deleteCommunity(
     form: Forms.DeleteCommunity,
   ): Promise<Schemas.Community>;
+
+  /** Admin only. Deletes the community and everything in it for good. */
+  abstract purgeCommunity(form: Forms.PurgeCommunity): Promise<void>;
 
   abstract uploadCommunityImage(
     form: Forms.UploadCommunityImage,
