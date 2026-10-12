@@ -10,6 +10,7 @@ import { useFiltersStore } from "@/src/stores/filters";
 import {
   Account,
   accountCanModerate,
+  accountIsAdmin,
   getAccountSite,
   parseAccountInfo,
   useAuth,
@@ -64,6 +65,7 @@ import { resolveRoute, useHistory } from "@/src/routing";
 import { getPostEmbed } from "../apis/post-embed";
 import { useMultiCommunityFeedStore } from "@/src/stores/multi-community-feeds";
 import { useRecentCommunitiesStore } from "@/src/stores/recent-communities";
+import { supportsRegistrationApplications } from "../apis/support";
 import { useShouldShowNsfw } from "../hooks/nsfw";
 import pTimeout from "p-timeout";
 
@@ -2021,6 +2023,90 @@ export function useResolveCommunityFollowRequestMutation() {
   });
 }
 
+function useRegistrationApplicationsKey() {
+  const { queryKeyPrefix } = useApiClients();
+  return [...queryKeyPrefix, "getRegistrationApplications"];
+}
+
+/** Admin only: sign-ups waiting for approval */
+export function useRegistrationApplicationsQuery() {
+  const isAdmin = useAuth((s) => accountIsAdmin(s.getSelectedAccount()));
+  const software = useSoftware();
+  const { api } = useApiClients();
+  const getCachePrefixer = useAuth((s) => s.getCachePrefixer);
+  const cacheProfiles = useProfilesStore((s) => s.cacheProfiles);
+  const queryKey = useRegistrationApplicationsKey();
+  return useThrottledInfiniteQuery({
+    queryKey,
+    queryFn: async ({ pageParam, signal }) => {
+      const { applications, users, nextCursor } = await (
+        await api
+      ).getRegistrationApplications(
+        { unreadOnly: true, pageCursor: pageParam },
+        { signal },
+      );
+      cacheProfiles(getCachePrefixer(), users);
+      return { applications, nextCursor };
+    },
+    initialPageParam: INIT_PAGE_TOKEN,
+    getNextPageParam: (prev) => prev.nextCursor,
+    enabled: isAdmin && supportsRegistrationApplications(software),
+    refetchOnWindowFocus: "always",
+  });
+}
+
+export function useApproveRegistrationApplicationMutation() {
+  const { api } = useApiClients();
+  const queryClient = useQueryClient();
+  const applicationsQueryKey = useRegistrationApplicationsKey();
+  const notificationCountQueryKey = useNotificationCountQueryKey();
+
+  return useMutation({
+    mutationFn: async (form: Forms.ApproveRegistrationApplication) =>
+      (await api).approveRegistrationApplication(form),
+    onMutate: (form) => {
+      // Only pending applications are listed, so a decided
+      // one is removed from the list right away.
+      const applications =
+        queryClient.getQueryData<
+          InfiniteData<
+            { applications: Schemas.RegistrationApplication[] },
+            unknown
+          >
+        >(applicationsQueryKey);
+      if (applications) {
+        const patched = produce(applications, (prev) => {
+          for (const page of prev.pages) {
+            page.applications = page.applications.filter(
+              (a) => a.id !== form.id,
+            );
+          }
+        });
+        queryClient.setQueryData(applicationsQueryKey, patched);
+      }
+    },
+    onSuccess: (_, { approve }) => {
+      toast.success(approve ? "Approved" : "Denied");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: notificationCountQueryKey,
+      });
+      queryClient.invalidateQueries({
+        queryKey: applicationsQueryKey,
+      });
+    },
+    onError: (err, { approve }) => {
+      if (isErrorLike(err)) {
+        toast.error(extractErrorContent(err));
+      } else {
+        toast.error(`Failed to ${approve ? "approve" : "deny"} application`);
+      }
+      console.error(err);
+    },
+  });
+}
+
 export function useCommentReportsQuery() {
   const isLoggedIn = useAuth((s) => s.isLoggedIn());
   const canModerate = useCanModerate();
@@ -2108,6 +2194,7 @@ export function useNotificationCountQuery() {
           const a = await api;
           // Reports and follow requests error for non-mods
           const canModerate = accountCanModerate(account);
+          const isAdmin = accountIsAdmin(account);
 
           const [
             mentions,
@@ -2115,6 +2202,7 @@ export function useNotificationCountQuery() {
             postReports,
             commentReports,
             followRequests,
+            applications,
           ] = await Promise.allSettled([
             a.getMentions(
               {
@@ -2145,6 +2233,11 @@ export function useNotificationCountQuery() {
                 )
               : null,
             canModerate ? a.getCommunityFollowRequests({}, { signal }) : null,
+            // Backends without registration applications reject this,
+            // which counts as none
+            isAdmin
+              ? a.getRegistrationApplications({ unreadOnly: true }, { signal })
+              : null,
           ]);
           const mentionCount =
             mentions.status === "fulfilled"
@@ -2164,6 +2257,10 @@ export function useNotificationCountQuery() {
             followRequests.status === "fulfilled"
               ? (followRequests.value?.followRequests.length ?? 0)
               : 0;
+          const applicationsCount =
+            applications.status === "fulfilled"
+              ? (applications.value?.applications.length ?? 0)
+              : 0;
 
           return [
             account.uuid,
@@ -2171,7 +2268,8 @@ export function useNotificationCountQuery() {
               repliesCount +
               postReportsCount +
               commentReportsCount +
-              followRequestsCount,
+              followRequestsCount +
+              applicationsCount,
           ] as const;
         }),
       );

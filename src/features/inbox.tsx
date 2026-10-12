@@ -16,7 +16,10 @@ import {
   useRepliesQuery,
   useResolvePostReportMutation,
   useResolveCommentReportMutation,
+  useRegistrationApplicationsQuery,
+  useApproveRegistrationApplicationMutation,
 } from "@/src/queries/index";
+import { z } from "zod";
 import { IonContent, IonHeader, IonToolbar } from "@ionic/react";
 import { MenuButton, UserDropdown } from "../components/nav";
 import { PageTitle } from "../components/page-title";
@@ -62,7 +65,12 @@ import { Page } from "../components/page";
 import { StickyFilterBar } from "../components/sticky-filter-bar";
 import { usePostFromStore } from "../stores/posts";
 import { SmallPostCard } from "../components/posts/post";
-import { getAccountSite, useAuth, useCanModerate } from "../stores/auth";
+import {
+  accountIsAdmin,
+  getAccountSite,
+  useAuth,
+  useCanModerate,
+} from "../stores/auth";
 import { Checkbox } from "../components/ui/checkbox";
 import { PersonHoverCard } from "../components/person/person-hover-card";
 import { useProfileFromStore } from "../stores/profiles";
@@ -74,7 +82,8 @@ type Item =
   | { id: string; mention: Schemas.Mention }
   | { id: string; postReport: Schemas.PostReport }
   | { id: string; commentReport: Schemas.CommentReport }
-  | { id: string; followRequest: Schemas.CommunityFollowRequest };
+  | { id: string; followRequest: Schemas.CommunityFollowRequest }
+  | { id: string; application: Schemas.RegistrationApplication };
 
 function NoInboxItemsMessage({ type }: { type: string }) {
   return (
@@ -557,18 +566,108 @@ function Reply({
   );
 }
 
+function RegistrationApplication({
+  application,
+}: {
+  application: Schemas.RegistrationApplication;
+}) {
+  const approve = useApproveRegistrationApplicationMutation();
+  const getConfirmation = useConfirmationAlert();
+  const person = parseHandle(application.personHandle).name;
+  return (
+    <ContentGutters noMobilePadding>
+      <div
+        className={cn(
+          "flex-1 border-b py-2.5 flex flex-col gap-2",
+          ContentGutters.mobilePadding,
+        )}
+      >
+        <div className="flex gap-3 items-center">
+          <Link
+            to="/inbox/u/:userId"
+            params={{ userId: encodeApId(application.personApId) }}
+          >
+            <PersonAvatar actorId={application.personApId} size="sm" />
+          </Link>
+          <div className="flex-1 text-sm leading-6 min-w-0">
+            <PersonHoverCard actorId={application.personApId} asChild>
+              <Link
+                to="/inbox/u/:userId"
+                params={{ userId: encodeApId(application.personApId) }}
+                className="font-medium"
+              >
+                {person}
+              </Link>
+            </PersonHoverCard>{" "}
+            <span className="text-muted-foreground">
+              applied to join · <RelativeTime time={application.createdAt} />
+            </span>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={approve.isPending}
+            onClick={() =>
+              getConfirmation({
+                header: `Deny ${person}?`,
+                message: "They won't be able to log in.",
+                confirmText: "Deny",
+                danger: true,
+                inputs: [{ name: "reason", placeholder: "Reason (optional)" }],
+                schema: z.object({ reason: z.string() }),
+              }).then(({ reason }) =>
+                approve.mutate({
+                  id: application.id,
+                  approve: false,
+                  denyReason: reason || undefined,
+                }),
+              )
+            }
+          >
+            Deny
+          </Button>
+          <Button
+            size="sm"
+            disabled={approve.isPending}
+            onClick={() =>
+              approve.mutate({ id: application.id, approve: true })
+            }
+          >
+            Approve
+          </Button>
+        </div>
+        <div className="pl-11 flex flex-col gap-1">
+          <MarkdownRenderer markdown={application.answer} />
+          {application.email && (
+            <a
+              href={`mailto:${application.email}`}
+              className="text-sm text-muted-foreground break-all"
+            >
+              {application.email}
+            </a>
+          )}
+        </div>
+      </div>
+      <></>
+    </ContentGutters>
+  );
+}
+
 export default function Inbox() {
   const media = useMedia();
 
   const paginationMode = useSettingsStore((s) => s.paginationMode);
   const canModerate = useCanModerate();
+  const isAdmin = useAuth((s) => accountIsAdmin(s.getSelectedAccount()));
   const storedType = useInboxStore((s) => s.inboxType);
-  // Reports and requests are only available to mods and admins
+  // Reports and requests are only available to mods and admins,
+  // registration applications only to admins
   const type =
-    !canModerate &&
-    (storedType === "post-reports" ||
-      storedType === "comment-reports" ||
-      storedType === "requests")
+    (!canModerate &&
+      (storedType === "post-reports" ||
+        storedType === "comment-reports" ||
+        storedType === "requests")) ||
+    (!isAdmin && storedType === "applications")
       ? "all"
       : storedType;
   const setType = useInboxStore((s) => s.setInboxType);
@@ -584,6 +683,7 @@ export default function Inbox() {
   const postReports = usePostReportsQuery();
   const commentReports = useCommentReportsQuery();
   const followRequests = useCommunityFollowRequestsQuery();
+  const applications = useRegistrationApplicationsQuery();
 
   const repliesPagination = usePagination({
     pages: replies.data?.pages,
@@ -648,6 +748,20 @@ export default function Inbox() {
     listKey: type,
   });
 
+  const applicationsPagination = usePagination({
+    pages: applications.data?.pages,
+    getItems: (p) =>
+      p.applications.map((application) => ({
+        application,
+        id: `ra${application.id}`,
+      })),
+    fetchNextPage: applications.fetchNextPage,
+    hasNextPage: applications.hasNextPage,
+    isFetchingNextPage: applications.isFetchingNextPage,
+    mode: isMergedTab ? "infinite" : paginationMode,
+    listKey: type,
+  });
+
   const activePagination =
     type === "replies"
       ? repliesPagination
@@ -659,7 +773,9 @@ export default function Inbox() {
             ? commentReportsPagination
             : type === "requests"
               ? followRequestsPagination
-              : repliesPagination;
+              : type === "applications"
+                ? applicationsPagination
+                : repliesPagination;
 
   // This updates in the background,
   // but calling it here ensures the
@@ -738,6 +854,10 @@ export default function Inbox() {
     if (type === "requests") {
       isFetching = isFetching || followRequests.isFetching;
     }
+    // Like follow requests, applications only show in their own tab
+    if (type === "applications") {
+      isFetching = isFetching || applications.isFetching;
+    }
 
     mergedData.sort((a, b) => {
       const aPublished =
@@ -774,6 +894,7 @@ export default function Inbox() {
     commentReports.data,
     commentReports.isFetching,
     followRequests.isFetching,
+    applications.isFetching,
   ]);
 
   // For merged tabs, use combined mergedData directly. For single-query tabs, use pagination flatData.
@@ -793,6 +914,9 @@ export default function Inbox() {
     .find((r) => !r.resolved);
   const hasPendingRequest = !!followRequests.data?.pages.some(
     (page) => page.followRequests.length > 0,
+  );
+  const hasPendingApplication = !!applications.data?.pages.some(
+    (page) => page.applications.length > 0,
   );
 
   const confirmationAlrt = useConfirmationAlert();
@@ -862,6 +986,13 @@ export default function Inbox() {
                     </BadgeCount>
                   </>
                 )}
+                {isAdmin && (
+                  <BadgeCount showBadge={hasPendingApplication}>
+                    <ToggleGroupItem value="applications">
+                      Applications
+                    </ToggleGroupItem>
+                  </BadgeCount>
+                )}
               </ToggleGroup>
             </ToolbarButtons>
           </IonToolbar>
@@ -913,6 +1044,13 @@ export default function Inbox() {
                     </BadgeCount>
                   </>
                 )}
+                {isAdmin && (
+                  <BadgeCount showBadge={hasPendingApplication}>
+                    <ToggleGroupItem value="applications">
+                      Applications
+                    </ToggleGroupItem>
+                  </BadgeCount>
+                )}
               </ToggleGroup>
               <Tooltip>
                 <TooltipTrigger
@@ -940,6 +1078,10 @@ export default function Inbox() {
             isMergedTab ? undefined : activePagination.paginationControls
           }
           renderItem={({ item }) => {
+            if ("application" in item) {
+              return <RegistrationApplication application={item.application} />;
+            }
+
             if ("followRequest" in item) {
               return (
                 <CommunityFollowRequest followRequest={item.followRequest} />

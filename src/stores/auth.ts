@@ -474,6 +474,12 @@ export function accountCanModerate(account: Account) {
   return !!site.admins?.includes(myApId) || !!site.moderates?.length;
 }
 
+export function accountIsAdmin(account: Account) {
+  const site = getAccountSite(account);
+  const myApId = site?.me?.apId;
+  return !!myApId && !!site.admins?.includes(myApId);
+}
+
 export function useCanModerate() {
   return useAuth((s) => accountCanModerate(s.getSelectedAccount()));
 }

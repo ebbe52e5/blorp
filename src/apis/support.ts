@@ -38,6 +38,12 @@ export function supportsCreateCommunity({
   );
 }
 
+// Blorp only implements registration applications for the Lemmy v4 API,
+// like the other admin and community management features
+export function supportsRegistrationApplications(software: Software) {
+  return supportsCreateCommunity(software);
+}
+
 export function supportsMarkCommentAsAnswer({ software }: Software) {
   return software === "piefed";
 }

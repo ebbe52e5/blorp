@@ -2070,6 +2070,15 @@ export class PieFedApi
     throw Errors.NOT_IMPLEMENTED;
   }
 
+  async getRegistrationApplications() {
+    throw Errors.NOT_IMPLEMENTED;
+    return {} as any;
+  }
+
+  async approveRegistrationApplication() {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
   async resolveObject(form: Forms.ResolveObject, options: RequestOptions) {
     try {
       const { post, community, person, comment, feed } =

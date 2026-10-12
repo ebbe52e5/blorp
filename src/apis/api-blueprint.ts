@@ -423,6 +423,18 @@ export const communityFollowRequestSchema = z.object({
   communityHandle,
 });
 
+export const registrationApplicationSchema = z.object({
+  id: z.number(),
+  createdAt: z.string(),
+  personApId: z.string(),
+  personHandle: handleSchema,
+  answer: z.string(),
+  email: z.string().nullable(),
+  status: z.enum(["pending", "approved", "denied"]),
+  adminApId: z.string().nullable(),
+  denyReason: z.string().nullable(),
+});
+
 export const modlogItemSchema = z.object({
   id: z.number(),
   actionType: z.string(),
@@ -510,6 +522,9 @@ export namespace Schemas {
   export type CommentReport = z.infer<typeof commentReportSchema>;
   export type CommunityFollowRequest = z.infer<
     typeof communityFollowRequestSchema
+  >;
+  export type RegistrationApplication = z.infer<
+    typeof registrationApplicationSchema
   >;
   export type ModlogItem = z.infer<typeof modlogItemSchema>;
 }
@@ -646,6 +661,17 @@ export namespace Forms {
     communityId: number;
     personId: number;
     approve: boolean;
+  };
+
+  export type GetRegistrationApplications = {
+    unreadOnly?: boolean;
+    pageCursor?: string;
+  };
+
+  export type ApproveRegistrationApplication = {
+    id: number;
+    approve: boolean;
+    denyReason?: string;
   };
 
   export type MarkPostRead = {
@@ -1459,6 +1485,21 @@ export abstract class ApiBlueprint<C> {
 
   abstract resolveCommunityFollowRequest(
     form: Forms.ResolveCommunityFollowRequest,
+  ): Promise<void>;
+
+  /** Admin only. Sign-ups waiting for approval, when the site requires it. */
+  abstract getRegistrationApplications(
+    form: Forms.GetRegistrationApplications,
+    options?: RequestOptions,
+  ): Promise<
+    Paginated & {
+      applications: Schemas.RegistrationApplication[];
+      users: Schemas.Person[];
+    }
+  >;
+
+  abstract approveRegistrationApplication(
+    form: Forms.ApproveRegistrationApplication,
   ): Promise<void>;
 
   abstract resolveObject(

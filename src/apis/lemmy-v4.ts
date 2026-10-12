@@ -2473,6 +2473,64 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
     unwrapResponsData(approveResponse);
   }
 
+  async getRegistrationApplications(
+    form: Forms.GetRegistrationApplications,
+    options?: RequestOptions,
+  ) {
+    const listResponse = await this.client.listRegistrationApplications(
+      {
+        unread_only: form.unreadOnly,
+        page_cursor:
+          form.pageCursor === INIT_PAGE_TOKEN ? undefined : form.pageCursor,
+        limit: this.limit,
+      },
+      options,
+    );
+    const { items, next_page } = unwrapResponsData(listResponse);
+    return {
+      applications: items.map(
+        ({
+          registration_application: application,
+          creator,
+          creator_local_user,
+          admin,
+        }) => ({
+          id: application.id,
+          createdAt: application.published_at,
+          personApId: creator.ap_id,
+          personHandle: createHandle({
+            apId: creator.ap_id,
+            name: creator.name,
+          }),
+          answer: application.answer,
+          email: creator_local_user.email ?? null,
+          // An admin who acted either approved it or denied it
+          status: _.isNil(application.admin_id)
+            ? ("pending" as const)
+            : creator_local_user.accepted_application
+              ? ("approved" as const)
+              : ("denied" as const),
+          adminApId: admin?.ap_id ?? null,
+          denyReason: application.deny_reason ?? null,
+        }),
+      ),
+      users: items.map(({ creator }) => convertPerson({ person: creator })),
+      nextCursor: next_page ?? null,
+    };
+  }
+
+  async approveRegistrationApplication(
+    form: Forms.ApproveRegistrationApplication,
+  ) {
+    unwrapResponsData(
+      await this.client.approveRegistrationApplication({
+        id: form.id,
+        approve: form.approve,
+        deny_reason: form.denyReason,
+      }),
+    );
+  }
+
   async resolveObject(form: Forms.ResolveObject, options?: RequestOptions) {
     const resolveObjectResponse = await this.client.resolveObject(
       {

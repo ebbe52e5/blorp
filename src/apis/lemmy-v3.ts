@@ -1896,6 +1896,15 @@ export class LemmyV3Api implements ApiBlueprint<lemmyV3.LemmyHttp> {
     throw Errors.NOT_IMPLEMENTED;
   }
 
+  async getRegistrationApplications() {
+    throw Errors.NOT_IMPLEMENTED;
+    return {} as any;
+  }
+
+  async approveRegistrationApplication() {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
   async resolveObject(form: Forms.ResolveObject, options: RequestOptions) {
     return translateErrors(async () => {
       const { post, community, person, comment } =
