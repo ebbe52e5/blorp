@@ -13,7 +13,7 @@ import { env } from "@/src/env";
 // List the last reason for bumping the key:
 // getMultiCommunityFeedFollowers returns followers (with their follow time)
 // instead of personApIds
-const REACT_QUERY_CACHE_VERSON = 15;
+const REACT_QUERY_CACHE_VERSON = 16;
 
 function pruneInfinitePages(client: PersistedClient): PersistedClient {
   const cacheState = client.clientState;

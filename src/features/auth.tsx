@@ -581,8 +581,15 @@ function SignupForm({
   setInstance: (val: string) => void;
   addAccount: boolean;
 }) {
+  const site = useSiteQuery({
+    instance: instance.url,
+  });
+
+  // Like lemmy-ui, only ask for a captcha when the server has them on.
+  // Otherwise the request fails and retries for ~10s behind a spinner.
   const captcha = useCaptchaQuery({
     instance: instance.url,
+    enabled: site.data?.site.captchaEnabled === true,
   });
 
   const [email, setEmail] = useState("");
@@ -594,10 +601,6 @@ function SignupForm({
 
   const register = useRegisterMutation({
     addAccount,
-    instance: instance.url,
-  });
-
-  const site = useSiteQuery({
     instance: instance.url,
   });
 
@@ -722,7 +725,7 @@ function SignupForm({
           />
         </Field>
 
-        {captcha.isPending && <LuLoaderCircle className="animate-spin" />}
+        {captcha.isLoading && <LuLoaderCircle className="animate-spin" />}
 
         {captcha.data && (
           <Field className="bg-secondary p-3 rounded-md flex md:flex-row gap-4 justify-between">

@@ -247,6 +247,8 @@ export const siteSchema = z.object({
   title: z.string().nullable(),
   applicationQuestion: z.string().nullable(),
   registrationMode: z.enum(["Closed", "RequireApplication", "Open"]),
+  // Optional so site data saved by an older build still parses
+  captchaEnabled: z.boolean().optional(),
   showNsfw: z.boolean(),
   blurNsfw: z.boolean(),
   enablePostDownvotes: z.boolean(),

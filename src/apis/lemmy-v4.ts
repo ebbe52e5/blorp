@@ -878,6 +878,8 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
       title: lemmySite.site_view.site.name,
       applicationQuestion:
         lemmySite.site_view.local_site.application_question ?? null,
+      // Lemmy 1.0 moved captchas into a plugin, so this is per server
+      captchaEnabled: lemmySite.captcha_enabled,
       registrationMode: remapEnum(
         lemmySite.site_view.local_site.registration_mode,
         {

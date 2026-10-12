@@ -43,11 +43,22 @@ test.describe("signup", () => {
   }, testInfo) => {
     const isMobile = testInfo.project.name.includes("Mobile");
 
+    // A server with captchas on, so the form asks for one
+    const site = {
+      ...SITE_WITH_USER,
+      site_view: {
+        ...SITE_WITH_USER.site_view,
+        local_site: {
+          ...SITE_WITH_USER.site_view.local_site,
+          captcha_enabled: true,
+        },
+      },
+    };
     await page.route("**/api/**/site?*", async (route, request) => {
       const loggedIn = request.headers()["authorization"]?.includes(JWT);
       return jsonRoute(
         route,
-        loggedIn ? SITE_WITH_USER : { ...SITE_WITH_USER, my_user: undefined },
+        loggedIn ? site : { ...site, my_user: undefined },
       );
     });
 

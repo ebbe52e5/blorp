@@ -791,6 +791,7 @@ export class LemmyV3Api implements ApiBlueprint<lemmyV3.LemmyHttp> {
         applicationQuestion:
           lemmySite.site_view.local_site.application_question ?? null,
         registrationMode: lemmySite.site_view.local_site.registration_mode,
+        captchaEnabled: lemmySite.site_view.local_site.captcha_enabled,
         showNsfw:
           lemmySite.my_user?.local_user_view.local_user.show_nsfw ?? false,
         blurNsfw:

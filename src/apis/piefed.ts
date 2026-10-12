@@ -796,6 +796,7 @@ export class PieFedApi
         instanceBlocks: instanceBlocks ?? null,
         applicationQuestion: null,
         registrationMode: pieFedSite.site.registration_mode ?? "Closed",
+        captchaEnabled: false,
         showNsfw:
           pieFedSite.my_user?.local_user_view?.local_user.show_nsfw ?? false,
         blurNsfw: nsfwVisibility !== "show",
