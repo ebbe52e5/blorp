@@ -35,7 +35,7 @@ function Input({
         type={type}
         data-slot="input"
         className={cn(
-          "border-none file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground",
+          "border-none file:text-foreground placeholder:text-muted-foreground",
           "flex-1 min-w-0 bg-transparent outline-none",
           "file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium",
           "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",

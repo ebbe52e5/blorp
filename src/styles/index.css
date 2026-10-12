@@ -45,6 +45,7 @@
   /* ── Light mode palette ── */
   --light-brand: #d40091;
   --light-brand-secondary: #4123d0;
+  --light-selection: rgb(65 35 208 / 0.16);
   --light-background: oklch(1 0 0);
   --light-foreground: oklch(0.141 0.005 285.823);
   --light-card: oklch(1 0 0);
@@ -80,6 +81,7 @@
   /* ── Dark mode palette ── */
   --dark-brand: #ff1fbb;
   --dark-brand-secondary: #876cff;
+  --dark-selection: rgb(135 108 255 / 0.35);
   --dark-background: oklch(0 0 0);
   --dark-foreground: oklch(0.985 0 0);
   --dark-card: oklch(0.21 0.006 285.885);
@@ -120,6 +122,7 @@
 @utility palette-light {
   --brand: var(--light-brand);
   --brand-secondary: var(--light-brand-secondary);
+  --selection: var(--light-selection);
   --shad-background: var(--light-background);
   --shad-foreground: var(--light-foreground);
   --shad-card: var(--light-card);
@@ -156,6 +159,7 @@
 @utility palette-dark {
   --brand: var(--dark-brand);
   --brand-secondary: var(--dark-brand-secondary);
+  --selection: var(--dark-selection);
   --shad-background: var(--dark-background);
   --shad-foreground: var(--dark-foreground);
   --shad-card: var(--dark-card);
@@ -275,9 +279,9 @@ details summary {
   cursor: pointer;
 }
 
+/* A light tint of brand-secondary, keeping the text its own color */
 *::selection {
-  color: white !important;
-  background-color: var(--color-brand-secondary) !important;
+  background-color: var(--selection) !important;
 }
 
 [data-tauri-drag-region] {
