@@ -78,8 +78,12 @@ export function CommunityBanner({
       >
         {communityView?.handle ? (
           <span className="font-bold text-lg h-7">
-            {name}
-            <span className="italic">@{host}</span>
+            {communityView.title || (
+              <>
+                {name}
+                <span className="italic">@{host}</span>
+              </>
+            )}
           </span>
         ) : (
           <Skeleton className="h-7 w-52" />

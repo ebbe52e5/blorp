@@ -58,8 +58,12 @@ export function MultiCommunityFeedBanner({ apId }: { apId?: string }) {
       >
         {feed?.handle ? (
           <span className="font-bold text-lg h-7">
-            {name}
-            <span className="italic">@{host}</span>
+            {feed.title || (
+              <>
+                {name}
+                <span className="italic">@{host}</span>
+              </>
+            )}
           </span>
         ) : (
           <Skeleton className="h-7 w-52" />
