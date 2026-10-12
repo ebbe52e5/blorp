@@ -145,3 +145,20 @@ details > summary::-webkit-details-marker {
 .markdown-content.markdown-document > p:first-child {
   @apply text-xs text-muted-foreground;
 }
+
+/*
+ * A post's body on its own page is long-form reading, so it gets a larger size
+ * than comments and sidebars. Two class names so this beats the text-sm and
+ * text-xs sizes above.
+ */
+.markdown-content.markdown-post-body {
+  @apply text-base leading-relaxed;
+}
+
+.markdown-content.markdown-post-body blockquote {
+  @apply text-base;
+}
+
+.markdown-content.markdown-post-body :is(code, pre) {
+  @apply text-sm;
+}
