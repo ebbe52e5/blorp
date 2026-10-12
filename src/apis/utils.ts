@@ -1,4 +1,4 @@
-import { Schemas } from "./api-blueprint";
+import { Errors, Schemas } from "./api-blueprint";
 import _ from "lodash";
 import z from "zod";
 
@@ -29,6 +29,24 @@ export const lemmyTimestamp = () => new Date().toISOString();
 export function extractErrorContent(err: Error) {
   const content = err.message || err.name;
   return content ? _.capitalize(content.replaceAll("_", " ")) : "Unknown error";
+}
+
+const NOT_FOUND_ERRORS = [
+  "not_found",
+  "couldnt_find_community",
+  Errors.OBJECT_NOT_FOUND.message,
+];
+
+/**
+ * The backend says the object doesn't exist (or isn't visible to us), as
+ * opposed to a network or server error
+ */
+export function isNotFoundError(err: unknown) {
+  return (
+    err instanceof Error &&
+    (NOT_FOUND_ERRORS.includes(err.name) ||
+      NOT_FOUND_ERRORS.includes(err.message))
+  );
 }
 
 /**

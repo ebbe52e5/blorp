@@ -25,7 +25,12 @@ import { useSettingsStore } from "../stores/settings";
 import { z } from "zod";
 import { useCommentsStore } from "../stores/comments";
 import { useCommunitiesStore } from "../stores/communities";
-import { encodeApId, extractErrorContent, lemmyTimestamp } from "../apis/utils";
+import {
+  encodeApId,
+  extractErrorContent,
+  isNotFoundError,
+  lemmyTimestamp,
+} from "../apis/utils";
 import { useProfilesStore } from "@/src/stores/profiles";
 import { toast } from "sonner";
 import {
@@ -777,20 +782,6 @@ export function useCommunityQuery({
     },
     enabled: !!form.name && enabled,
   });
-}
-
-const NOT_FOUND_ERRORS = [
-  "not_found",
-  "couldnt_find_community",
-  Errors.OBJECT_NOT_FOUND.message,
-];
-
-function isNotFoundError(err: unknown) {
-  return (
-    err instanceof Error &&
-    (NOT_FOUND_ERRORS.includes(err.name) ||
-      NOT_FOUND_ERRORS.includes(err.message))
-  );
 }
 
 function is2faError(err?: Error | null) {

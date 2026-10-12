@@ -1,6 +1,7 @@
 import { QueryClient } from "@tanstack/react-query";
 import { MAX_CACHE_MS } from "../stores/config";
 import { Errors } from "../apis/api-blueprint";
+import { isNotFoundError } from "../apis/utils";
 
 export function compareErrors(err: Error, key: keyof typeof Errors) {
   const target = Errors[key].message;
@@ -15,7 +16,8 @@ export const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       networkMode: "online",
       retry: (count, err) => {
-        if (err instanceof Error && compareErrors(err, "OBJECT_NOT_FOUND")) {
+        // Retrying won't make a missing object appear
+        if (isNotFoundError(err)) {
           return false;
         }
         return count <= 3;

@@ -53,7 +53,7 @@ import { Separator } from "../components/ui/separator";
 import { useCommunityFromStore } from "../stores/communities";
 import { Page } from "../components/page";
 import { NoPostsMessage } from "../components/posts/no-posts-message";
-import { parseHandle } from "../apis/utils";
+import { isNotFoundError, parseHandle } from "../apis/utils";
 import { decodeCommunityHandle } from "../lib/handle";
 
 const Post = memo((props: PostProps) => (
@@ -166,7 +166,13 @@ export default function CommunityPosts() {
 
   return (
     <Page
-      notFound={!communityHandle || (communityQuery.isError && !community)}
+      notFound={
+        !communityHandle ||
+        // A purged community can still be in the local cache, so trust the
+        // backend's not found over the cached copy
+        (communityQuery.isError &&
+          (!community || isNotFoundError(communityQuery.error)))
+      }
       notFoundCommunityHandle={communityHandle}
     >
       <PageTitle>{communityHandle}</PageTitle>

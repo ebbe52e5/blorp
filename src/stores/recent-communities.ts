@@ -9,6 +9,12 @@ import { mergeCacheArray } from "./utils";
 
 const persistedSchema = z.object({
   recentlyVisited: z.array(communitySchema),
+  /**
+   * Handles of deleted or purged communities, newest first. Tabs merge their
+   * lists on focus, so a tab that still has one of these would otherwise add
+   * it back. Kept separately so the removal survives that merge.
+   */
+  removedHandles: z.array(z.string()).default([]),
 });
 
 type RecentCommunityStore = z.infer<typeof persistedSchema> & {
@@ -18,28 +24,37 @@ type RecentCommunityStore = z.infer<typeof persistedSchema> & {
 };
 
 export const MAX_VISITED = 100;
+export const MAX_REMOVED = 100;
 
-const INIT_STATE = {
+const INIT_STATE: z.infer<typeof persistedSchema> = {
   recentlyVisited: [],
+  removedHandles: [],
 };
 
 /**
  * Dedupe before dropping deleted and removed communities, so a visit that
  * finds a community deleted also drops the older copy saved before that.
  */
-function pruneCommunitites(communities: Schemas.Community[]) {
+function pruneCommunitites(
+  communities: Schemas.Community[],
+  removedHandles: string[],
+) {
   return _.slice(
     _.uniqBy(communities, (c) => c.apId).filter(
-      (c) => !c.deleted && !c.removed,
+      (c) => !c.deleted && !c.removed && !removedHandles.includes(c.handle),
     ),
     0,
     MAX_VISITED,
   );
 }
 
+function pruneRemovedHandles(handles: string[]) {
+  return _.slice(_.uniq(handles), 0, MAX_REMOVED);
+}
+
 export function migrateRecentCommunities(
   state: Record<string, unknown>,
-): z.infer<typeof persistedSchema> {
+): Pick<z.infer<typeof persistedSchema>, "recentlyVisited"> {
   const communities = (state["recentlyVisited"] ?? []) as unknown[];
   const recentlyVisited = communities.map((c) => {
     if (c && typeof c === "object") {
@@ -66,16 +81,34 @@ export const useRecentCommunitiesStore = create<RecentCommunityStore>()(
     (set, get) => ({
       ...INIT_STATE,
       update: (community) => {
-        const prev = get().recentlyVisited;
+        const { recentlyVisited, removedHandles } = get();
+        if (community.deleted || community.removed) {
+          get().remove(community.handle);
+          return;
+        }
+        // Visiting it again (say, after a restore) lists it again
+        const nextRemoved = removedHandles.filter(
+          (h) => h !== community.handle,
+        );
         set({
-          recentlyVisited: pruneCommunitites([community, ...prev]),
+          recentlyVisited: pruneCommunitites(
+            [community, ...recentlyVisited],
+            nextRemoved,
+          ),
+          removedHandles: nextRemoved,
         });
       },
       remove: (handle) => {
+        const removedHandles = pruneRemovedHandles([
+          handle,
+          ...get().removedHandles,
+        ]);
         set({
-          recentlyVisited: get().recentlyVisited.filter(
-            (c) => c.handle !== handle,
+          recentlyVisited: pruneCommunitites(
+            get().recentlyVisited,
+            removedHandles,
           ),
+          removedHandles,
         });
       },
       reset: () => {
@@ -93,6 +126,13 @@ export const useRecentCommunitiesStore = create<RecentCommunityStore>()(
       },
       merge: (p: any, current) => {
         const migrated = migrateRecentCommunities(p ?? {});
+        const persistedRemoved = z
+          .array(z.string())
+          .safeParse(p?.["removedHandles"]);
+        const removedHandles = pruneRemovedHandles([
+          ...current.removedHandles,
+          ...(persistedRemoved.success ? persistedRemoved.data : []),
+        ]);
         return {
           ...current,
           recentlyVisited: pruneCommunitites(
@@ -101,7 +141,9 @@ export const useRecentCommunitiesStore = create<RecentCommunityStore>()(
               migrated.recentlyVisited as unknown[] | undefined,
               communitySchema,
             ),
+            removedHandles,
           ),
+          removedHandles,
         } satisfies RecentCommunityStore;
       },
     },

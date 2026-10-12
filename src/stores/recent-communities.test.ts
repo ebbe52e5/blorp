@@ -38,6 +38,42 @@ describe("useRecentCommunitiesStore", () => {
     expect(result.current.recentlyVisited.map((c) => c.id)).toEqual([3]);
   });
 
+  test("a removed community stays removed when another tab merges it back", () => {
+    const gone = api.getCommunity({ id: 1 });
+    const kept = api.getCommunity({ id: 2 });
+
+    const { result } = renderHook(() => useRecentCommunitiesStore());
+
+    act(() => {
+      result.current.update(kept);
+      result.current.remove(gone.handle);
+    });
+
+    // Another tab that still had it wrote it back to storage
+    const merge = useRecentCommunitiesStore.persist.getOptions().merge!;
+    const merged = merge(
+      { recentlyVisited: [gone, kept], removedHandles: [] },
+      useRecentCommunitiesStore.getState(),
+    );
+
+    expect(merged.recentlyVisited.map((c) => c.id)).toEqual([2]);
+    expect(merged.removedHandles).toEqual([gone.handle]);
+  });
+
+  test("visiting a removed community again lists it again", () => {
+    const community = api.getCommunity({ id: 1 });
+
+    const { result } = renderHook(() => useRecentCommunitiesStore());
+
+    act(() => {
+      result.current.remove(community.handle);
+      result.current.update(community);
+    });
+
+    expect(result.current.recentlyVisited.map((c) => c.id)).toEqual([1]);
+    expect(result.current.removedHandles).toEqual([]);
+  });
+
   test("remove drops a community by handle", () => {
     const c1 = api.getCommunity({ id: 1 });
     const c2 = api.getCommunity({ id: 2 });
