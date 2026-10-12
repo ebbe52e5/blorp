@@ -5,6 +5,7 @@ import {
   ApiBlueprint,
   Errors,
   Forms,
+  Handle,
   INIT_PAGE_TOKEN,
   RequestOptions,
   resolveObjectResponseSchema,
@@ -21,6 +22,7 @@ import _ from "lodash";
 import { exhaustiveList, isErrorLike, ErrorLike } from "../lib/utils";
 import { getCommunityTagColors } from "../lib/community-tag-colors";
 import { getIdFromLocalApId } from "./lemmy-common";
+import { parseHandle } from "../lib/handle";
 
 function translateError(err: ErrorLike): Error {
   const name = err.name.trim().toLowerCase();
@@ -795,6 +797,22 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
     }
   }
 
+  /**
+   * The backend treats a name with an @domain as a remote actor. When a
+   * logged-in user asks for a community on this instance that no longer
+   * exists (say, purged), it then webfingers this instance and fails with
+   * "unknown" instead of not_found, so blorp keeps showing the cached copy.
+   * Sending this instance's communities by bare name gets a plain not_found,
+   * and lets admins and mods load deleted communities, like lemmy-ui.
+   */
+  private toCommunityName(handle: Handle | undefined) {
+    if (!handle) {
+      return handle;
+    }
+    const { name, host } = parseHandle(handle);
+    return host === new URL(this.instance).host ? name : handle;
+  }
+
   async getSite(options: RequestOptions) {
     const responses = await Promise.all([
       this.client.getSite(options),
@@ -1074,7 +1092,7 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
             page_cursor:
               form.pageCursor === INIT_PAGE_TOKEN ? undefined : form.pageCursor,
             limit: form.limit ?? this.limit,
-            community_name: form.communityHandle,
+            community_name: this.toCommunityName(form.communityHandle),
             multi_community_id,
             show_nsfw: form.showNsfw,
             // This lemmy-js-client build predates GetPosts.tag_id
@@ -1127,7 +1145,7 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
         ? this.client.getPosts(
             {
               search_term: form.q,
-              community_name: form.communityHandle,
+              community_name: this.toCommunityName(form.communityHandle),
               page_cursor: pageCursor,
               limit,
               sort: "new",
@@ -1142,7 +1160,7 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
         ? this.client.getComments(
             {
               search_term: form.q,
-              community_name: form.communityHandle,
+              community_name: this.toCommunityName(form.communityHandle),
               page_cursor: pageCursor,
               limit,
               sort: "new",
@@ -1244,7 +1262,7 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
   async getCommunity(form: Forms.GetCommunity, options?: RequestOptions) {
     const getCommunityResponse = await this.client.getCommunity(
       {
-        name: form.handle,
+        name: this.toCommunityName(form.handle),
       },
       options,
     );
@@ -2117,7 +2135,9 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
 
   async createPost(form: Forms.CreatePost) {
     const { community_view } = unwrapResponsData(
-      await this.client.getCommunity({ name: form.communityHandle }),
+      await this.client.getCommunity({
+        name: this.toCommunityName(form.communityHandle),
+      }),
     );
 
     const createPostResponse = await this.client.createPost({

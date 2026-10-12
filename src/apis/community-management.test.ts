@@ -330,6 +330,19 @@ describe("LemmyV4Api community settings", () => {
     });
   });
 
+  test("getCommunity asks for this instance's communities by bare name", async () => {
+    mockRoute("/api/v4/community", { ...communityResponse, moderators: [] });
+
+    await api.getCommunity({ handle: "cats@lemmy.example" }, {});
+    let url = new URL(String(lastRequest().url));
+    expect(url.searchParams.get("name")).toBe("cats");
+
+    // Other instances' communities keep the domain
+    await api.getCommunity({ handle: "cats@other.example" }, {});
+    url = new URL(String(lastRequest().url));
+    expect(url.searchParams.get("name")).toBe("cats@other.example");
+  });
+
   test("getCommunity maps settings fields and keeps mod order", async () => {
     mockRoute("/api/v4/community", {
       ...communityResponse,
@@ -713,7 +726,8 @@ describe("LemmyV4Api post tags", () => {
     );
     let url = new URL(String(lastRequest().url));
     expect(url.searchParams.get("tag_id")).toBe(String(TAG.id));
-    expect(url.searchParams.get("community_name")).toBe("cats@lemmy.example");
+    // A community on this instance goes by bare name
+    expect(url.searchParams.get("community_name")).toBe("cats");
 
     await api.getPosts({ type: "All" }, {});
     url = new URL(String(lastRequest().url));
