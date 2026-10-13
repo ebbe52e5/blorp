@@ -183,6 +183,15 @@ details > summary::-webkit-details-marker {
   .markdown-content.markdown-post-body blockquote {
     font-size: 17px;
   }
+
+  /*
+   * PingFang's strokes are ~14% thicker at 17px than at 15px, which reads
+   * heavier than an X article, so light mode gets a lighter color here.
+   * Dark mode is restated to keep its color.
+   */
+  .markdown-content.markdown-post-body {
+    @apply text-[rgb(45_50_56)] dark:text-[rgb(231_233_234)];
+  }
 }
 
 .markdown-content.markdown-post-body :is(code, pre) {
