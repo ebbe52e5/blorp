@@ -297,6 +297,30 @@ export function PostByline({
     post.creatorHandle,
   );
 
+  const communityAvatar = (
+    <Avatar
+      className={cn(
+        "h-6 w-6 text-sm",
+        showCommunity && showCreator && "h-8 w-8 text-md",
+      )}
+      aria-hidden
+    >
+      <AvatarImage
+        src={community?.icon ?? undefined}
+        className={cn(
+          "object-cover",
+          community?.nsfw &&
+            blurNsfw &&
+            !isRevealed &&
+            COMMUNITY_NSFW_ICON_BLUR_CLASS,
+        )}
+      />
+      <AvatarFallback>
+        {communityName.substring(0, 1).toUpperCase()}
+      </AvatarFallback>
+    </Avatar>
+  );
+
   const communityPart = (
     <>
       <span className="font-medium text-foreground">c/{communityName}</span>
@@ -312,29 +336,24 @@ export function PostByline({
         className,
       )}
     >
-      {!hideImage && (
-        <Avatar
-          className={cn(
-            "h-6 w-6 text-sm",
-            showCommunity && showCreator && "h-8 w-8 text-md",
-          )}
-          aria-hidden
-        >
-          <AvatarImage
-            src={community?.icon ?? undefined}
-            className={cn(
-              "object-cover",
-              community?.nsfw &&
-                blurNsfw &&
-                !isRevealed &&
-                COMMUNITY_NSFW_ICON_BLUR_CLASS,
-            )}
-          />
-          <AvatarFallback>
-            {communityName.substring(0, 1).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-      )}
+      {!hideImage &&
+        (communityName ? (
+          // The community name beside it is the keyboard-reachable link;
+          // this one is just a bigger target for pointers
+          <Link
+            to={`${linkCtx.root}c/:communityHandle`}
+            params={{
+              communityHandle: post.communityHandle,
+            }}
+            tabIndex={-1}
+            aria-hidden
+            className={cn("shrink-0", ABOVE_LINK_OVERLAY)}
+          >
+            {communityAvatar}
+          </Link>
+        ) : (
+          communityAvatar
+        ))}
 
       <div className="flex flex-col text-muted-foreground min-w-0 relative">
         {showCommunity && (
