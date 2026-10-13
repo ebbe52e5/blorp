@@ -90,6 +90,10 @@ const POLL_UNIT_OPTIONS: {
 
 const EMPTY_ARR: never[] = [];
 
+// Lemmy's POST_BODY_MAX_LENGTH. It counts UTF-16 code units, like
+// String.length, so a Chinese character counts as one.
+const LEMMY_POST_BODY_MAX_LENGTH = 50_000;
+
 function stripNewlines(value: string) {
   return value.replace(/[\r\n]+/g, " ");
 }
@@ -318,6 +322,10 @@ function CreatePostInner() {
 
   const softwareInfo = useSoftware();
   const { software } = softwareInfo;
+  const bodyLength = draft.body?.length ?? 0;
+  const bodyMaxLength =
+    software === "lemmy" ? LEMMY_POST_BODY_MAX_LENGTH : undefined;
+  const bodyTooLong = !!bodyMaxLength && bodyLength > bodyMaxLength;
   const showPollOption =
     (!isEdit
       ? supportsPollCreation({
@@ -435,6 +443,7 @@ function CreatePostInner() {
       disabled={
         !draft.communityHandle ||
         (isEdit && !canEdit) ||
+        bodyTooLong ||
         (draft.type === "poll" &&
           (software === "lemmy" || communitySoftware === "lemmy"))
       }
@@ -827,6 +836,30 @@ function CreatePostInner() {
                     !editingBody && draft.type !== "text" && !draft.body?.trim()
                   }
                 />
+                {bodyLength > 0 && (
+                  <p
+                    className={cn(
+                      "flex flex-wrap justify-end gap-x-2 text-xs text-muted-foreground",
+                      bodyTooLong && "text-destructive",
+                    )}
+                    data-testid="create-post-body-length"
+                  >
+                    {bodyTooLong && (
+                      <span>
+                        Too long by{" "}
+                        {(bodyLength - bodyMaxLength).toLocaleString()}{" "}
+                        {bodyLength - bodyMaxLength === 1
+                          ? "character"
+                          : "characters"}
+                        . Split it into multiple posts.
+                      </span>
+                    )}
+                    <span className="whitespace-nowrap">
+                      {bodyLength.toLocaleString()}
+                      {bodyMaxLength && ` / ${bodyMaxLength.toLocaleString()}`}
+                    </span>
+                  </p>
+                )}
               </div>
 
               {getPostButton("self-end max-xl:hidden")}
