@@ -368,8 +368,8 @@ export default function Post() {
             media.maxMd
               ? theme === "light"
                 ? {
-                    "--background": "var(--color-brand-secondary)",
-                    "--border-color": "var(--color-brand-secondary)",
+                    "--background": "var(--color-brand)",
+                    "--border-color": "var(--color-brand)",
                   }
                 : {
                     "--border-color": "var(--color-background)",
