@@ -56,6 +56,13 @@ RUN printf '%s\n' \
   '    # React Router support: serve index.html for any path' \
   '    location / {' \
   '        try_files $uri $uri/ /index.html;' \
+  '        add_header Cache-Control "no-cache" always;' \
+  '    }' \
+  '' \
+  '    # Always revalidate the page: a stale index.html points at hashed' \
+  '    # chunks that the next deploy removes, which left a blank page' \
+  '    location = /index.html {' \
+  '        add_header Cache-Control "no-cache" always;' \
   '    }' \
   '' \
   '    # long‑term caching for static assets' \
