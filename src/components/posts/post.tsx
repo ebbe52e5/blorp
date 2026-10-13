@@ -642,7 +642,11 @@ function LargePostCard({
         !post.removed && <BandcampEmbed embedVideoUrl={embed.embedUrl} />}
 
       {detailView && post.body && !post.deleted && !post.removed && (
-        <div className={cn("flex-1", ABOVE_LINK_OVERLAY)} {...doubeTapLike}>
+        // A container so the body's text size can follow the column width
+        <div
+          className={cn("flex-1 @container", ABOVE_LINK_OVERLAY)}
+          {...doubeTapLike}
+        >
           <MarkdownRenderer
             markdown={post.body}
             className="pt-2 markdown-post-body"

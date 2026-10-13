@@ -149,15 +149,40 @@ details > summary::-webkit-details-marker {
 /*
  * A post's body on its own page is long-form reading, so it gets a larger size
  * than comments and sidebars. Two class names so this beats the text-sm and
- * text-xs sizes above. Size, line height and color match the body text of an
- * article on X (15px, 1.625, rgb(15 20 26) and X's dark-mode rgb(231 233 234)).
+ * text-xs sizes above. Line height and color match the body text of an
+ * article on X (1.625, rgb(15 20 26) and X's dark-mode rgb(231 233 234)).
+ * X uses 15px in a 568px column. Ours reaches ~720px on desktop, where 15px
+ * reads small, so a column of 600px or more gets 17px for a similar number of
+ * characters per line. This keys off the column (post.tsx makes the body's
+ * wrapper a container), not the viewport: sidebars come and go at different
+ * breakpoints, so a 1024px window has a narrower column than a 900px one.
  */
 .markdown-content.markdown-post-body {
   @apply text-[15px] leading-relaxed text-[rgb(15_20_26)] dark:text-[rgb(231_233_234)];
+  /*
+   * On Apple devices -apple-system renders Chinese in the compact UI variant
+   * of PingFang, which reads smaller than the regular PingFang SC that X
+   * articles fall back to. Naming PingFang SC first picks the regular one;
+   * the rest is the app's usual stack for systems without it.
+   */
+  font-family:
+    "PingFang SC",
+    -apple-system,
+    "system-ui",
+    "Helvetica Neue",
+    Roboto,
+    sans-serif;
 }
 
 .markdown-content.markdown-post-body blockquote {
   @apply text-[15px];
+}
+
+@container (min-width: 600px) {
+  .markdown-content.markdown-post-body,
+  .markdown-content.markdown-post-body blockquote {
+    font-size: 17px;
+  }
 }
 
 .markdown-content.markdown-post-body :is(code, pre) {
