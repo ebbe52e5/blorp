@@ -2341,15 +2341,34 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
   }
 
   async saveUserSettings(form: Forms.SaveUserSettings) {
-    const response = await this.client.saveUserSettings({
-      //avatar: form.avatar,
-      //banner: form.banner,
-      bio: form.bio,
-      email: form.email,
-      show_nsfw: form.showNsfw,
-      blur_nsfw: form.blurNsfw,
-    });
-    unwrapResponsData(response);
+    // v4 settings take no avatar or banner; they're uploaded on their own
+    // endpoints, which set them on the account
+    for (const [image, upload] of [
+      [form.avatar, (image: File) => this.client.uploadUserAvatar({ image })],
+      [form.banner, (image: File) => this.client.uploadUserBanner({ image })],
+    ] as const) {
+      if (image) {
+        const { image_url } = unwrapResponsData(await upload(image));
+        // lemmy-js-client's upload ignores the HTTP status, so a failed
+        // upload shows up as a response without a url
+        if (!image_url) {
+          throw new Error("Couldn't upload image");
+        }
+      }
+    }
+
+    const settings = _.omitBy(
+      {
+        bio: form.bio,
+        email: form.email,
+        show_nsfw: form.showNsfw,
+        blur_nsfw: form.blurNsfw,
+      },
+      _.isUndefined,
+    );
+    if (!_.isEmpty(settings)) {
+      unwrapResponsData(await this.client.saveUserSettings(settings));
+    }
   }
 
   async removeUserAvatar() {
