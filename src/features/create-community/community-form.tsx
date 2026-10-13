@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { Forms } from "@/src/apis/api-blueprint";
 import { MarkdownEditor } from "@/src/components/markdown/editor";
 import { LoadingButton } from "@/src/components/ui/button";
@@ -7,11 +7,7 @@ import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
 import { MultiSelect } from "@/src/components/ui/multi-select";
 import { SimpleSelect } from "@/src/components/ui/simple-select";
-import {
-  useCreateCommunityMutation,
-  useDeleteImageMutation,
-  useUploadImageMutation,
-} from "@/src/queries";
+import { useCreateCommunityMutation } from "@/src/queries";
 import { getAccountSite, useAuth } from "@/src/stores/auth";
 import { ImageDropzone } from "./image-dropzone";
 import {
@@ -30,36 +26,35 @@ import {
 function ImageUploadField({
   id,
   label,
-  url,
+  file,
   onChange,
   imgClassName,
 }: {
   id: string;
   label: string;
-  url: string | undefined;
-  onChange: (url: string | undefined) => void;
+  file: File | undefined;
+  onChange: (file: File | undefined) => void;
   imgClassName?: string;
 }) {
-  const uploadImage = useUploadImageMutation();
-  const deleteImage = useDeleteImageMutation();
+  // Previewed locally; the image is uploaded once the community exists
+  const [previewUrl, setPreviewUrl] = useState<string>();
+  useEffect(() => {
+    if (!file) {
+      setPreviewUrl(undefined);
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
   return (
     <ImageDropzone
       id={id}
       label={label}
-      url={url}
-      pending={uploadImage.isPending}
-      onDrop={(image) =>
-        uploadImage
-          .mutateAsync({ image })
-          .then((res) => onChange(res.url))
-          .catch((err) => console.log(err))
-      }
-      onRemove={() => {
-        if (url) {
-          deleteImage.mutate({ url });
-        }
-        onChange(undefined);
-      }}
+      url={previewUrl}
+      pending={false}
+      onDrop={onChange}
+      onRemove={() => onChange(undefined)}
       imgClassName={imgClassName}
     />
   );
@@ -75,10 +70,11 @@ export function CommunityForm() {
   const patchForm = (patch: Partial<Forms.CreateCommunity>) =>
     setForm((prev) => ({ ...prev, ...patch }));
 
-  // lemmy-ui lets you upload an icon and banner here but never sends them in
-  // the create request, so they only live in local state.
-  const [icon, setIcon] = useState<string>();
-  const [banner, setBanner] = useState<string>();
+  // The backend's create request takes no icon or banner (lemmy-ui uploads
+  // them here and then drops them), so the files are kept until submit and
+  // uploaded to /community/icon|banner once the community exists.
+  const [icon, setIcon] = useState<File>();
+  const [banner, setBanner] = useState<File>();
 
   const languageOptions = useSiteLanguageOptions();
 
@@ -95,6 +91,7 @@ export function CommunityForm() {
       postingRestrictedToMods: form.postingRestrictedToMods,
       discussionLanguages: form.discussionLanguages,
       visibility: form.visibility,
+      images: { icon, banner },
     });
   };
 
@@ -139,7 +136,7 @@ export function CommunityForm() {
       <ImageUploadField
         id={`${id}-icon`}
         label="Icon"
-        url={icon}
+        file={icon}
         onChange={setIcon}
         imgClassName="w-24 h-24 rounded-full"
       />
@@ -147,7 +144,7 @@ export function CommunityForm() {
       <ImageUploadField
         id={`${id}-banner`}
         label="Banner"
-        url={banner}
+        file={banner}
         onChange={setBanner}
         imgClassName="w-full h-32 rounded-md"
       />

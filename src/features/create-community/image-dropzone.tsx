@@ -7,8 +7,8 @@ import { cn } from "@/src/lib/utils";
 
 /**
  * Icon/banner picker used by the community forms. Uploading is left to the
- * caller, since create and edit upload differently (lemmy-ui uses the
- * generic image endpoint on create and /community/icon|banner on edit).
+ * caller, since create and edit upload at different times (create keeps
+ * the file until the community exists, edit uploads after a confirmation).
  */
 export function ImageDropzone({
   id,

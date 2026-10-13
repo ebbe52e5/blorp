@@ -2826,11 +2826,50 @@ export function useCreateCommunityMutation() {
   const getCachePrefixer = useAuth((s) => s.getCachePrefixer);
   const cacheCommunities = useCommunitiesStore((s) => s.cacheCommunities);
   return useMutation({
-    mutationFn: async (form: Forms.CreateCommunity) =>
-      (await api).createCommunity(form),
+    mutationFn: async ({
+      images,
+      ...form
+    }: Forms.CreateCommunity & {
+      images?: Partial<Record<Forms.CommunityImageKind, File>>;
+    }) => {
+      const client = await api;
+      const community = await client.createCommunity(form);
+      // The backend's create request has no icon/banner, so they're set on
+      // the new community afterwards. The community exists by then, so a
+      // failed upload only warns instead of failing the whole create.
+      const failed: Forms.CommunityImageKind[] = [];
+      for (const kind of ["icon", "banner"] as const) {
+        const image = images?.[kind];
+        if (!image) {
+          continue;
+        }
+        try {
+          const { url } = await client.uploadCommunityImage({
+            communityId: community.id,
+            kind,
+            image,
+          });
+          // lemmy-js-client's upload ignores the HTTP status, so a failed
+          // upload shows up as a response without a url
+          if (!url) {
+            throw new Error(`No url in the ${kind} upload response`);
+          }
+          community[kind] = url;
+        } catch (err) {
+          console.error(err);
+          failed.push(kind);
+        }
+      }
+      return { community, failed };
+    },
     onMutate: () => toast.loading("Creating community"),
-    onSuccess: (community, _, toastId) => {
+    onSuccess: ({ community, failed }, _, toastId) => {
       toast.dismiss(toastId);
+      if (failed.length > 0) {
+        toast.error(
+          `Community created, but the ${failed.join(" and ")} couldn't be uploaded. You can set it in community settings.`,
+        );
+      }
       cacheCommunities(getCachePrefixer(), [{ communityView: community }]);
       // Refresh the site so the new community shows up under moderates
       queryClient.invalidateQueries({ queryKey: refreshAuthKey });
