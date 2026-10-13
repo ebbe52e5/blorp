@@ -13,6 +13,7 @@ import { CommunityJoinButton } from "./community-join-button";
 import { useLinkContext } from "@/src/hooks/navigation-hooks";
 import { useCommunityFromStore } from "@/src/stores/communities";
 import { LuCakeSlice } from "react-icons/lu";
+import { CommunityVisibility } from "./community-visibility";
 import { Link, resolveRoute, useHistory } from "@/src/routing/index";
 import { supportsCreateCommunity } from "@/src/apis/support";
 import {
@@ -228,6 +229,10 @@ export function SmallScreenSidebar({
                 hideAltTooltip
               />
             )}
+            <CommunityVisibility
+              visibility={communityView?.visibility}
+              className="pt-3"
+            />
           </section>
 
           <Separator />
@@ -547,6 +552,10 @@ function CommunitySidebarInner({
                     Posts: communityView?.postCount,
                     Comments: communityView?.commentCount,
                   }}
+                />
+                <CommunityVisibility
+                  visibility={communityView.visibility}
+                  className="mt-3"
                 />
               </CollapsibleContent>
             </Collapsible>
