@@ -22,6 +22,7 @@ import { Separator } from "../ui/separator";
 import { useSidebarStore } from "@/src/stores/sidebars";
 import { cn } from "@/src/lib/utils";
 import { AggregateBadges } from "../aggregates";
+import { Badge } from "../ui/badge";
 import { Skeleton } from "../ui/skeleton";
 import { EasterEggBox } from "@/src/components/easter-eggs/EasterEggBox";
 import { DateTime } from "../datetime";
@@ -130,7 +131,10 @@ export function SmallScreenSidebar({
             // zhifou.io Lemmy fork only
             People: feed?.personApIds?.length || undefined,
           }}
-        />
+        >
+          {/* Only the owner and admins can see a deleted feed */}
+          {feed?.deleted && <Badge variant="destructive">Deleted</Badge>}
+        </AggregateBadges>
 
         {!expanded && createdAt}
 
@@ -304,7 +308,11 @@ export function FeedSidebar({
               />
             </div>
 
-            <span className="font-bold line-clamp-1">{feed.handle}</span>
+            <div className="flex items-center gap-2">
+              <span className="font-bold line-clamp-1">{feed.handle}</span>
+              {/* Only the owner and admins can see a deleted feed */}
+              {feed.deleted && <Badge variant="destructive">Deleted</Badge>}
+            </div>
 
             <div className="flex items-center gap-1.5 text-sm text-zinc-500 dark:text-zinc-400">
               <LuCakeSlice />

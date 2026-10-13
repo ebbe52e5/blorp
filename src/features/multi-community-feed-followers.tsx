@@ -20,6 +20,7 @@ import { Schemas } from "../apis/api-blueprint";
 import { ContentGutters } from "../components/gutters";
 import { decodeApId } from "../apis/utils";
 import { useMultiCommunityFeedFromStore } from "../stores/multi-community-feeds";
+import { useCanSeeFeed } from "../stores/auth";
 
 // The list behind the Subscribers count in the feed sidebar. Only the
 // zhifou.io Lemmy fork lists feed followers, and only to the feed's creator
@@ -31,6 +32,7 @@ export default function MultiCommunityFeedFollowers() {
 
   const feedQuery = useMultiCommunityFeedQuery({ apId });
   const feed = useMultiCommunityFeedFromStore(apId)?.feedView;
+  const canSeeFeed = useCanSeeFeed(feed);
 
   const followersQuery = useMultiCommunityFeedFollowersQuery({
     feedId: feed?.id,
@@ -48,7 +50,7 @@ export default function MultiCommunityFeedFollowers() {
   const title = `Subscribers — ${feed?.title || feed?.name || apId}`;
 
   return (
-    <Page notFound={feedQuery.isError}>
+    <Page notFound={feedQuery.isError || !canSeeFeed}>
       <PageTitle>{title}</PageTitle>
       <IonHeader>
         <IonToolbar>

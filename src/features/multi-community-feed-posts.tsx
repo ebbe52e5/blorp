@@ -37,7 +37,7 @@ import { FaArrowUp } from "react-icons/fa6";
 import { useMedia } from "../hooks";
 import { FeedPostSortBar } from "../components/multi-community-feeds/feed-post-sort-bar";
 import { ToolbarTitle } from "../components/toolbar/toolbar-title";
-import { useAuth, useIsCommunityBlocked } from "../stores/auth";
+import { useAuth, useCanSeeFeed, useIsCommunityBlocked } from "../stores/auth";
 import { usePostsStore } from "../stores/posts";
 import { ToolbarBackButton } from "../components/toolbar/toolbar-back-button";
 import { ToolbarButtons } from "../components/toolbar/toolbar-buttons";
@@ -71,6 +71,7 @@ export default function MultiCommunityFeedPosts() {
     apId,
   });
   const feed = useMultiCommunityFeedFromStore(apId)?.feedView;
+  const canSeeFeed = useCanSeeFeed(feed);
 
   const paginationMode = useSettingsStore((s) => s.paginationMode);
   const { postSort, suggestedPostSort } = useAvailableSortsQuery();
@@ -126,7 +127,8 @@ export default function MultiCommunityFeedPosts() {
     <Page
       notFound={
         (software.software !== undefined && !supportsFeeds(software)) ||
-        (feedQuery.isError && !feed)
+        (feedQuery.isError && !feed) ||
+        !canSeeFeed
       }
     >
       <PageTitle>{feed?.handle ?? apId}</PageTitle>

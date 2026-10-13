@@ -6,6 +6,7 @@ import _ from "lodash";
 import { env } from "../env";
 import z from "zod";
 import { Schemas, siteSchema } from "../apis/api-blueprint";
+import { isFeedVisibleTo } from "../apis/utils";
 import { v4 as uuid } from "uuid";
 import { isTest } from "../lib/device";
 import { normalizeInstance } from "../normalize-instance";
@@ -490,6 +491,20 @@ export function useAmIAdmin() {
     const site = getAccountSite(account);
     return site?.me?.apId && site?.admins?.includes(site.me?.apId);
   });
+}
+
+/**
+ * Whether the selected account may see a multi-community feed. Deleted feeds
+ * are only shown to their owner and admins, like in the feed lists.
+ */
+export function useCanSeeFeed(
+  feed: Schemas.MultiCommunityFeed | null | undefined,
+) {
+  const myApId = useAuth(
+    (s) => getAccountSite(s.getSelectedAccount())?.me?.apId,
+  );
+  const isAdmin = useAmIAdmin();
+  return !feed || isFeedVisibleTo(feed, { apId: myApId, isAdmin: !!isAdmin });
 }
 
 export function useLoginSuggestions(instance: string) {

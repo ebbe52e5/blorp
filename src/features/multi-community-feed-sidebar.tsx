@@ -11,6 +11,8 @@ import { Link, useParams } from "@/src/routing/index";
 import { useSoftware } from "@/src/queries/index";
 import { supportsFeeds } from "@/src/apis/support";
 import { Page } from "@/src/components/page";
+import { useCanSeeFeed } from "@/src/stores/auth";
+import { useMultiCommunityFeedFromStore } from "@/src/stores/multi-community-feeds";
 
 import { UserDropdown } from "../components/nav";
 import { PageTitle } from "../components/page-title";
@@ -32,10 +34,16 @@ export default function MultiCommunitySidebar() {
   const apId = useMemo(() => decodeApId(encodedApId), [encodedApId]);
 
   const software = useSoftware();
+  const canSeeFeed = useCanSeeFeed(
+    useMultiCommunityFeedFromStore(apId)?.feedView,
+  );
 
   return (
     <Page
-      notFound={software.software !== undefined && !supportsFeeds(software)}
+      notFound={
+        (software.software !== undefined && !supportsFeeds(software)) ||
+        !canSeeFeed
+      }
     >
       <PageTitle>{apId}</PageTitle>
       <IonHeader>
