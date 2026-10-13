@@ -128,7 +128,7 @@ function FileUpload({
   return (
     <div
       {...getRootProps()}
-      className="border-2 border-dashed min-h-32 rounded-md p-2"
+      className="border-2 border-dashed min-h-32 rounded-md p-2 flex flex-col items-center justify-center gap-2 cursor-pointer text-center"
     >
       <input id="profile-upload" {...getInputProps()} />
       {placeholder && (
