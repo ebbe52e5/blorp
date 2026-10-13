@@ -3,7 +3,7 @@ import { persist } from "zustand/middleware";
 import { createStorage, sync } from "./storage";
 import _ from "lodash";
 import { MAX_CACHE_MS } from "./config";
-import { Account, CachePrefixer, useAuth } from "./auth";
+import { Account, CachePrefixer, getAccountSite, useAuth } from "./auth";
 import {
   Handle,
   Schemas,
@@ -231,4 +231,30 @@ export function useCommunitiesFromStore(communityHandle?: string[]) {
         .filter(isNotNil),
     ),
   );
+}
+
+/**
+ * Whether a community only lets its moderators post and the account isn't
+ * one of them. Lemmy checks this when creating a post, and admins aren't
+ * exempt. Backends that don't report the setting never restrict.
+ */
+export function isPostingRestrictedFor(
+  community: Pick<Schemas.Community, "handle" | "postingRestrictedToMods">,
+  moderates: readonly string[] | null | undefined,
+) {
+  return (
+    !!community.postingRestrictedToMods &&
+    !(moderates ?? []).includes(community.handle)
+  );
+}
+
+/** The communities the selected account moderates */
+export function useMyModerates() {
+  return useAuth((s) => getAccountSite(s.getSelectedAccount())?.moderates);
+}
+
+export function useCanPostInCommunity(communityHandle?: Handle) {
+  const community = useCommunityFromStore(communityHandle)?.communityView;
+  const moderates = useMyModerates();
+  return !community || !isPostingRestrictedFor(community, moderates);
 }

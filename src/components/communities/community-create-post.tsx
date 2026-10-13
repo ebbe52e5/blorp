@@ -4,7 +4,10 @@ import { v4 as uuid } from "uuid";
 import _ from "lodash";
 import { Deferred } from "@/src/lib/deferred";
 import { useAuth } from "@/src/stores/auth";
-import { useCommunityFromStore } from "@/src/stores/communities";
+import {
+  useCanPostInCommunity,
+  useCommunityFromStore,
+} from "@/src/stores/communities";
 import { resolveRoute } from "@/src/routing";
 import { Handle } from "@/src/lib/handle";
 
@@ -71,8 +74,9 @@ export function CommunityCreatePost({
   const isLoggedIn = useAuth((s) => s.isLoggedIn());
 
   const createPost = useCommunityCreatePost({ communityHandle });
+  const canPost = useCanPostInCommunity(communityHandle);
 
-  if (!isLoggedIn || !communityHandle) {
+  if (!isLoggedIn || !communityHandle || !canPost) {
     return null;
   }
 

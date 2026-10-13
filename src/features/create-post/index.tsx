@@ -55,8 +55,11 @@ import { usePostFromStore } from "../../stores/posts";
 import { getAccountActorId, useAuth } from "../../stores/auth";
 import { Sidebar, SidebarContent } from "../../components/sidebar";
 import {
+  isPostingRestrictedFor,
+  useCanPostInCommunity,
   useCommunitiesFromStore,
   useCommunityFromStore,
+  useMyModerates,
 } from "../../stores/communities";
 import { ToolbarButtons } from "../../components/toolbar/toolbar-buttons";
 import { MultiSelect } from "../../components/ui/multi-select";
@@ -308,6 +311,9 @@ function CreatePostInner() {
     name: draft.communityHandle,
   });
   const community = useCommunityFromStore(draft.communityHandle);
+  // Edits aren't restricted, only new posts
+  const postingRestricted =
+    !useCanPostInCommunity(draft.communityHandle ?? undefined) && !isEdit;
   const flairs = useFlairs(community?.flairs?.map((f) => f.id));
   const flairLookup = useFlairLookup(flairs);
 
@@ -443,6 +449,7 @@ function CreatePostInner() {
       disabled={
         !draft.communityHandle ||
         (isEdit && !canEdit) ||
+        postingRestricted ||
         bodyTooLong ||
         (draft.type === "poll" &&
           (software === "lemmy" || communitySoftware === "lemmy"))
@@ -516,6 +523,11 @@ function CreatePostInner() {
                 )}
                 {!isEdit && <FaChevronDown className="text-brand" />}
               </button>
+              {postingRestricted && (
+                <p className="text-sm text-destructive">
+                  Only moderators can post in this community.
+                </p>
+              )}
 
               <ToggleGroup
                 type="single"
@@ -947,6 +959,35 @@ const ChooseCommunityMemoed = memo(function ChooseCommunity({
   if (selectedCommunity) {
     data.unshift("Selected", selectedCommunity);
   }
+
+  // Hide communities that only let their moderators post, unless we're one.
+  // Recent entries are snapshots, so prefer the cached community when there is
+  // one. The selected community stays, and the form explains why it can't post.
+  const moderates = useMyModerates();
+  const listedCommunities = useCommunitiesFromStore(
+    data.flatMap((item) => (typeof item === "string" ? [] : [item.handle])),
+  );
+  data = data.filter((item) => {
+    if (typeof item === "string" || item === selectedCommunity) {
+      return true;
+    }
+    const community =
+      listedCommunities?.find((c) => c.communityView.handle === item.handle)
+        ?.communityView ?? item;
+    return !isPostingRestrictedFor(
+      {
+        handle: item.handle,
+        postingRestrictedToMods:
+          "postingRestrictedToMods" in community &&
+          community.postingRestrictedToMods === true,
+      },
+      moderates,
+    );
+  });
+  // Drop section headings that no longer have communities under them
+  data = data.filter(
+    (item, i) => typeof item !== "string" || typeof data[i + 1] === "object",
+  );
 
   data = _.uniqBy(data, (item) => {
     if (typeof item === "string") {

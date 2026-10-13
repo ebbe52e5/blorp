@@ -8,7 +8,7 @@ import {
   vi,
 } from "vitest";
 import * as api from "@/test-utils/api";
-import { useCommunitiesStore } from "./communities";
+import { isPostingRestrictedFor, useCommunitiesStore } from "./communities";
 import _ from "lodash";
 import { renderHook, act } from "@testing-library/react";
 import { SubscribedType } from "lemmy-v3";
@@ -252,5 +252,33 @@ describe("persisted state snapshot", () => {
 
     expect(result.current.communities).toMatchSnapshot();
     expect(_.omitBy(result.current, _.isFunction)).toMatchSnapshot();
+  });
+});
+
+describe("isPostingRestrictedFor", () => {
+  const handle = "cats@lemmy.example" as const;
+
+  test("restricts communities where only mods can post", () => {
+    expect(
+      isPostingRestrictedFor({ handle, postingRestrictedToMods: true }, []),
+    ).toBe(true);
+    expect(
+      isPostingRestrictedFor({ handle, postingRestrictedToMods: true }, null),
+    ).toBe(true);
+  });
+
+  test("lets the community's moderators post", () => {
+    expect(
+      isPostingRestrictedFor({ handle, postingRestrictedToMods: true }, [
+        handle,
+      ]),
+    ).toBe(false);
+  });
+
+  test("doesn't restrict when the setting is off or unknown", () => {
+    expect(
+      isPostingRestrictedFor({ handle, postingRestrictedToMods: false }, []),
+    ).toBe(false);
+    expect(isPostingRestrictedFor({ handle }, [])).toBe(false);
   });
 });

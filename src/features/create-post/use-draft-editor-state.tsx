@@ -9,6 +9,10 @@ import {
 } from "../../stores/create-post";
 import { useEvent, useUrlSearchState } from "../../hooks";
 import { useRecentCommunitiesStore } from "@/src/stores/recent-communities";
+import {
+  isPostingRestrictedFor,
+  useMyModerates,
+} from "@/src/stores/communities";
 import { useCallback, useState } from "react";
 import { createContext } from "use-context-selector";
 import { encodedApIdSchema } from "@/src/apis/utils";
@@ -38,8 +42,12 @@ export function useDraftIdUrlParam() {
 }
 
 export function useDraftFromUrl() {
-  const mostRecentCommunity = useRecentCommunitiesStore(
-    (s) => s.recentlyVisited[0],
+  // New drafts start in the most recent community we can post in, skipping
+  // ones where only their moderators can post
+  const recentlyVisited = useRecentCommunitiesStore((s) => s.recentlyVisited);
+  const moderates = useMyModerates();
+  const mostRecentCommunity = recentlyVisited.find(
+    (community) => !isPostingRestrictedFor(community, moderates),
   );
 
   const idUrlParam = useDraftIdUrlParam();
