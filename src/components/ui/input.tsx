@@ -19,7 +19,7 @@ function Input({
     <div
       className={cn(
         "flex h-9 w-full items-center rounded-md border border-input bg-transparent px-3 shadow-xs transition-[color,box-shadow]",
-        "focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]",
+        "focus-within:border-ring",
         "has-[>input[aria-invalid='true']]:aria-invalid:ring-destructive/20 has-[>input[aria-invalid='true']]:dark:ring-destructive/40",
         "has-[>input[aria-invalid='true']]:border-destructive",
         wrapperClassName,
