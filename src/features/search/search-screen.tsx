@@ -10,7 +10,7 @@ import {
 } from "@/src/components/posts/post";
 import { CommunitySidebar } from "@/src/components/communities/community-sidebar";
 import { ContentGutters } from "@/src/components/gutters";
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { VirtualList } from "@/src/components/virtual-list";
 import {
   CommunityCard,
@@ -23,7 +23,7 @@ import { Link, useParams } from "@/src/routing/index";
 import { IonContent, IonHeader, IonToolbar } from "@ionic/react";
 import { PageTitle } from "@/src/components/page-title";
 import { UserDropdown } from "@/src/components/nav";
-import { useKeyboardShortcut, useMedia, useUrlSearchState } from "@/src/hooks";
+import { useMedia, useUrlSearchState } from "@/src/hooks";
 import { PostReportProvider } from "@/src/components/posts/post-report";
 import z from "zod";
 import { PersonCard } from "@/src/components/person/person-card";
@@ -37,7 +37,6 @@ import { Separator } from "@/src/components/ui/separator";
 import { ToolbarBackButton } from "@/src/components/toolbar/toolbar-back-button";
 import { ToolbarButtons } from "@/src/components/toolbar/toolbar-buttons";
 import { SearchBar } from "./search-bar";
-import { KeyboardShortcut } from "../keyboard-shortcut";
 import { RecentSearchesSidebar } from "./recent-searches-sidebar";
 import { useSearchStore } from "@/src/stores/search";
 import { Button } from "@/src/components/ui/button";
@@ -212,31 +211,6 @@ export default function SearchFeed({
     z.enum(["posts", "communities", "users", "comments"]),
   );
   const type = typeParam.value;
-  const setType = typeParam.set;
-
-  useKeyboardShortcut(
-    useCallback(
-      (e) => {
-        if (!(e.target instanceof HTMLInputElement)) {
-          switch (e.key) {
-            case "1":
-              setType("posts");
-              break;
-            case "2":
-              setType("comments");
-              break;
-            case "3":
-              setType("communities");
-              break;
-            case "4":
-              setType("users");
-              break;
-          }
-        }
-      },
-      [setType],
-    ),
-  );
 
   const { postSort } = useAvailableSortsQuery();
 
@@ -387,25 +361,15 @@ export default function SearchFeed({
                     )
                   }
                 >
-                  <ToggleGroupItem value="posts">
-                    Posts
-                    <KeyboardShortcut>1</KeyboardShortcut>
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="comments">
-                    Comments
-                    <KeyboardShortcut>2</KeyboardShortcut>
-                  </ToggleGroupItem>
+                  <ToggleGroupItem value="posts">Posts</ToggleGroupItem>
+                  <ToggleGroupItem value="comments">Comments</ToggleGroupItem>
                   {scope === "global" && (
                     <ToggleGroupItem value="communities">
                       Communities
-                      <KeyboardShortcut>3</KeyboardShortcut>
                     </ToggleGroupItem>
                   )}
                   {scope === "global" && (
-                    <ToggleGroupItem value="users">
-                      Users
-                      <KeyboardShortcut>4</KeyboardShortcut>
-                    </ToggleGroupItem>
+                    <ToggleGroupItem value="users">Users</ToggleGroupItem>
                   )}
                 </ToggleGroup>
               </StickyFilterBar>,
