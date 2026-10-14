@@ -16,6 +16,8 @@ pnpm test
 pnpm lint
 ```
 
+When click-testing against a local Lemmy (`pnpm dev` with `REACT_APP_DEFAULT_INSTANCE`), use `http://127.0.0.1:8536`; `normalizeInstance` rejects `localhost`, which has no dot. Expect logins to vanish on a full page reload: the handle `user@127.0.0.1:8536` fails `handleSchema`, so the persisted auth store fails to parse and is replaced with a fresh guest. Navigate in-app (`history.pushState` plus a `popstate` event) instead of `page.goto`/`reload`. Real hostnames like zhifou.io are unaffected.
+
 ## ESLint
 
 - Do not add `eslint-disable` comments without explicit developer approval. Many of our lint rules exist specifically to require a human decision — disabling them silently defeats the purpose.

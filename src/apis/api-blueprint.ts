@@ -1089,6 +1089,12 @@ export namespace Forms {
     replyHideThreshold?: number;
   };
 
+  export type ChangePassword = {
+    newPassword: string;
+    newPasswordVerify: string;
+    oldPassword: string;
+  };
+
   export type ResolveObject = {
     q: string;
   };
@@ -1462,6 +1468,11 @@ export abstract class ApiBlueprint<C> {
   abstract register(form: Forms.Register): Promise<Schemas.Registration>;
 
   abstract saveUserSettings(form: Forms.SaveUserSettings): Promise<void>;
+
+  /** Changing the password invalidates every login, so callers must store the returned jwt */
+  abstract changePassword(
+    form: Forms.ChangePassword,
+  ): Promise<{ jwt: string | null }>;
 
   abstract removeUserAvatar(): Promise<void>;
 

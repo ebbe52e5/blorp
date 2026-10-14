@@ -85,6 +85,7 @@ type AuthStore = {
   isLoggedIn: () => boolean;
   updateSelectedAccount: (patch: Partial<UpdateAccount>) => any;
   updateAccountSite: (uuid: Uuid, site: Schemas.Site) => any;
+  updateAccountJwt: (uuid: Uuid, jwt: string) => any;
   addAccount: (patch?: Partial<UpdateAccount>) => any;
   selectAccount: (uuid: Uuid) => Account | null;
   logout: (uuid?: Uuid) => any;
@@ -279,6 +280,13 @@ export const useAuth = create<AuthStore>()(
           }
         }
         set({ accounts, knownAccounts });
+      },
+      updateAccountJwt: (uuid, jwt) => {
+        set({
+          accounts: get().accounts.map((a) =>
+            a.uuid === uuid ? { ...a, jwt } : a,
+          ),
+        });
       },
       updateSelectedAccount: (patch) => {
         const state = get();

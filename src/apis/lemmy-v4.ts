@@ -2371,6 +2371,17 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
     }
   }
 
+  async changePassword(form: Forms.ChangePassword) {
+    const { jwt } = unwrapResponsData(
+      await this.client.changePassword({
+        new_password: form.newPassword,
+        new_password_verify: form.newPasswordVerify,
+        old_password: form.oldPassword,
+      }),
+    );
+    return { jwt: jwt ?? null };
+  }
+
   async removeUserAvatar() {
     const response = await this.client.deleteUserAvatar();
     unwrapResponsData(response);

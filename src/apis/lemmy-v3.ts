@@ -1782,6 +1782,17 @@ export class LemmyV3Api implements ApiBlueprint<lemmyV3.LemmyHttp> {
     });
   }
 
+  async changePassword(form: Forms.ChangePassword) {
+    return translateErrors(async () => {
+      const { jwt } = await this.client.changePassword({
+        new_password: form.newPassword,
+        new_password_verify: form.newPasswordVerify,
+        old_password: form.oldPassword,
+      });
+      return { jwt: jwt ?? null };
+    });
+  }
+
   async removeUserAvatar() {
     return translateErrors(async () => {
       await this.client.saveUserSettings({

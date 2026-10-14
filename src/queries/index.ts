@@ -1086,6 +1086,43 @@ export function useUpdateUserSettingsMutation() {
   });
 }
 
+export function useChangePasswordMutation() {
+  const queryClient = useQueryClient();
+  const queryKey = useRefreshAuthKey();
+  const updateAccountJwt = useAuth((s) => s.updateAccountJwt);
+
+  return useMutation({
+    mutationFn: async ({
+      account,
+      form,
+    }: {
+      account: Account;
+      form: Forms.ChangePassword;
+    }) => {
+      const api = await apiClient(account);
+      const { jwt } = await api.changePassword(form);
+      // The old jwt is invalidated server side
+      if (jwt) {
+        updateAccountJwt(account.uuid, jwt);
+      }
+    },
+    onSuccess: () => {
+      toast.success("Password changed");
+      queryClient.invalidateQueries({
+        queryKey,
+      });
+    },
+    onError: (err) => {
+      if (isErrorLike(err)) {
+        toast.error(extractErrorContent(err));
+      } else {
+        toast.error("An unexpected error occured");
+      }
+      console.error(err);
+    },
+  });
+}
+
 export function useRemoveUserAvatarMutation() {
   const queryClient = useQueryClient();
   const queryKey = useRefreshAuthKey();

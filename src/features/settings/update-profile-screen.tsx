@@ -5,16 +5,23 @@ import { FiHelpCircle } from "react-icons/fi";
 import { UserDropdown } from "@/src/components/nav";
 import { PageTitle } from "@/src/components/page-title";
 import { useParams } from "@/src/routing";
-import { getAccountSite, parseAccountInfo, useAuth } from "@/src/stores/auth";
+import {
+  type Account,
+  getAccountSite,
+  parseAccountInfo,
+  useAuth,
+} from "@/src/stores/auth";
 import { Page } from "../../components/page";
 import { ToolbarBackButton } from "@/src/components/toolbar/toolbar-back-button";
 import { ToolbarTitle } from "@/src/components/toolbar/toolbar-title";
 import { useState } from "react";
 import { MarkdownEditor } from "@/src/components/markdown/editor";
 import {
+  useChangePasswordMutation,
   useRemoveUserAvatarMutation,
   useUpdateUserSettingsMutation,
 } from "@/src/queries";
+import { toast } from "sonner";
 import { Button } from "@/src/components/ui/button";
 import { useHistory } from "react-router";
 import { useDropzone } from "react-dropzone";
@@ -103,6 +110,93 @@ function fromScoreDisplay(mode: ScoreDisplay): {
     case "none":
       return { showUpvotes: false, showDownvotes: false, showScores: false };
   }
+}
+
+function ChangePasswordForm({ account }: { account: Account }) {
+  const changePassword = useChangePasswordMutation();
+  const [newPassword, setNewPassword] = useState("");
+  const [newPasswordVerify, setNewPasswordVerify] = useState("");
+  const [oldPassword, setOldPassword] = useState("");
+
+  const handleSubmit = () => {
+    if (newPassword !== newPasswordVerify) {
+      toast.error("Passwords do not match");
+      return;
+    }
+    changePassword
+      .mutateAsync({
+        account,
+        form: { newPassword, newPasswordVerify, oldPassword },
+      })
+      .then(() => {
+        setNewPassword("");
+        setNewPasswordVerify("");
+        setOldPassword("");
+      });
+  };
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        handleSubmit();
+      }}
+      className="gap-4 flex flex-col"
+    >
+      <h2 className="font-bold">Change password</h2>
+      <div className="flex flex-col gap-1">
+        <label className="text-muted-foreground text-sm" htmlFor="new-password">
+          New password
+        </label>
+        <Input
+          type="password"
+          id="new-password"
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+          autoComplete="new-password"
+          required
+        />
+      </div>
+      <div className="flex flex-col gap-1">
+        <label
+          className="text-muted-foreground text-sm"
+          htmlFor="verify-new-password"
+        >
+          Verify new password
+        </label>
+        <Input
+          type="password"
+          id="verify-new-password"
+          value={newPasswordVerify}
+          onChange={(e) => setNewPasswordVerify(e.target.value)}
+          autoComplete="new-password"
+          required
+        />
+      </div>
+      <div className="flex flex-col gap-1">
+        <label className="text-muted-foreground text-sm" htmlFor="old-password">
+          Current password
+        </label>
+        {/* Left optional: Lemmy accepts an empty old password for accounts
+            created through OAuth, which have none */}
+        <Input
+          type="password"
+          id="old-password"
+          value={oldPassword}
+          onChange={(e) => setOldPassword(e.target.value)}
+          autoComplete="current-password"
+        />
+      </div>
+      <Button
+        variant="outline"
+        disabled={
+          changePassword.isPending || !newPassword || !newPasswordVerify
+        }
+      >
+        Change password
+      </Button>
+    </form>
+  );
 }
 
 function FileUpload({
@@ -487,6 +581,8 @@ export default function SettingsPage() {
 
               <Button variant="outline">Save profile</Button>
             </form>
+
+            {account && !isPieFed && <ChangePasswordForm account={account} />}
           </div>
         </ContentGutters>
       </IonContent>

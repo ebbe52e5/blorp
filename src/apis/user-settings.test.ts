@@ -72,3 +72,64 @@ describe("LemmyV4Api saveUserSettings", () => {
     await expect(api.saveUserSettings({ avatar: IMAGE() })).rejects.toThrow();
   });
 });
+
+describe("LemmyV4Api changePassword", () => {
+  let api: LemmyV4Api;
+
+  const mockRoute = (path: string, body: unknown, status = 200) =>
+    fetchMock
+      .mockGlobal()
+      .route(({ url }) => url.split("?")[0]!.endsWith(path), {
+        status,
+        body: JSON.stringify(body),
+      });
+
+  beforeEach(() => {
+    fetchMock.removeRoutes().clearHistory();
+    api = new LemmyV4Api({
+      instance: INSTANCE,
+      jwt: "jwt",
+      softwareVersion: "1.0.0",
+    });
+  });
+
+  test("sends the passwords and returns the new jwt", async () => {
+    mockRoute("/api/v4/account/auth/change_password", {
+      jwt: "new-jwt",
+      registration_created: false,
+      verify_email_sent: false,
+    });
+
+    const res = await api.changePassword({
+      newPassword: "new-pass",
+      newPasswordVerify: "new-pass",
+      oldPassword: "old-pass",
+    });
+
+    expect(res).toEqual({ jwt: "new-jwt" });
+    expect(requests()).toEqual(["put /api/v4/account/auth/change_password"]);
+    expect(
+      JSON.parse(String(fetchMock.callHistory.lastCall()?.options.body)),
+    ).toEqual({
+      new_password: "new-pass",
+      new_password_verify: "new-pass",
+      old_password: "old-pass",
+    });
+  });
+
+  test("throws on a wrong old password", async () => {
+    mockRoute(
+      "/api/v4/account/auth/change_password",
+      { error: "incorrect_login" },
+      400,
+    );
+
+    await expect(
+      api.changePassword({
+        newPassword: "new-pass",
+        newPasswordVerify: "new-pass",
+        oldPassword: "wrong",
+      }),
+    ).rejects.toThrow();
+  });
+});

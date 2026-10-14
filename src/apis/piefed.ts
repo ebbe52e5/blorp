@@ -2023,6 +2023,10 @@ export class PieFedApi
     });
   }
 
+  async changePassword(): Promise<{ jwt: string | null }> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
   async removeUserAvatar() {
     await this.client.putApiAlphaUserSaveUserSettings({
       avatar: null,
