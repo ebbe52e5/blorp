@@ -61,29 +61,35 @@ export function usePersonActions({
   );
 
   const isBlocked = useIsPersonBlocked(person?.apId);
+  const isMe = !!person && person.apId === myUserId;
 
   return [
     ...(person && !isBlocked
       ? [
-          {
-            text: `Message ${personLabel}`,
-            onClick: () =>
-              router.push(
-                resolveRoute("/messages/chat/:userId", {
-                  userId: encodeApId(person?.apId),
-                }),
-              ),
-          },
-          {
-            text: `Tag ${personLabel}`,
-            onClick: async () => {
-              tagUser(person.handle, tag);
-            },
-          },
+          // Messaging or tagging yourself makes no sense
+          ...(!isMe
+            ? [
+                {
+                  text: `Message ${personLabel}`,
+                  onClick: () =>
+                    router.push(
+                      resolveRoute("/messages/chat/:userId", {
+                        userId: encodeApId(person.apId),
+                      }),
+                    ),
+                },
+                {
+                  text: `Tag ${personLabel}`,
+                  onClick: async () => {
+                    tagUser(person.handle, tag);
+                  },
+                },
+              ]
+            : []),
           ...shareActions,
         ]
       : []),
-    ...(person && person.apId !== myUserId
+    ...(person && !isMe
       ? [
           {
             text: `${isBlocked ? "Unblock" : "Block"} ${personLabel}`,
@@ -122,11 +128,33 @@ export function usePersonActions({
 
 export function PersonActionMenu({ person }: { person?: Schemas.Person }) {
   const actions = usePersonActions({ person });
+  const router = useIonRouter();
+  const myUserId = useAuth((s) => getAccountActorId(s.getSelectedAccount()));
+  const accountIndex = useAuth((s) =>
+    s.accounts.findIndex((a) => a.uuid === s.getSelectedAccount().uuid),
+  );
+  const isMe = !!person && person.apId === myUserId;
+
   return (
     <EllipsisActionMenu
       header="User actions"
       align="end"
-      actions={actions}
+      actions={[
+        ...(isMe && accountIndex >= 0
+          ? [
+              {
+                text: "Edit profile",
+                onClick: () =>
+                  router.push(
+                    resolveRoute("/settings/update-profile/:index", {
+                      index: String(accountIndex),
+                    }),
+                  ),
+              },
+            ]
+          : []),
+        ...actions,
+      ]}
       aria-label="User actions"
     />
   );
