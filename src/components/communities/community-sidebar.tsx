@@ -156,11 +156,8 @@ export function SmallScreenSidebar({
           aggregates={{
             ...(expanded
               ? {
-                  "users / day": communityView?.usersActiveDayCount,
                   "users / week": communityView?.usersActiveWeekCount,
                   "users / month": communityView?.usersActiveMonthCount,
-                  "users / 6 months": communityView?.usersActiveHalfYearCount,
-                  "Local subscribers": communityView?.subscribersLocalCount,
                 }
               : {}),
             Subscribers: communityView?.subscriberCount,
@@ -543,11 +540,8 @@ function CommunitySidebarInner({
                   className="mt-2"
                   links={subscribersLink}
                   aggregates={{
-                    "users / day": communityView?.usersActiveDayCount,
                     "users / week": communityView?.usersActiveWeekCount,
                     "users / month": communityView?.usersActiveMonthCount,
-                    "users / 6 months": communityView?.usersActiveHalfYearCount,
-                    "Local subscribers": communityView?.subscribersLocalCount,
                     Subscribers: communityView?.subscriberCount,
                     Posts: communityView?.postCount,
                     Comments: communityView?.commentCount,
