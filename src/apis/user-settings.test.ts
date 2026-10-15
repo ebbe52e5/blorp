@@ -147,8 +147,20 @@ describe("LemmyV4Api getSite user settings", () => {
     comment_count: 0,
   };
 
+  const ADMIN = {
+    person: {
+      ...PERSON,
+      id: 1,
+      name: "admin",
+      ap_id: `${INSTANCE}/u/admin`,
+      follower_count: 3,
+    },
+    is_admin: true,
+    banned: false,
+  };
+
   const SITE = {
-    admins: [],
+    admins: [ADMIN],
     all_languages: [],
     discussion_languages: [],
     version: "1.0.0",
@@ -184,7 +196,7 @@ describe("LemmyV4Api getSite user settings", () => {
     instance_persons_blocks: [],
   });
 
-  const getSite = async (localUser: object = {}, localSite: object = {}) => {
+  const loadSite = async (localUser: object = {}, localSite: object = {}) => {
     fetchMock.removeRoutes().clearHistory();
     fetchMock
       .mockGlobal()
@@ -207,8 +219,23 @@ describe("LemmyV4Api getSite user settings", () => {
       jwt: "jwt",
       softwareVersion: "1.0.0",
     });
-    return (await api.getSite({})).site;
+    return api.getSite({});
   };
+
+  const getSite = async (localUser: object = {}, localSite: object = {}) =>
+    (await loadSite(localUser, localSite)).site;
+
+  // The site's admins have no viewer, so they mustn't reset a profile's
+  // follow state or note the profile page cached
+  test("admins don't carry followed or note", async () => {
+    const { profiles } = await loadSite();
+    const admin = profiles.find((p) => p.apId === ADMIN.person.ap_id);
+
+    expect(admin).toBeDefined();
+    expect(admin).not.toHaveProperty("followed");
+    expect(admin).not.toHaveProperty("note");
+    expect(admin?.followerCount).toBe(3);
+  });
 
   test("maps the account's email, NSFW and vote settings", async () => {
     const site = await getSite({ email: "alice@example.com" });

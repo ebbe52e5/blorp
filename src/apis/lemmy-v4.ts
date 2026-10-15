@@ -888,7 +888,12 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
       shrinkBlockedCommunity(convertCommunity({ community })),
     );
 
-    const admins = lemmySite.admins.map((p) => convertPerson(p));
+    // The site response is the same for every viewer, so its admins carry no
+    // follow or note. Convert just the person so they don't overwrite the
+    // cached profile's followed and note with false and null.
+    const admins = lemmySite.admins.map((p) =>
+      convertPerson({ person: p.person }),
+    );
     const localUser = myUser?.local_user_view.local_user;
     const site = {
       privateInstance: lemmySite.site_view.local_site.private_instance,
