@@ -466,13 +466,19 @@ function convertCommunity(
 
 function convertPerson(
   view: ForkPersonView | { person: ForkPerson },
+  // Post and comment views carry the viewer's actions on their creator
+  creatorActions?: { person_actions?: lemmyV4.PersonActions },
 ): Schemas.Person {
   const { person } = view;
   // Only a full PersonView (e.g. a profile) carries the viewer's follow
   // state. Omit the keys otherwise so cached values aren't overwritten.
   const followed =
     "is_admin" in view ? { followed: !!view.person_follow?.active } : null;
+  // Same for the viewer's note
+  const actions = "is_admin" in view ? view : creatorActions;
+  const note = actions ? { note: actions.person_actions?.note ?? null } : null;
   return {
+    ...note,
     ...(_.isNumber(person.follower_count)
       ? { followerCount: person.follower_count }
       : null),
@@ -978,9 +984,12 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
     return {
       post: convertPost(fullPost.post_view),
       // TODO: does lemmy v4 give us community moderators?
-      profiles: [fullPost.post_view.creator].map((person) =>
-        convertPerson({ person }),
-      ),
+      profiles: [
+        convertPerson(
+          { person: fullPost.post_view.creator },
+          fullPost.post_view,
+        ),
+      ],
       community: convertCommunity(fullPost.community_view),
       flairs: fullPost.post_view.tags.map(convertTagToFlair),
     };
@@ -1175,7 +1184,7 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
         items?.map((p) => ({
           post: convertPost(p),
           flairs: p.tags.map(convertTagToFlair),
-          creator: convertPerson({ person: p.creator }),
+          creator: convertPerson({ person: p.creator }, p),
           community: convertCommunity({
             community: p.community,
             community_actions: p.community_actions,
@@ -1298,7 +1307,7 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
       comments: comments.map(convertComment),
       users: _.uniqBy(
         [
-          ...users.map(convertPerson),
+          ...users.map((p) => convertPerson(p)),
           ...posts.map((p) => convertPerson({ person: p.creator })),
           ...comments.map((p) => convertPerson({ person: p.creator })),
         ],
@@ -1631,7 +1640,7 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
       options,
     );
     const { items } = unwrapResponsData(listPersonsResponse);
-    return items.map(convertPerson);
+    return items.map((p) => convertPerson(p));
   }
 
   async getCommunityFollowers(
@@ -1664,7 +1673,7 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
         isBanned: view.banned,
         isBannedFromCommunity: !!view.community_actions?.received_ban_at,
       })),
-      persons: views.map(convertPerson),
+      persons: views.map((p) => convertPerson(p)),
       nextCursor: next_page ?? null,
     };
   }
@@ -1697,7 +1706,7 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
         isBanned: view.banned,
         isBannedFromCommunity: false,
       })),
-      persons: views.map(convertPerson),
+      persons: views.map((p) => convertPerson(p)),
       nextCursor: next_page ?? null,
     };
   }
@@ -1796,7 +1805,7 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
       options,
     );
     const { items } = unwrapResponsData(listPersonsResponse);
-    return items.map(convertPerson);
+    return items.map((p) => convertPerson(p));
   }
 
   // Same query and filtering as lemmy-ui's "Add a community" box
@@ -1932,7 +1941,8 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
     return {
       comments: items?.map(convertComment) ?? [],
       creators:
-        items?.map(({ creator }) => convertPerson({ person: creator })) ?? [],
+        items?.map((item) => convertPerson({ person: item.creator }, item)) ??
+        [],
       // Lemmy next cursor is broken when maxDepth is present.
       // It will page out to infinity until we get rate limited
       nextCursor: _.isNil(form.maxDepth) ? nextPage : null,
@@ -2282,6 +2292,14 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
     const response = await this.client.blockPerson({
       person_id: form.personId,
       block: form.block,
+    });
+    unwrapResponsData(response);
+  }
+
+  async notePerson(form: Forms.NotePerson): Promise<void> {
+    const response = await this.client.notePerson({
+      person_id: form.personId,
+      note: form.note,
     });
     unwrapResponsData(response);
   }

@@ -1679,6 +1679,10 @@ export class LemmyV3Api implements ApiBlueprint<lemmyV3.LemmyHttp> {
     return {} as any;
   }
 
+  async notePerson(): Promise<void> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
   async blockPerson(form: Forms.BlockPerson): Promise<void> {
     return translateErrors(async () => {
       await this.client.blockPerson({

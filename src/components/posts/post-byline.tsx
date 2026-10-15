@@ -28,7 +28,6 @@ import { Schemas } from "@/src/apis/api-blueprint";
 import { useProfileFromStore } from "@/src/stores/profiles";
 import { CakeDay } from "../cake-day";
 import { useCommunityActions } from "@/src/components/communities/community-sidebar";
-import { useTagUserStore } from "@/src/stores/user-tags";
 import { Badge } from "../ui/badge";
 import { useShowPostRemoveModal } from "./post-remove";
 import { PostCreatorBadge } from "./post-creator-badge";
@@ -41,7 +40,7 @@ import {
   useAddPostReactionEmojiMutation,
 } from "@/src/queries/post-mutations";
 import { ABOVE_LINK_OVERLAY } from "./config";
-import { useSoftware } from "@/src/queries/index";
+import { useSoftware, useUserTag } from "@/src/queries/index";
 import { usePickEmoji } from "@/src/components/emoji-picker/emoji-picker-sheet";
 import { usePersonActions } from "../person/person-action-menu";
 import { useShareActions } from "@/src/components/adaptable/action-menu/hooks";
@@ -276,7 +275,10 @@ export function PostByline({
 }) {
   const linkCtx = useLinkContext();
 
-  const tag = useTagUserStore((s) => s.userTags[post.creatorHandle]);
+  const tag = useUserTag({
+    apId: post.creatorApId,
+    handle: post.creatorHandle,
+  });
 
   const blurNsfw = useShouldBlurNsfw();
   const isRevealed = useNsfwRevealedPostsStore(

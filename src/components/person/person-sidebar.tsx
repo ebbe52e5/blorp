@@ -16,9 +16,9 @@ import {
 } from "@radix-ui/react-collapsible";
 import { ChevronsUpDown } from "lucide-react";
 import { useSidebarStore } from "@/src/stores/sidebars";
+import { useUserTag } from "@/src/queries";
 import { AggregateBadges } from "../aggregates";
 import { Schemas } from "@/src/apis/api-blueprint";
-import { useTagUserStore } from "@/src/stores/user-tags";
 import { Badge } from "../ui/badge";
 import { PersonActionMenu } from "./person-action-menu";
 import { PersonFollowButton } from "./person-follow-button";
@@ -126,9 +126,7 @@ function PersonSidebarInner({
   const open = useSidebarStore((s) => s.personBioExpanded);
   const setOpen = useSidebarStore((s) => s.setPersonBioExpanded);
 
-  const tag = useTagUserStore((s) =>
-    person ? s.userTags[person.handle] : undefined,
-  );
+  const tag = useUserTag(person);
 
   const { name, host } = parseHandle(person?.handle);
 

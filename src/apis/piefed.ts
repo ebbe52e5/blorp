@@ -1927,6 +1927,10 @@ export class PieFedApi
     return convertComment(comment_reply_view);
   }
 
+  async notePerson(): Promise<void> {
+    throw Errors.NOT_IMPLEMENTED;
+  }
+
   async blockPerson(form: Forms.BlockPerson) {
     await this.client.postApiAlphaUserBlock({
       person_id: form.personId,

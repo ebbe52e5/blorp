@@ -4,7 +4,7 @@ import { EllipsisActionMenu, SubAction } from "../adaptable/action-menu";
 import { encodeApId } from "@/src/apis/utils";
 import { Deferred } from "@/src/lib/deferred";
 import { useIonAlert, useIonRouter } from "@ionic/react";
-import { useBlockPersonMutation } from "@/src/queries";
+import { useBlockPersonMutation, useTagUser, useUserTag } from "@/src/queries";
 import {
   getAccountActorId,
   useAuth,
@@ -13,8 +13,7 @@ import {
 import { useShareActions } from "@/src/components/adaptable/action-menu/hooks";
 import { resolveRoute } from "../../routing/index";
 import { Schemas } from "@/src/apis/api-blueprint";
-import { useTagUserStore } from "@/src/stores/user-tags";
-import { useTagUser, useRequireAuth } from "@/src/hooks";
+import { useRequireAuth } from "@/src/hooks";
 import { useLinkContext } from "@/src/hooks/navigation-hooks";
 
 dayjs.extend(localizedFormat);
@@ -26,9 +25,7 @@ export function usePersonActions({
   person?: Schemas.Person;
   personLabel?: string;
 }): SubAction[] {
-  const tag = useTagUserStore((s) =>
-    person ? s.userTags[person.handle] : undefined,
-  );
+  const tag = useUserTag(person);
 
   const [alrt] = useIonAlert();
 
@@ -81,7 +78,7 @@ export function usePersonActions({
                 {
                   text: `Tag ${personLabel}`,
                   onClick: async () => {
-                    tagUser(person.handle, tag);
+                    tagUser(person, tag);
                   },
                 },
               ]

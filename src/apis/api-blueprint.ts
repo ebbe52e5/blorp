@@ -47,6 +47,10 @@ export const personSchema = z.object({
   // Whether the logged in user follows this person. Only known
   // when the person was fetched directly, not as e.g. a post creator.
   followed: z.boolean().optional(),
+  // The logged in user's private note on this person, shown as their user
+  // tag. Only Lemmy v4 has notes, and only when the person came with the
+  // viewer's person actions (a profile, or a post or comment creator).
+  note: z.string().nullable().optional(),
 });
 
 export const postPollSchema = z.object({
@@ -1054,6 +1058,12 @@ export namespace Forms {
     block: boolean;
   };
 
+  /** An empty note deletes it */
+  export type NotePerson = {
+    personId: number;
+    note: string;
+  };
+
   export type BlockCommunity = {
     communityId: number;
     block: boolean;
@@ -1463,6 +1473,8 @@ export abstract class ApiBlueprint<C> {
   abstract createCommentReport(form: Forms.CreateCommentReport): Promise<void>;
 
   abstract blockPerson(form: Forms.BlockPerson): Promise<void>;
+
+  abstract notePerson(form: Forms.NotePerson): Promise<void>;
 
   abstract blockCommunity(form: Forms.BlockCommunity): Promise<void>;
 

@@ -49,6 +49,11 @@ export function supportsInvitations(software: Software) {
   return supportsCreateCommunity(software);
 }
 
+// User tags are stored as Lemmy 1.0 person notes
+export function supportsPersonNotes(software: Software) {
+  return supportsCreateCommunity(software);
+}
+
 export function supportsMarkCommentAsAnswer({ software }: Software) {
   return software === "piefed";
 }

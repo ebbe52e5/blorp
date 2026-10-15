@@ -20,6 +20,7 @@ import {
   useMarkCommentAsAnswerMutation,
   useSaveCommentMutation,
   useSoftware,
+  useUserTag,
 } from "@/src/queries/index";
 import {
   COMMENT_COLOR_PALETTE,
@@ -63,7 +64,6 @@ import { COMMENT_COLLAPSE_EVENT } from "../posts/config";
 import { useMedia, useRequireAuth } from "@/src/hooks";
 import { usePickEmoji } from "@/src/components/emoji-picker/emoji-picker-sheet";
 import { CakeDay } from "../cake-day";
-import { useTagUserStore } from "@/src/stores/user-tags";
 import { useSettingsStore } from "@/src/stores/settings";
 import {
   useCommentCollapseThreshold,
@@ -304,7 +304,7 @@ function Byline({
 
   const locked = comment.optimisticLocked ?? comment.locked;
 
-  const tag = useTagUserStore((s) => s.userTags[actorHandle]);
+  const tag = useUserTag({ apId: actorId, handle: actorHandle });
 
   const isAdmin = useIsAdmin(comment.creatorApId);
 

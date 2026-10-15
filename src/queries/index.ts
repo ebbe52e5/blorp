@@ -34,7 +34,7 @@ import {
   isNotFoundError,
   lemmyTimestamp,
 } from "../apis/utils";
-import { useProfilesStore } from "@/src/stores/profiles";
+import { useProfileFromStore, useProfilesStore } from "@/src/stores/profiles";
 import { toast } from "sonner";
 import {
   Draft,
@@ -67,7 +67,12 @@ import { resolveRoute, useHistory } from "@/src/routing";
 import { getPostEmbed } from "../apis/post-embed";
 import { useMultiCommunityFeedStore } from "@/src/stores/multi-community-feeds";
 import { useRecentCommunitiesStore } from "@/src/stores/recent-communities";
-import { supportsRegistrationApplications } from "../apis/support";
+import {
+  supportsPersonNotes,
+  supportsRegistrationApplications,
+} from "../apis/support";
+import { useTagUserStore } from "../stores/user-tags";
+import { useConfirmationAlert } from "../hooks/alerts";
 import { useShouldShowNsfw } from "../hooks/nsfw";
 import pTimeout from "p-timeout";
 
@@ -3593,6 +3598,82 @@ export function useBlockPersonMutation(options?: {
       }
     },
   });
+}
+
+/** Saves a user tag as the account's Lemmy note on the person */
+export function useNotePersonMutation() {
+  const { api } = useApiClients();
+  const getCachePrefixer = useAuth((s) => s.getCachePrefixer);
+  const cacheProfiles = useProfilesStore((s) => s.cacheProfiles);
+  return useMutation({
+    mutationFn: async ({
+      person,
+      note,
+    }: {
+      person: Schemas.Person;
+      note: string;
+    }) => (await api).notePerson({ personId: person.id, note }),
+    onMutate: ({ person, note }) => {
+      cacheProfiles(getCachePrefixer(), [{ ...person, note: note || null }]);
+    },
+    onError: (err, { person }) => {
+      cacheProfiles(getCachePrefixer(), [person]);
+      if (isErrorLike(err)) {
+        toast.error(extractErrorContent(err));
+      } else {
+        toast.error("Couldn't tag person");
+      }
+    },
+  });
+}
+
+/**
+ * Logged in on Lemmy 1.0, user tags are the account's person notes, saved on
+ * the server. Elsewhere (guests, Lemmy v3, PieFed) they stay on this device.
+ */
+function useTagsAreNotes() {
+  const isLoggedIn = useAuth((s) => s.isLoggedIn());
+  const software = useSoftware();
+  return isLoggedIn && supportsPersonNotes(software);
+}
+
+export function useUserTag(person?: { apId: string; handle: string }) {
+  const tagsAreNotes = useTagsAreNotes();
+  const profile = useProfileFromStore(tagsAreNotes ? person?.apId : undefined);
+  const localTag = useTagUserStore((s) =>
+    person ? s.userTags[person.handle] : undefined,
+  );
+  return tagsAreNotes ? (profile?.note ?? undefined) : localTag;
+}
+
+export function useTagUser() {
+  const setUserTag = useTagUserStore((s) => s.setUserTag);
+  const notePerson = useNotePersonMutation();
+  const tagsAreNotes = useTagsAreNotes();
+  const alrt = useConfirmationAlert();
+
+  return async (person: Schemas.Person, initValue?: string) => {
+    const { tag } = await alrt({
+      header: person.handle,
+      message: "Tag user to identify them later",
+      inputs: [
+        {
+          type: "text",
+          name: "tag",
+          id: "tag",
+          value: initValue,
+        },
+      ],
+      schema: z.object({
+        tag: z.string(),
+      }),
+    });
+    if (tagsAreNotes) {
+      notePerson.mutate({ person, note: tag.trim() });
+    } else {
+      setUserTag(person.handle, tag);
+    }
+  };
 }
 
 export function useBlockInstanceMutation(options?: { account?: Account }) {
