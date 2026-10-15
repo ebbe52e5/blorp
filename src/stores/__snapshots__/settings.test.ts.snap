@@ -13,7 +13,6 @@ exports[`persisted state snapshot > settings store initial shape 1`] = `
   "hideReadSetting": "account",
   "hideSubscribedFromLocalAll": false,
   "hideThresholdSetting": "account",
-  "languageSetting": "account",
   "leftHandedMode": false,
   "lightTheme": "default-light",
   "nsfwPreviouslyEnabled": false,

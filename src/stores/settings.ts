@@ -70,7 +70,6 @@ export type PaginationSetting = "account" | PaginationMode;
 
 // Placeholder until blorp has translations: English is the only language
 export type InterfaceLanguage = "en";
-export type LanguageSetting = "account" | InterfaceLanguage;
 
 export const INTERFACE_LANGUAGE_OPTIONS: {
   label: string;
@@ -113,7 +112,6 @@ const persistedSchema = z.object({
     .nullable(),
   filterKeywords: z.array(z.string()),
   paginationSetting: z.enum(["account", "infinite", "pages"]),
-  languageSetting: z.enum(["account", "en"]),
   darkMode: z.enum(["system", "dark", "light"]),
   nsfwPreviouslyEnabled: z.boolean(),
   contentWarningAccepted: z.boolean(),
@@ -144,7 +142,6 @@ type SettingsStore = {
   setFilterKeywords: (update: { index: number; keyword: string }) => any;
   pruneFiltersKeywords: () => any;
   setPaginationSetting: (newVal: PaginationSetting) => void;
-  setLanguageSetting: (newVal: LanguageSetting) => void;
   setDarkMode: (mode: DarkMode) => void;
   // App stores (e.g. iOS) may prohibit showing NSFW settings by default.
   // We track whether any account ever had NSFW enabled so users can
@@ -176,7 +173,6 @@ const INIT_STATE: z.infer<typeof persistedSchema> = {
   // Lemmy accounts default to pages, so following the account would switch
   // most users off infinite scroll
   paginationSetting: "infinite",
-  languageSetting: "account",
   darkMode: "system",
   nsfwPreviouslyEnabled: false,
   contentWarningAccepted: false,
@@ -217,7 +213,6 @@ export const useSettingsStore = create<SettingsStore>()(
         set({ filterKeywords: pruneFilterKeywords(get().filterKeywords) });
       },
       setPaginationSetting: (paginationSetting) => set({ paginationSetting }),
-      setLanguageSetting: (languageSetting) => set({ languageSetting }),
       setDarkMode: (darkMode) => set({ darkMode }),
       setNsfwPreviouslyEnabled: (nsfwPreviouslyEnabled) =>
         set({ nsfwPreviouslyEnabled }),
@@ -250,11 +245,14 @@ export const useSettingsStore = create<SettingsStore>()(
         const {
           hideRead: legacyHideRead,
           paginationMode: legacyPaginationMode,
+          languageSetting: _languageSetting,
           ...persisted
         } = p as Partial<SettingsStore> & {
           // Replaced by hideReadSetting and paginationSetting
           hideRead?: boolean;
           paginationMode?: PaginationMode;
+          // Dropped: the language only follows the account now
+          languageSetting?: unknown;
         };
         return {
           ...current,

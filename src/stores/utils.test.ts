@@ -329,9 +329,9 @@ describe("resolveInterfaceLanguage", () => {
   test.each(["en", "browser", "zh", undefined])(
     "account language %s falls back to English",
     (interfaceLanguage) => {
-      expect(
-        resolveInterfaceLanguage("account", api.getSite({ interfaceLanguage })),
-      ).toBe("en");
+      expect(resolveInterfaceLanguage(api.getSite({ interfaceLanguage }))).toBe(
+        "en",
+      );
     },
   );
 });

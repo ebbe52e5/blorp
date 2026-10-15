@@ -73,6 +73,12 @@ describe("merging state persisted by older builds", () => {
     },
   );
 
+  test("drops the removed languageSetting", () => {
+    expect(merge({ languageSetting: "en" })).not.toHaveProperty(
+      "languageSetting",
+    );
+  });
+
   test("a newer setting wins over the legacy key", () => {
     expect(
       merge({ hideRead: true, hideReadSetting: false }).hideReadSetting,

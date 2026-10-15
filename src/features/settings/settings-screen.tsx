@@ -3,9 +3,7 @@ import {
   DARK_THEME_OPTIONS,
   DarkMode,
   HideReadSetting,
-  INTERFACE_LANGUAGE_OPTIONS,
   LIGHT_THEME_OPTIONS,
-  LanguageSetting,
   PaginationSetting,
   POST_CARD_STYLE_OPTIONS,
   SHARE_LINK_TYPE_OPTIONS,
@@ -342,9 +340,6 @@ export default function SettingsPage() {
   const paginationSetting = useSettingsStore((s) => s.paginationSetting);
   const setPaginationSetting = useSettingsStore((s) => s.setPaginationSetting);
 
-  const languageSetting = useSettingsStore((s) => s.languageSetting);
-  const setLanguageSetting = useSettingsStore((s) => s.setLanguageSetting);
-
   const darkMode = useSettingsStore((s) => s.darkMode);
   const setDarkMode = useSettingsStore((s) => s.setDarkMode);
 
@@ -482,22 +477,6 @@ export default function SettingsPage() {
             </Section>
 
             <Section title="APPEARANCE">
-              <SectionItem>
-                <label>Language</label>
-                <SimpleSelect
-                  options={
-                    [
-                      { value: "account", label: "Account setting" },
-                      ...INTERFACE_LANGUAGE_OPTIONS,
-                    ] satisfies { value: LanguageSetting; label: string }[]
-                  }
-                  value={languageSetting}
-                  onChange={(o) => setLanguageSetting(o.value)}
-                  valueGetter={(o) => o.value}
-                  labelGetter={(o) => o.label}
-                  className="w-[160px]"
-                />
-              </SectionItem>
               <SectionItem>
                 <label>Light theme</label>
                 <SimpleSelect

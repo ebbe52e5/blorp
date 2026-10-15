@@ -377,8 +377,6 @@ export default function SettingsPage() {
   const setHideReadSetting = useSettingsStore((s) => s.setHideReadSetting);
   const paginationSetting = useSettingsStore((s) => s.paginationSetting);
   const setPaginationSetting = useSettingsStore((s) => s.setPaginationSetting);
-  const languageSetting = useSettingsStore((s) => s.languageSetting);
-  const setLanguageSetting = useSettingsStore((s) => s.setLanguageSetting);
 
   const nsfwPreviouslyEnabled = useSettingsStore(
     (s) => s.nsfwPreviouslyEnabled,
@@ -739,12 +737,8 @@ export default function SettingsPage() {
               )}
 
               {!_.isUndefined(interfaceLanguage) && (
-                <AccountSettingRow
-                  label="Language"
-                  overridden={languageSetting !== "account"}
-                  onUseAccount={() => setLanguageSetting("account")}
-                  onInfo={showOverrideInfo}
-                >
+                <div className="flex items-center justify-between gap-2">
+                  <label className="font-light">Language</label>
                   <SimpleSelect
                     options={_.uniq([
                       interfaceLanguage,
@@ -757,7 +751,7 @@ export default function SettingsPage() {
                     className="w-[160px]"
                     side="top"
                   />
-                </AccountSettingRow>
+                </div>
               )}
 
               {/* The server filters these keywords out of feeds. They add to

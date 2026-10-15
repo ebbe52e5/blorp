@@ -4,7 +4,6 @@ import {
   useSettingsStore,
   type HideReadSetting,
   type InterfaceLanguage,
-  type LanguageSetting,
   type PaginationMode,
   type PaginationSetting,
   type ScoreDisplay,
@@ -148,13 +147,11 @@ export function resolvePaginationMode(
 }
 
 export function resolveInterfaceLanguage(
-  setting: LanguageSetting,
   site: Schemas.Site | undefined,
 ): InterfaceLanguage {
-  const language = setting === "account" ? site?.interfaceLanguage : setting;
   // Blorp only has English so far. Lemmy defaults to "browser", and any
   // language without translations falls back to English too.
-  switch (language) {
+  switch (site?.interfaceLanguage) {
     case "en":
     default:
       return "en";
@@ -208,9 +205,8 @@ export function usePaginationMode(): PaginationMode {
 }
 
 export function useInterfaceLanguage(): InterfaceLanguage {
-  const setting = useSettingsStore((s) => s.languageSetting);
   const site = useAuth((s) => getAccountSite(s.getSelectedAccount()));
-  return resolveInterfaceLanguage(setting, site);
+  return resolveInterfaceLanguage(site);
 }
 
 // Re-export so consumers don't need to import from two places.
