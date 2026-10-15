@@ -29,10 +29,7 @@ import { cn } from "@/src/lib/utils";
 import { Input } from "@/src/components/ui/input";
 import { ToolbarButtons } from "@/src/components/toolbar/toolbar-buttons";
 import { isCapacitor, isIos } from "@/src/lib/device";
-import {
-  INTERFACE_LANGUAGE_OPTIONS,
-  useSettingsStore,
-} from "@/src/stores/settings";
+import { useSettingsStore } from "@/src/stores/settings";
 import { SimpleSelect } from "@/src/components/ui/simple-select";
 import { type ScoreDisplay } from "@/src/stores/utils";
 
@@ -53,13 +50,17 @@ const SCROLL_STYLE_OPTIONS: { value: "infinite" | "pages"; label: string }[] = [
   { value: "pages", label: "Manual pages" },
 ];
 
+// Lemmy's interface_language values. The backend also picks the language of
+// its emails from it; "browser" isn't a language, so those emails fall back
+// to English.
+const ACCOUNT_LANGUAGE_OPTIONS = [
+  { value: "browser", label: "Browser default" },
+  { value: "en", label: "English" },
+  { value: "zh", label: "中文" },
+];
+
 function languageLabel(code: string) {
-  if (code === "browser") {
-    return "Browser default";
-  }
-  return (
-    INTERFACE_LANGUAGE_OPTIONS.find((o) => o.value === code)?.label ?? code
-  );
+  return ACCOUNT_LANGUAGE_OPTIONS.find((o) => o.value === code)?.label ?? code;
 }
 
 function pruneKeywords(keywords: string[]) {
@@ -740,9 +741,13 @@ export default function SettingsPage() {
                 <div className="flex items-center justify-between gap-2">
                   <label className="font-light">Language</label>
                   <SimpleSelect
+                    // Keep a language set elsewhere (e.g. registering with a
+                    // French browser stores "fr") so the select can show it
                     options={_.uniq([
-                      interfaceLanguage,
-                      ...INTERFACE_LANGUAGE_OPTIONS.map((o) => o.value),
+                      ...ACCOUNT_LANGUAGE_OPTIONS.map((o) => o.value),
+                      ...(site?.interfaceLanguage
+                        ? [site.interfaceLanguage]
+                        : []),
                     ])}
                     value={interfaceLanguage}
                     onChange={setInterfaceLanguage}

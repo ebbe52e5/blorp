@@ -71,11 +71,6 @@ export type PaginationSetting = "account" | PaginationMode;
 // Placeholder until blorp has translations: English is the only language
 export type InterfaceLanguage = "en";
 
-export const INTERFACE_LANGUAGE_OPTIONS: {
-  label: string;
-  value: InterfaceLanguage;
-}[] = [{ value: "en", label: "English" }];
-
 export type ShareLinkType =
   | "blorp"
   | "instance"
