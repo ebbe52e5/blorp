@@ -263,6 +263,12 @@ export const siteSchema = z.object({
   showDownvotes: z.boolean().optional(),
   replyCollapseThreshold: z.number().optional(),
   replyHideThreshold: z.number().optional(),
+  // Account filter and display settings, undefined when the backend has none
+  showReadPosts: z.boolean().optional(),
+  showBotAccounts: z.boolean().optional(),
+  blockingKeywords: z.array(z.string()).optional(),
+  infiniteScrollEnabled: z.boolean().optional(),
+  interfaceLanguage: z.string().optional(),
   // Only populated by Lemmy v4; used by the create community page.
   communityCreationAdminOnly: z.boolean().optional(),
   nsfwContentDisallowed: z.boolean().optional(),
@@ -1087,6 +1093,11 @@ export namespace Forms {
     showDownvotes?: boolean;
     replyCollapseThreshold?: number;
     replyHideThreshold?: number;
+    showReadPosts?: boolean;
+    showBotAccounts?: boolean;
+    blockingKeywords?: string[];
+    infiniteScrollEnabled?: boolean;
+    interfaceLanguage?: string;
   };
 
   export type ChangePassword = {

@@ -43,6 +43,43 @@ describe("useSettingsStore", () => {
   });
 });
 
+describe("merging state persisted by older builds", () => {
+  const merge = (persisted: object) =>
+    useSettingsStore.persist.getOptions().merge!(
+      persisted,
+      useSettingsStore.getState(),
+    ) as ReturnType<typeof useSettingsStore.getState>;
+
+  test.each([
+    [{ hideRead: false }, "account"],
+    [{ hideRead: true }, true],
+    [{}, "account"],
+  ])("hideRead %o becomes hideReadSetting %s", (persisted, expected) => {
+    const merged = merge(persisted);
+    expect(merged.hideReadSetting).toBe(expected);
+    expect(merged).not.toHaveProperty("hideRead");
+  });
+
+  test.each([
+    [{ paginationMode: "pages" }, "pages"],
+    [{ paginationMode: "infinite" }, "infinite"],
+    [{}, "infinite"],
+  ])(
+    "paginationMode %o becomes paginationSetting %s",
+    (persisted, expected) => {
+      const merged = merge(persisted);
+      expect(merged.paginationSetting).toBe(expected);
+      expect(merged).not.toHaveProperty("paginationMode");
+    },
+  );
+
+  test("a newer setting wins over the legacy key", () => {
+    expect(
+      merge({ hideRead: true, hideReadSetting: false }).hideReadSetting,
+    ).toBe(false);
+  });
+});
+
 describe("persisted state snapshot", () => {
   test("settings store initial shape", () => {
     const { result } = renderHook(() => useSettingsStore());

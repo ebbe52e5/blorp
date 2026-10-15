@@ -11,7 +11,7 @@ import { ContentGutters } from "../components/gutters";
 import { Fragment, memo, useCallback, useMemo, useState } from "react";
 import { z } from "zod";
 import { usePagination } from "../components/pagination/use-pagination";
-import { useSettingsStore } from "../stores/settings";
+import { usePaginationMode } from "../stores/utils";
 import { VirtualList } from "../components/virtual-list";
 import {
   useAvailableSortsQuery,
@@ -81,7 +81,7 @@ export default function CommunityPosts() {
     [communityHandleEncoded],
   );
 
-  const paginationMode = useSettingsStore((s) => s.paginationMode);
+  const paginationMode = usePaginationMode();
   const { postSort, suggestedPostSort } = useAvailableSortsQuery();
 
   // Like lemmy-ui, the tag filter lives in the URL (?tagId=)

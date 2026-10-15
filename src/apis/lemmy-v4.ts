@@ -924,6 +924,11 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
       showDownvotes: localUser
         ? localUser.show_downvotes !== "hide"
         : undefined,
+      showReadPosts: localUser?.show_read_posts,
+      showBotAccounts: localUser?.show_bot_accounts,
+      blockingKeywords: myUser?.keyword_blocks,
+      infiniteScrollEnabled: localUser?.infinite_scroll_enabled,
+      interfaceLanguage: localUser?.interface_language,
       enablePostDownvotes: enableDownvotes,
       enableCommentDownvotes: enableDownvotes,
       communityCreationAdminOnly:
@@ -2380,6 +2385,11 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
           : form.showDownvotes
             ? "show"
             : "hide",
+        show_read_posts: form.showReadPosts,
+        show_bot_accounts: form.showBotAccounts,
+        blocking_keywords: form.blockingKeywords,
+        infinite_scroll_enabled: form.infiniteScrollEnabled,
+        interface_language: form.interfaceLanguage,
       },
       _.isUndefined,
     );

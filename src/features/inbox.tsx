@@ -26,7 +26,7 @@ import { PageTitle } from "../components/page-title";
 import { cn } from "../lib/utils";
 import { useMemo } from "react";
 import { usePagination } from "../components/pagination/use-pagination";
-import { useSettingsStore } from "../stores/settings";
+import { usePaginationMode } from "../stores/utils";
 import _ from "lodash";
 import { ToggleGroup, ToggleGroupItem } from "../components/ui/toggle-group";
 import { useConfirmationAlert, useMedia } from "../hooks";
@@ -656,7 +656,7 @@ function RegistrationApplication({
 export default function Inbox() {
   const media = useMedia();
 
-  const paginationMode = useSettingsStore((s) => s.paginationMode);
+  const paginationMode = usePaginationMode();
   const canModerate = useCanModerate();
   const isAdmin = useAuth((s) => accountIsAdmin(s.getSelectedAccount()));
   const storedType = useInboxStore((s) => s.inboxType);

@@ -2,6 +2,9 @@ import { describe, test, expect } from "vitest";
 import {
   scoreDisplayPreference,
   resolveThreshold,
+  resolveHideRead,
+  resolvePaginationMode,
+  resolveInterfaceLanguage,
   mergeCacheObject,
   mergeCacheArray,
 } from "./utils";
@@ -270,4 +273,65 @@ describe("resolveThreshold", () => {
   test("explicit numeric setting ignores server value", () => {
     expect(resolveThreshold(-5, -20)).toBe(-5);
   });
+});
+
+describe("resolveHideRead", () => {
+  test.each([
+    [true, false],
+    [false, true],
+    [undefined, false],
+  ])(
+    "'account' with showReadPosts = %s hides read: %s",
+    (showReadPosts, hide) => {
+      expect(resolveHideRead("account", api.getSite({ showReadPosts }))).toBe(
+        hide,
+      );
+    },
+  );
+
+  test("a device setting overrides the account", () => {
+    const site = api.getSite({ showReadPosts: true });
+    expect(resolveHideRead(true, site)).toBe(true);
+    expect(resolveHideRead(false, api.getSite({ showReadPosts: false }))).toBe(
+      false,
+    );
+  });
+
+  test("guests don't hide read posts", () => {
+    expect(resolveHideRead("account", undefined)).toBe(false);
+  });
+});
+
+describe("resolvePaginationMode", () => {
+  test.each([
+    [true, "infinite"],
+    [false, "pages"],
+    [undefined, "infinite"],
+  ])(
+    "'account' with infiniteScrollEnabled = %s gives %s",
+    (infiniteScrollEnabled, mode) => {
+      expect(
+        resolvePaginationMode(
+          "account",
+          api.getSite({ infiniteScrollEnabled }),
+        ),
+      ).toBe(mode);
+    },
+  );
+
+  test("a device setting overrides the account", () => {
+    const site = api.getSite({ infiniteScrollEnabled: false });
+    expect(resolvePaginationMode("infinite", site)).toBe("infinite");
+  });
+});
+
+describe("resolveInterfaceLanguage", () => {
+  test.each(["en", "browser", "zh", undefined])(
+    "account language %s falls back to English",
+    (interfaceLanguage) => {
+      expect(
+        resolveInterfaceLanguage("account", api.getSite({ interfaceLanguage })),
+      ).toBe("en");
+    },
+  );
 });

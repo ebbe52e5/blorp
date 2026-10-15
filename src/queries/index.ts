@@ -23,6 +23,7 @@ import { useIsStale } from "../hooks/use-is-stale";
 import _ from "lodash";
 import { usePostFromStore, usePostsStore } from "../stores/posts";
 import { useSettingsStore } from "../stores/settings";
+import { useHideRead } from "../stores/utils";
 import { z } from "zod";
 import { useCommentsStore } from "../stores/comments";
 import { useCommunitiesStore } from "../stores/communities";
@@ -471,7 +472,7 @@ export function useMostRecentPostQuery(
   const { postSort } = useAvailableSortsQuery();
   const sort = form.sort ?? postSort;
 
-  const hideRead = useSettingsStore((s) => s.hideRead);
+  const hideRead = useHideRead();
   const showNsfw = useShouldShowNsfw();
 
   form = {
@@ -524,7 +525,7 @@ export function usePostsQuery(form: Forms.GetPosts) {
   const { postSort } = useAvailableSortsQuery();
   const sort = form.sort ?? postSort;
 
-  const hideRead = useSettingsStore((s) => s.hideRead);
+  const hideRead = useHideRead();
   const showNsfw = useShouldShowNsfw();
 
   form = {

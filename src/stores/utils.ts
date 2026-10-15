@@ -2,6 +2,11 @@ import { getAccountSite, useAuth } from "./auth";
 import z from "zod";
 import {
   useSettingsStore,
+  type HideReadSetting,
+  type InterfaceLanguage,
+  type LanguageSetting,
+  type PaginationMode,
+  type PaginationSetting,
   type ScoreDisplay,
   type ThresholdSetting,
   type VoteDisplaySetting,
@@ -121,6 +126,41 @@ export function resolveThreshold(
   return setting;
 }
 
+export function resolveHideRead(
+  setting: HideReadSetting,
+  site: Schemas.Site | undefined,
+): boolean {
+  if (setting === "account") {
+    return site?.showReadPosts === false;
+  }
+  return setting;
+}
+
+export function resolvePaginationMode(
+  setting: PaginationSetting,
+  site: Schemas.Site | undefined,
+): PaginationMode {
+  if (setting === "account") {
+    // Backends without the setting (PieFed, guests) keep infinite scroll
+    return site?.infiniteScrollEnabled === false ? "pages" : "infinite";
+  }
+  return setting;
+}
+
+export function resolveInterfaceLanguage(
+  setting: LanguageSetting,
+  site: Schemas.Site | undefined,
+): InterfaceLanguage {
+  const language = setting === "account" ? site?.interfaceLanguage : setting;
+  // Blorp only has English so far. Lemmy defaults to "browser", and any
+  // language without translations falls back to English too.
+  switch (language) {
+    case "en":
+    default:
+      return "en";
+  }
+}
+
 // ─── Hooks ───────────────────────────────────────────────────────────────────
 
 export function useScoreDisplayPreference(): ScoreDisplay {
@@ -153,6 +193,24 @@ export function useCommentHideThreshold(): number | null {
     (s) => getAccountSite(s.getSelectedAccount())?.replyHideThreshold,
   );
   return resolveThreshold(setting, accountThreshold);
+}
+
+export function useHideRead(): boolean {
+  const setting = useSettingsStore((s) => s.hideReadSetting);
+  const site = useAuth((s) => getAccountSite(s.getSelectedAccount()));
+  return resolveHideRead(setting, site);
+}
+
+export function usePaginationMode(): PaginationMode {
+  const setting = useSettingsStore((s) => s.paginationSetting);
+  const site = useAuth((s) => getAccountSite(s.getSelectedAccount()));
+  return resolvePaginationMode(setting, site);
+}
+
+export function useInterfaceLanguage(): InterfaceLanguage {
+  const setting = useSettingsStore((s) => s.languageSetting);
+  const site = useAuth((s) => getAccountSite(s.getSelectedAccount()));
+  return resolveInterfaceLanguage(setting, site);
 }
 
 // Re-export so consumers don't need to import from two places.

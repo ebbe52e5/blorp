@@ -2,7 +2,11 @@ import { useEffect, useId, useState } from "react";
 import {
   DARK_THEME_OPTIONS,
   DarkMode,
+  HideReadSetting,
+  INTERFACE_LANGUAGE_OPTIONS,
   LIGHT_THEME_OPTIONS,
+  LanguageSetting,
+  PaginationSetting,
   POST_CARD_STYLE_OPTIONS,
   SHARE_LINK_TYPE_OPTIONS,
   ShareLinkType,
@@ -289,6 +293,16 @@ function CacheSection() {
   );
 }
 
+const HIDE_READ_OPTIONS: {
+  key: string;
+  setting: HideReadSetting;
+  label: string;
+}[] = [
+  { key: "account", setting: "account", label: "Account setting" },
+  { key: "hide", setting: true, label: "Hide" },
+  { key: "show", setting: false, label: "Show" },
+];
+
 export default function SettingsPage() {
   const id = useId();
 
@@ -308,8 +322,8 @@ export default function SettingsPage() {
   const shareLinkType = useSettingsStore((s) => s.shareLinkType);
   const setShareLinkType = useSettingsStore((s) => s.setShareLinkType);
 
-  const hideRead = useSettingsStore((s) => s.hideRead);
-  const setHideRead = useSettingsStore((s) => s.setHideRead);
+  const hideReadSetting = useSettingsStore((s) => s.hideReadSetting);
+  const setHideReadSetting = useSettingsStore((s) => s.setHideReadSetting);
 
   const hideSubscribedFromLocalAll = useSettingsStore(
     (s) => s.hideSubscribedFromLocalAll,
@@ -325,8 +339,11 @@ export default function SettingsPage() {
   const setFilterKeywords = useSettingsStore((s) => s.setFilterKeywords);
   const pruneFiltersKeywords = useSettingsStore((s) => s.pruneFiltersKeywords);
 
-  const paginationMode = useSettingsStore((s) => s.paginationMode);
-  const setPaginationMode = useSettingsStore((s) => s.setPaginationMode);
+  const paginationSetting = useSettingsStore((s) => s.paginationSetting);
+  const setPaginationSetting = useSettingsStore((s) => s.setPaginationSetting);
+
+  const languageSetting = useSettingsStore((s) => s.languageSetting);
+  const setLanguageSetting = useSettingsStore((s) => s.setLanguageSetting);
 
   const darkMode = useSettingsStore((s) => s.darkMode);
   const setDarkMode = useSettingsStore((s) => s.setDarkMode);
@@ -441,9 +458,9 @@ export default function SettingsPage() {
               <SectionItem>
                 <label htmlFor={`${id}-pagination-mode`}>Scroll style</label>
                 <Select
-                  value={paginationMode}
+                  value={paginationSetting}
                   onValueChange={(val) =>
-                    setPaginationMode(val as "infinite" | "pages")
+                    setPaginationSetting(val as PaginationSetting)
                   }
                 >
                   <SelectTrigger
@@ -455,6 +472,7 @@ export default function SettingsPage() {
                   <SelectContent align="end">
                     <SelectGroup>
                       <SelectLabel>Scroll style</SelectLabel>
+                      <SelectItem value="account">Account setting</SelectItem>
                       <SelectItem value="infinite">Infinite scroll</SelectItem>
                       <SelectItem value="pages">Manual pages</SelectItem>
                     </SelectGroup>
@@ -464,6 +482,22 @@ export default function SettingsPage() {
             </Section>
 
             <Section title="APPEARANCE">
+              <SectionItem>
+                <label>Language</label>
+                <SimpleSelect
+                  options={
+                    [
+                      { value: "account", label: "Account setting" },
+                      ...INTERFACE_LANGUAGE_OPTIONS,
+                    ] satisfies { value: LanguageSetting; label: string }[]
+                  }
+                  value={languageSetting}
+                  onChange={(o) => setLanguageSetting(o.value)}
+                  valueGetter={(o) => o.value}
+                  labelGetter={(o) => o.label}
+                  className="w-[160px]"
+                />
+              </SectionItem>
               <SectionItem>
                 <label>Light theme</label>
                 <SimpleSelect
@@ -590,13 +624,18 @@ export default function SettingsPage() {
 
             <Section title="GLOBAL FILTERS">
               <SectionItem>
-                <IonToggle
-                  className="flex-1"
-                  checked={hideRead}
-                  onIonChange={(e) => setHideRead(e.detail.checked)}
-                >
-                  Hide read posts from feeds
-                </IonToggle>
+                <label>Read posts in feeds</label>
+                <SimpleSelect
+                  options={HIDE_READ_OPTIONS}
+                  value={
+                    HIDE_READ_OPTIONS.find((o) => o.setting === hideReadSetting)
+                      ?.key
+                  }
+                  onChange={(o) => setHideReadSetting(o.setting)}
+                  valueGetter={(o) => o.key}
+                  labelGetter={(o) => o.label}
+                  className="w-[160px]"
+                />
               </SectionItem>
               <SectionItem>
                 <IonToggle

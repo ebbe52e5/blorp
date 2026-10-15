@@ -97,6 +97,42 @@ describe("LemmyV4Api saveUserSettings", () => {
   );
 });
 
+describe("LemmyV4Api saveUserSettings account filters", () => {
+  test("saves the filter, scroll and language settings", async () => {
+    fetchMock.removeRoutes().clearHistory();
+    fetchMock
+      .mockGlobal()
+      .route(
+        ({ url }) =>
+          url.split("?")[0]!.endsWith("/api/v4/account/settings/save"),
+        JSON.stringify({ success: true }),
+      );
+    const api = new LemmyV4Api({
+      instance: INSTANCE,
+      jwt: "jwt",
+      softwareVersion: "1.0.0",
+    });
+
+    await api.saveUserSettings({
+      showReadPosts: false,
+      showBotAccounts: true,
+      blockingKeywords: ["spoiler", "leak"],
+      infiniteScrollEnabled: false,
+      interfaceLanguage: "en",
+    });
+
+    expect(
+      JSON.parse(String(fetchMock.callHistory.lastCall()?.options.body)),
+    ).toEqual({
+      show_read_posts: false,
+      show_bot_accounts: true,
+      blocking_keywords: ["spoiler", "leak"],
+      infinite_scroll_enabled: false,
+      interface_language: "en",
+    });
+  });
+});
+
 describe("LemmyV4Api getSite user settings", () => {
   const PERSON = {
     id: 2,
@@ -132,9 +168,14 @@ describe("LemmyV4Api getSite user settings", () => {
         show_score: false,
         show_upvotes: true,
         show_downvotes: "hide",
+        show_read_posts: false,
+        show_bot_accounts: false,
+        infinite_scroll_enabled: true,
+        interface_language: "browser",
         ...localUser,
       },
     },
+    keyword_blocks: ["spoiler"],
     moderates: [],
     follows: [],
     person_blocks: [],
@@ -173,6 +214,11 @@ describe("LemmyV4Api getSite user settings", () => {
       showScores: false,
       showUpvotes: true,
       showDownvotes: false,
+      showReadPosts: false,
+      showBotAccounts: false,
+      blockingKeywords: ["spoiler"],
+      infiniteScrollEnabled: true,
+      interfaceLanguage: "browser",
     });
   });
 

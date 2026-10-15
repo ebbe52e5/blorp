@@ -34,6 +34,7 @@ import { SearchBar } from "./search/search-bar";
 import { useReducedMotion } from "../hooks/use-reduced-motion";
 import { usePagination } from "../components/pagination/use-pagination";
 import { useSettingsStore } from "../stores/settings";
+import { usePaginationMode } from "../stores/utils";
 import { NoPostsMessage } from "../components/posts/no-posts-message";
 import { Page } from "../components/page";
 
@@ -183,7 +184,7 @@ export default function HomePosts() {
   const listingType = useFiltersStore((s) => s.listingType);
   const setPostSort = useFiltersStore((s) => s.setPostSort);
 
-  const paginationMode = useSettingsStore((s) => s.paginationMode);
+  const paginationMode = usePaginationMode();
   const hideSubscribedFromLocalAll = useSettingsStore(
     (s) => s.hideSubscribedFromLocalAll,
   );

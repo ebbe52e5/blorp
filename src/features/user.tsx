@@ -13,7 +13,7 @@ import { MarkdownRenderer } from "../components/markdown/renderer";
 import { VirtualList } from "../components/virtual-list";
 import { memo, useEffect, useMemo } from "react";
 import { usePagination } from "../components/pagination/use-pagination";
-import { useSettingsStore } from "../stores/settings";
+import { usePaginationMode } from "../stores/utils";
 import { decodeApId, encodeApId, getCommentSaved } from "../apis/utils";
 import { ToggleGroup, ToggleGroupItem } from "../components/ui/toggle-group";
 import _ from "lodash";
@@ -136,7 +136,7 @@ export default function User() {
   );
   const type = typeParam.value;
 
-  const paginationMode = useSettingsStore((s) => s.paginationMode);
+  const paginationMode = usePaginationMode();
   const { postSort } = useAvailableSortsQuery();
   const personQuery = usePersonDetailsQuery({ actorId });
   const query = usePersonFeedQuery({ apIdOrUsername: actorId, type });

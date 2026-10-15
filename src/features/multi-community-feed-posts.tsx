@@ -6,7 +6,7 @@ import {
 import { ContentGutters } from "../components/gutters";
 import { Fragment, memo, useMemo, useState } from "react";
 import { usePagination } from "../components/pagination/use-pagination";
-import { useSettingsStore } from "../stores/settings";
+import { usePaginationMode } from "../stores/utils";
 import { VirtualList } from "../components/virtual-list";
 import {
   useAvailableSortsQuery,
@@ -73,7 +73,7 @@ export default function MultiCommunityFeedPosts() {
   const feed = useMultiCommunityFeedFromStore(apId)?.feedView;
   const canSeeFeed = useCanSeeFeed(feed);
 
-  const paginationMode = useSettingsStore((s) => s.paginationMode);
+  const paginationMode = usePaginationMode();
   const { postSort, suggestedPostSort } = useAvailableSortsQuery();
   const setPostSort = useFiltersStore((s) => s.setPostSort);
   const posts = usePostsQuery({

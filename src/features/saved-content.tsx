@@ -6,7 +6,7 @@ import {
 import { ContentGutters } from "../components/gutters";
 import { memo, useMemo } from "react";
 import { usePagination } from "../components/pagination/use-pagination";
-import { useSettingsStore } from "../stores/settings";
+import { usePaginationMode } from "../stores/utils";
 import { VirtualList } from "../components/virtual-list";
 import {
   useAvailableSortsQuery,
@@ -82,7 +82,7 @@ export default function SavedContent() {
   );
   const type = typeParam.value;
 
-  const paginationMode = useSettingsStore((s) => s.paginationMode);
+  const paginationMode = usePaginationMode();
 
   const comments = useCommentsQuery({
     savedOnly: true,

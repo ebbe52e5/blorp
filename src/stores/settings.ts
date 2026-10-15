@@ -62,6 +62,21 @@ export const THRESHOLD_OPTIONS: ThresholdSetting[] = [
   -20,
 ];
 
+// "account" defers to the account's setting on the server
+export type HideReadSetting = "account" | boolean;
+
+export type PaginationMode = "infinite" | "pages";
+export type PaginationSetting = "account" | PaginationMode;
+
+// Placeholder until blorp has translations: English is the only language
+export type InterfaceLanguage = "en";
+export type LanguageSetting = "account" | InterfaceLanguage;
+
+export const INTERFACE_LANGUAGE_OPTIONS: {
+  label: string;
+  value: InterfaceLanguage;
+}[] = [{ value: "en", label: "English" }];
+
 export type ShareLinkType =
   | "blorp"
   | "instance"
@@ -90,14 +105,15 @@ const persistedSchema = z.object({
   reduceMotion: z.boolean(),
   disableHaptics: z.boolean(),
   showMarkdown: z.boolean(),
-  hideRead: z.boolean(),
+  hideReadSetting: z.union([z.literal("account"), z.boolean()]),
   hideSubscribedFromLocalAll: z.boolean(),
   hideBotPosts: z.boolean(),
   shareLinkType: z
     .enum(["blorp", "instance", "content-instance", "threadiverse.link"])
     .nullable(),
   filterKeywords: z.array(z.string()),
-  paginationMode: z.enum(["infinite", "pages"]),
+  paginationSetting: z.enum(["account", "infinite", "pages"]),
+  languageSetting: z.enum(["account", "en"]),
   darkMode: z.enum(["system", "dark", "light"]),
   nsfwPreviouslyEnabled: z.boolean(),
   contentWarningAccepted: z.boolean(),
@@ -121,13 +137,14 @@ type SettingsStore = {
   setReduceMotion: (newVal: boolean) => any;
   setDisableHaptics: (newVal: boolean) => any;
   setShowMarkdown: (newVal: boolean) => any;
-  setHideRead: (newVal: boolean) => any;
+  setHideReadSetting: (newVal: HideReadSetting) => any;
   setHideSubscribedFromLocalAll: (newVal: boolean) => any;
   setHideBotPosts: (newVal: boolean) => any;
   setShareLinkType: (newVal: ShareLinkType) => any;
   setFilterKeywords: (update: { index: number; keyword: string }) => any;
   pruneFiltersKeywords: () => any;
-  setPaginationMode: (mode: "infinite" | "pages") => void;
+  setPaginationSetting: (newVal: PaginationSetting) => void;
+  setLanguageSetting: (newVal: LanguageSetting) => void;
   setDarkMode: (mode: DarkMode) => void;
   // App stores (e.g. iOS) may prohibit showing NSFW settings by default.
   // We track whether any account ever had NSFW enabled so users can
@@ -151,12 +168,15 @@ const INIT_STATE: z.infer<typeof persistedSchema> = {
   reduceMotion: false,
   disableHaptics: false,
   showMarkdown: false,
-  hideRead: false,
+  hideReadSetting: "account",
   hideSubscribedFromLocalAll: false,
   hideBotPosts: false,
   shareLinkType: null,
   filterKeywords: [],
-  paginationMode: "infinite",
+  // Lemmy accounts default to pages, so following the account would switch
+  // most users off infinite scroll
+  paginationSetting: "infinite",
+  languageSetting: "account",
   darkMode: "system",
   nsfwPreviouslyEnabled: false,
   contentWarningAccepted: false,
@@ -181,7 +201,7 @@ export const useSettingsStore = create<SettingsStore>()(
       setReduceMotion: (reduceMotion) => set({ reduceMotion }),
       setDisableHaptics: (disableHaptics) => set({ disableHaptics }),
       setShowMarkdown: (showMarkdown) => set({ showMarkdown }),
-      setHideRead: (hideRead) => set({ hideRead }),
+      setHideReadSetting: (hideReadSetting) => set({ hideReadSetting }),
       setHideSubscribedFromLocalAll: (hideSubscribedFromLocalAll) =>
         set({ hideSubscribedFromLocalAll }),
       setHideBotPosts: (hideBotPosts) => set({ hideBotPosts }),
@@ -196,7 +216,8 @@ export const useSettingsStore = create<SettingsStore>()(
       pruneFiltersKeywords: () => {
         set({ filterKeywords: pruneFilterKeywords(get().filterKeywords) });
       },
-      setPaginationMode: (paginationMode) => set({ paginationMode }),
+      setPaginationSetting: (paginationSetting) => set({ paginationSetting }),
+      setLanguageSetting: (languageSetting) => set({ languageSetting }),
       setDarkMode: (darkMode) => set({ darkMode }),
       setNsfwPreviouslyEnabled: (nsfwPreviouslyEnabled) =>
         set({ nsfwPreviouslyEnabled }),
@@ -226,9 +247,23 @@ export const useSettingsStore = create<SettingsStore>()(
         return persistedSchema.passthrough().parse(state);
       },
       merge: (p: any, current) => {
-        const persisted = p as Partial<SettingsStore>;
+        const {
+          hideRead: legacyHideRead,
+          paginationMode: legacyPaginationMode,
+          ...persisted
+        } = p as Partial<SettingsStore> & {
+          // Replaced by hideReadSetting and paginationSetting
+          hideRead?: boolean;
+          paginationMode?: PaginationMode;
+        };
         return {
           ...current,
+          // Turning hide read on was a choice, but off was the default, which
+          // now means following the account
+          ...(legacyHideRead ? { hideReadSetting: true } : null),
+          ...(legacyPaginationMode
+            ? { paginationSetting: legacyPaginationMode }
+            : null),
           ...persisted,
           filterKeywords: pruneFilterKeywords([
             ...(persisted.filterKeywords ?? []),

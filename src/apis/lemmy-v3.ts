@@ -803,6 +803,14 @@ export class LemmyV3Api implements ApiBlueprint<lemmyV3.LemmyHttp> {
         showDownvotes:
           lemmySite.my_user?.local_user_view.local_user_vote_display_mode
             ?.downvotes,
+        showReadPosts:
+          lemmySite.my_user?.local_user_view.local_user.show_read_posts,
+        showBotAccounts:
+          lemmySite.my_user?.local_user_view.local_user.show_bot_accounts,
+        infiniteScrollEnabled:
+          lemmySite.my_user?.local_user_view.local_user.infinite_scroll_enabled,
+        interfaceLanguage:
+          lemmySite.my_user?.local_user_view.local_user.interface_language,
         enablePostDownvotes: enableDownvotes,
         enableCommentDownvotes: enableDownvotes,
         software: this.software,
@@ -1778,6 +1786,10 @@ export class LemmyV3Api implements ApiBlueprint<lemmyV3.LemmyHttp> {
         show_scores: form.showScores,
         show_upvotes: form.showUpvotes,
         show_downvotes: form.showDownvotes,
+        show_read_posts: form.showReadPosts,
+        show_bot_accounts: form.showBotAccounts,
+        infinite_scroll_enabled: form.infiniteScrollEnabled,
+        interface_language: form.interfaceLanguage,
       });
     });
   }

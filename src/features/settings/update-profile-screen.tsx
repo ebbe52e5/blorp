@@ -29,7 +29,10 @@ import { cn } from "@/src/lib/utils";
 import { Input } from "@/src/components/ui/input";
 import { ToolbarButtons } from "@/src/components/toolbar/toolbar-buttons";
 import { isCapacitor, isIos } from "@/src/lib/device";
-import { useSettingsStore } from "@/src/stores/settings";
+import {
+  INTERFACE_LANGUAGE_OPTIONS,
+  useSettingsStore,
+} from "@/src/stores/settings";
 import { SimpleSelect } from "@/src/components/ui/simple-select";
 import { type ScoreDisplay } from "@/src/stores/utils";
 
@@ -39,6 +42,73 @@ const VOTE_DISPLAY_OPTIONS: { value: ScoreDisplay; label: string }[] = [
   { value: "downvotes", label: "Downvotes only" },
   { value: "none", label: "Hidden" },
 ];
+
+const SHOW_HIDE_OPTIONS: { value: "show" | "hide"; label: string }[] = [
+  { value: "show", label: "Show" },
+  { value: "hide", label: "Hide" },
+];
+
+const SCROLL_STYLE_OPTIONS: { value: "infinite" | "pages"; label: string }[] = [
+  { value: "infinite", label: "Infinite scroll" },
+  { value: "pages", label: "Manual pages" },
+];
+
+function languageLabel(code: string) {
+  if (code === "browser") {
+    return "Browser default";
+  }
+  return (
+    INTERFACE_LANGUAGE_OPTIONS.find((o) => o.value === code)?.label ?? code
+  );
+}
+
+function pruneKeywords(keywords: string[]) {
+  return _.uniq(keywords.map((k) => k.trim()).filter(Boolean));
+}
+
+/**
+ * An account setting, or a note that the device setting overrides it
+ */
+function AccountSettingRow({
+  label,
+  overridden,
+  onUseAccount,
+  onInfo,
+  children,
+}: {
+  label: string;
+  overridden: boolean;
+  onUseAccount: () => void;
+  onInfo: () => void;
+  children: React.ReactNode;
+}) {
+  if (!overridden) {
+    return (
+      <div className="flex items-center justify-between gap-2">
+        <label className="font-light">{label}</label>
+        {children}
+      </div>
+    );
+  }
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <span className="font-light">{label}</span>
+      <div className="flex items-center gap-1">
+        <Button
+          variant="outline"
+          size="sm"
+          type="button"
+          onClick={onUseAccount}
+        >
+          Use account setting
+        </Button>
+        <Button variant="secondary" size="icon" type="button" onClick={onInfo}>
+          <FiHelpCircle />
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 type NsfwDisplay = "hidden" | "blur" | "show";
 
@@ -286,6 +356,30 @@ export default function SettingsPage() {
   const replyHideThreshold =
     _replyHideThreshold ?? site?.replyHideThreshold ?? -20;
 
+  const [_showReadPosts, setShowReadPosts] = useState<boolean>();
+  const showReadPosts = _showReadPosts ?? site?.showReadPosts;
+
+  const [_showBotAccounts, setShowBotAccounts] = useState<boolean>();
+  const showBotAccounts = _showBotAccounts ?? site?.showBotAccounts;
+
+  const [_infiniteScrollEnabled, setInfiniteScrollEnabled] =
+    useState<boolean>();
+  const infiniteScrollEnabled =
+    _infiniteScrollEnabled ?? site?.infiniteScrollEnabled;
+
+  const [_interfaceLanguage, setInterfaceLanguage] = useState<string>();
+  const interfaceLanguage = _interfaceLanguage ?? site?.interfaceLanguage;
+
+  const [_blockingKeywords, setBlockingKeywords] = useState<string[]>();
+  const blockingKeywords = _blockingKeywords ?? site?.blockingKeywords;
+
+  const hideReadSetting = useSettingsStore((s) => s.hideReadSetting);
+  const setHideReadSetting = useSettingsStore((s) => s.setHideReadSetting);
+  const paginationSetting = useSettingsStore((s) => s.paginationSetting);
+  const setPaginationSetting = useSettingsStore((s) => s.setPaginationSetting);
+  const languageSetting = useSettingsStore((s) => s.languageSetting);
+  const setLanguageSetting = useSettingsStore((s) => s.setLanguageSetting);
+
   const nsfwPreviouslyEnabled = useSettingsStore(
     (s) => s.nsfwPreviouslyEnabled,
   );
@@ -341,6 +435,14 @@ export default function SettingsPage() {
             showScores,
             replyCollapseThreshold,
             replyHideThreshold,
+            // Only sent once changed, so saving the profile keeps what other
+            // apps set, e.g. lemmy-ui's "browser" language
+            showReadPosts: _showReadPosts,
+            showBotAccounts: _showBotAccounts,
+            infiniteScrollEnabled: _infiniteScrollEnabled,
+            interfaceLanguage: _interfaceLanguage,
+            blockingKeywords:
+              _blockingKeywords && pruneKeywords(_blockingKeywords),
           },
         })
         .then(() => history.goBack());
@@ -577,6 +679,112 @@ export default function SettingsPage() {
                     </div>
                   )}
                 </>
+              )}
+
+              {!_.isUndefined(showReadPosts) && (
+                <AccountSettingRow
+                  label="Read posts in feeds"
+                  overridden={hideReadSetting !== "account"}
+                  onUseAccount={() => setHideReadSetting("account")}
+                  onInfo={showOverrideInfo}
+                >
+                  <SimpleSelect
+                    options={SHOW_HIDE_OPTIONS}
+                    value={showReadPosts ? "show" : "hide"}
+                    onChange={(opt) => setShowReadPosts(opt.value === "show")}
+                    valueGetter={(o) => o.value}
+                    labelGetter={(o) => o.label}
+                    className="w-[160px]"
+                    side="top"
+                  />
+                </AccountSettingRow>
+              )}
+
+              {/* The server filters bot posts, so the device setting can only
+                  hide more of them, never show them */}
+              {!_.isUndefined(showBotAccounts) && (
+                <div className="flex items-center justify-between gap-2">
+                  <label className="font-light">Bot posts</label>
+                  <SimpleSelect
+                    options={SHOW_HIDE_OPTIONS}
+                    value={showBotAccounts ? "show" : "hide"}
+                    onChange={(opt) => setShowBotAccounts(opt.value === "show")}
+                    valueGetter={(o) => o.value}
+                    labelGetter={(o) => o.label}
+                    className="w-[160px]"
+                    side="top"
+                  />
+                </div>
+              )}
+
+              {!_.isUndefined(infiniteScrollEnabled) && (
+                <AccountSettingRow
+                  label="Scroll style"
+                  overridden={paginationSetting !== "account"}
+                  onUseAccount={() => setPaginationSetting("account")}
+                  onInfo={showOverrideInfo}
+                >
+                  <SimpleSelect
+                    options={SCROLL_STYLE_OPTIONS}
+                    value={infiniteScrollEnabled ? "infinite" : "pages"}
+                    onChange={(opt) =>
+                      setInfiniteScrollEnabled(opt.value === "infinite")
+                    }
+                    valueGetter={(o) => o.value}
+                    labelGetter={(o) => o.label}
+                    className="w-[160px]"
+                    side="top"
+                  />
+                </AccountSettingRow>
+              )}
+
+              {!_.isUndefined(interfaceLanguage) && (
+                <AccountSettingRow
+                  label="Language"
+                  overridden={languageSetting !== "account"}
+                  onUseAccount={() => setLanguageSetting("account")}
+                  onInfo={showOverrideInfo}
+                >
+                  <SimpleSelect
+                    options={_.uniq([
+                      interfaceLanguage,
+                      ...INTERFACE_LANGUAGE_OPTIONS.map((o) => o.value),
+                    ])}
+                    value={interfaceLanguage}
+                    onChange={setInterfaceLanguage}
+                    valueGetter={(o) => o}
+                    labelGetter={languageLabel}
+                    className="w-[160px]"
+                    side="top"
+                  />
+                </AccountSettingRow>
+              )}
+
+              {/* The server filters these keywords out of feeds. They add to
+                  the device's keyword filters. */}
+              {blockingKeywords && (
+                <div className="flex flex-col gap-2">
+                  <label className="font-light">Blocked keywords</label>
+                  {[...blockingKeywords, ""].map((keyword, index) => (
+                    <Input
+                      key={index}
+                      value={keyword}
+                      placeholder="Keyword to block..."
+                      onChange={(e) => {
+                        const next = [...blockingKeywords];
+                        next[index] = e.target.value;
+                        setBlockingKeywords(next);
+                      }}
+                      onBlur={() =>
+                        setBlockingKeywords(pruneKeywords(blockingKeywords))
+                      }
+                    />
+                  ))}
+                  <span className="text-muted-foreground text-xs">
+                    Hides posts with any of these in the title, body or link.
+                    Each needs 3 to 50 characters.
+                  </span>
+                </div>
               )}
 
               <Button variant="outline">Save profile</Button>
