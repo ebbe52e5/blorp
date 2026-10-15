@@ -54,7 +54,7 @@ extension String {
 
 /// Builds a universal‐link URL for a Lemmy post.
 /// - Parameters:
-///   - domain: your associated‐domains host, e.g. "blorpblorp.xyz"
+///   - domain: your associated‐domains host, e.g. "zhifou.io"
 ///   - community: the community name (no leading “r/”)
 ///   - apId: the ActivityPub ID, e.g. "microblogmemes@lemmy.world"
 func makeLemmyPostURL(
@@ -102,7 +102,7 @@ func communityApId(from urlString: String) throws -> String {
 func fetchData(with url: URL) async throws -> Data {
   var request = URLRequest(url: url)
   // Set your custom UA here:
-  request.setValue("Blorp", forHTTPHeaderField: "User-Agent")
+  request.setValue("ZhiFou", forHTTPHeaderField: "User-Agent")
 
   // Fire it off
   let (data, _) = try await URLSession.shared.data(for: request)

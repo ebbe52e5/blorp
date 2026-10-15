@@ -12,6 +12,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "build": "vite build && cap sync && pnpm cp-package-json",
+    "build:zhifou": "REACT_APP_NAME=ZhiFou REACT_APP_DEFAULT_INSTANCE=https://zhifou.io REACT_APP_LOCK_TO_DEFAULT_INSTANCE=1 REACT_APP_INSTANCE_SELECTION_MODE=default_first pnpm build",
     "build:tauri": "tauri build",
     "build:docker": "docker build . --tag blorp",
     "beta:ios": "dotenvx run -- ./scripts/beta-ios.sh",

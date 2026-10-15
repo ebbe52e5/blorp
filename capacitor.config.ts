@@ -2,8 +2,8 @@ import type { CapacitorConfig } from "@capacitor/cli";
 import { KeyboardResize, KeyboardStyle } from "@capacitor/keyboard";
 
 const config: CapacitorConfig = {
-  appId: "xyz.blorpblorp.app",
-  appName: "Blorp",
+  appId: "io.zhifou.app",
+  appName: "ZhiFou",
   webDir: "dist",
   appendUserAgent: "Blorp",
   plugins: {

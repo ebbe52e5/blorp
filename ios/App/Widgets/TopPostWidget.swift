@@ -98,7 +98,7 @@ struct TopPostProvider: AppIntentTimelineProvider {
   }
 
   private func fetchTopPost(for community: String?) async -> LemmyPost? {
-    var urlStr = "https://lemmy.world/api/v3/post/list?sort=TopDay&type=All&limit=1"
+    var urlStr = "https://zhifou.io/api/v3/post/list?sort=TopDay&type=All&limit=1"
     if community != nil && community != TopPostCommunityOption.empty.rawValue {
       urlStr += "&community_name=" + community!
     }
@@ -133,7 +133,7 @@ struct TopPostWidgetEntryView: View {
 
   private var tapURL: URL? {
     makeLemmyPostURL(
-      domain: "blorpblorp.xyz",
+      domain: "zhifou.io",
       community: entry.community,
       apId: entry.apId
     )
