@@ -103,6 +103,7 @@ export function postToDraft(
     thumbnailUrl: post.thumbnailUrl,
     altText: post.altText,
     url: post.url,
+    nsfw: post.nsfw,
     flairs: flairs ?? undefined,
     poll: post.poll
       ? {

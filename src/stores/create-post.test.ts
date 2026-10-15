@@ -131,6 +131,18 @@ describe("poll round trip", () => {
   });
 });
 
+describe("nsfw round trip", () => {
+  test.each([true, false])(
+    "editing a post with nsfw = %s keeps it in the draft and edit data",
+    (nsfw) => {
+      const { post } = api.getPost({ post: { nsfw } });
+      const draft = postToDraft(post, []);
+      expect(draft.nsfw).toBe(nsfw);
+      expect(draftToEditPostData(draft).nsfw).toBe(nsfw);
+    },
+  );
+});
+
 describe("alt text", () => {
   const ALT = "A cat on a windowsill";
 
