@@ -8,12 +8,14 @@ export function AggregateBadges({
   aggregates,
   links,
   className,
+  badgeClassName,
   children,
 }: {
   aggregates: Record<string, number | undefined | null>;
   /** Wraps the badge for a label, e.g. in a Link to the list it counts */
   links?: Partial<Record<string, (badge: React.ReactNode) => React.ReactNode>>;
   className?: string;
+  badgeClassName?: string;
   children?: React.ReactNode;
 }) {
   const entries = Object.entries(aggregates);
@@ -35,7 +37,7 @@ export function AggregateBadges({
           <Badge
             key={label}
             variant="secondary"
-            className={cn(wrap && "text-brand hover:underline")}
+            className={cn(wrap && "text-brand hover:underline", badgeClassName)}
           >
             <span className="block" key={label}>
               {abbriviateNumber(value)} {label}

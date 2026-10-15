@@ -89,6 +89,49 @@ function useSubscribersLink(
   };
 }
 
+// Narrower than the default badge, so the three counts fit one row of the
+// sidebar at common widths
+const COMPACT_STAT_BADGE = "px-1.5 text-[11px]";
+
+/**
+ * Subscribers, posts and comments on one row, active users on the next, so
+ * wrapping never splits a group
+ */
+function CommunityStats({
+  communityView,
+  subscribersLink,
+  showActivity,
+  className,
+}: {
+  communityView?: Schemas.Community;
+  subscribersLink: ReturnType<typeof useSubscribersLink>;
+  showActivity?: boolean;
+  className?: string;
+}) {
+  return (
+    <div className={cn("flex flex-col gap-1", className)}>
+      <AggregateBadges
+        links={subscribersLink}
+        badgeClassName={COMPACT_STAT_BADGE}
+        aggregates={{
+          Subscribers: communityView?.subscriberCount,
+          Posts: communityView?.postCount,
+          Comments: communityView?.commentCount,
+        }}
+      />
+      {showActivity && (
+        <AggregateBadges
+          badgeClassName={COMPACT_STAT_BADGE}
+          aggregates={{
+            "users / week": communityView?.usersActiveWeekCount,
+            "users / month": communityView?.usersActiveMonthCount,
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
 export function SmallScreenSidebar({
   communityHandle,
   actorId,
@@ -151,19 +194,10 @@ export function SmallScreenSidebar({
           </div>
         )}
 
-        <AggregateBadges
-          links={subscribersLink}
-          aggregates={{
-            ...(expanded
-              ? {
-                  "users / week": communityView?.usersActiveWeekCount,
-                  "users / month": communityView?.usersActiveMonthCount,
-                }
-              : {}),
-            Subscribers: communityView?.subscriberCount,
-            Posts: communityView?.postCount,
-            Comments: communityView?.commentCount,
-          }}
+        <CommunityStats
+          communityView={communityView}
+          subscribersLink={subscribersLink}
+          showActivity={expanded}
         />
 
         {!expanded && createdAt}
@@ -536,16 +570,11 @@ function CommunitySidebarInner({
                   />
                 )}
 
-                <AggregateBadges
+                <CommunityStats
                   className="mt-2"
-                  links={subscribersLink}
-                  aggregates={{
-                    "users / week": communityView?.usersActiveWeekCount,
-                    "users / month": communityView?.usersActiveMonthCount,
-                    Subscribers: communityView?.subscriberCount,
-                    Posts: communityView?.postCount,
-                    Comments: communityView?.commentCount,
-                  }}
+                  communityView={communityView}
+                  subscribersLink={subscribersLink}
+                  showActivity
                 />
                 <CommunityVisibility
                   visibility={communityView.visibility}
