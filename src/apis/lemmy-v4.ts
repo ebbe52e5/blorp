@@ -1864,6 +1864,7 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
       name: form.title,
       alt_text: form.altText ?? undefined,
       custom_thumbnail: form.thumbnailUrl ?? undefined,
+      nsfw: form.nsfw ?? undefined,
       tags,
     });
     const { post_view } = unwrapResponsData(editPostResponse);

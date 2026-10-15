@@ -1276,6 +1276,7 @@ export class LemmyV3Api implements ApiBlueprint<lemmyV3.LemmyHttp> {
         name: form.title,
         alt_text: form.altText ?? undefined,
         custom_thumbnail: form.thumbnailUrl ?? undefined,
+        nsfw: form.nsfw ?? undefined,
       });
 
       return convertPost(post_view);

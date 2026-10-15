@@ -135,3 +135,44 @@ describe("LemmyV4Api my vote", () => {
     },
   );
 });
+
+describe("LemmyV4Api editPost", () => {
+  beforeEach(() => {
+    fetchMock.removeRoutes().clearHistory();
+  });
+
+  test.each([true, false])("sends nsfw = %s", async (nsfw) => {
+    fetchMock.mockGlobal().route(
+      ({ url }) => url.split("?")[0]!.endsWith("/api/v4/post"),
+      JSON.stringify({
+        post_view: {
+          post: { ...POST, nsfw },
+          community: COMMUNITY,
+          creator: PERSON,
+          creator_banned_from_community: false,
+          tags: [],
+        },
+      }),
+    );
+    const api = new LemmyV4Api({
+      instance: INSTANCE,
+      jwt: "jwt",
+      softwareVersion: "1.0.0",
+    });
+
+    const post = await api.editPost({
+      apId: POST.ap_id,
+      title: POST.name,
+      url: null,
+      body: null,
+      altText: null,
+      thumbnailUrl: null,
+      nsfw,
+    });
+
+    expect(
+      JSON.parse(String(fetchMock.callHistory.lastCall()?.options.body)),
+    ).toMatchObject({ post_id: POST.id, nsfw });
+    expect(post.nsfw).toBe(nsfw);
+  });
+});
