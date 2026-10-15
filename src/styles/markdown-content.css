@@ -197,3 +197,18 @@ details > summary::-webkit-details-marker {
 .markdown-content.markdown-post-body :is(code, pre) {
   @apply text-sm;
 }
+
+/*
+ * Chinese typesetting indents a paragraph's first line by two characters.
+ * Markdown can't do it in the text (four leading spaces make a code block),
+ * so post bodies indent their top-level paragraphs here. Comments don't.
+ * A paragraph holding just an image isn't indented. CSS can't see text
+ * nodes, so a paragraph with an image and text loses its indent too.
+ */
+.markdown-content.markdown-post-body > p {
+  text-indent: 2em;
+}
+
+.markdown-content.markdown-post-body > p:has(> :is(img, span):only-child img) {
+  text-indent: 0;
+}
