@@ -842,9 +842,10 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
       this.isLoggedIn ? this.client.getMyUser(options) : null,
     ]);
     const [lemmySite, myUser] = unwrapResponseDataTuple(responses);
-    const enableDownvotes =
-      "enable_downvotes" in lemmySite.site_view.local_site &&
-      lemmySite.site_view.local_site.enable_downvotes === true;
+    // Lemmy 1.0 replaced enable_downvotes with a mode per content type.
+    // "local" only stops remote users, and blorp's users are local.
+    const { post_downvotes, comment_downvotes } =
+      lemmySite.site_view.local_site;
 
     const me = myUser ? convertPerson(myUser.local_user_view) : null;
 
@@ -929,8 +930,8 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
       blockingKeywords: myUser?.keyword_blocks,
       infiniteScrollEnabled: localUser?.infinite_scroll_enabled,
       interfaceLanguage: localUser?.interface_language,
-      enablePostDownvotes: enableDownvotes,
-      enableCommentDownvotes: enableDownvotes,
+      enablePostDownvotes: post_downvotes !== "disable",
+      enableCommentDownvotes: comment_downvotes !== "disable",
       communityCreationAdminOnly:
         lemmySite.site_view.local_site.community_creation_admin_only,
       nsfwContentDisallowed:

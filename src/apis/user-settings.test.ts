@@ -184,13 +184,19 @@ describe("LemmyV4Api getSite user settings", () => {
     instance_persons_blocks: [],
   });
 
-  const getSite = async (localUser: object = {}) => {
+  const getSite = async (localUser: object = {}, localSite: object = {}) => {
     fetchMock.removeRoutes().clearHistory();
     fetchMock
       .mockGlobal()
       .route(
         ({ url }) => url.split("?")[0]!.endsWith("/api/v4/site"),
-        JSON.stringify(SITE),
+        JSON.stringify({
+          ...SITE,
+          site_view: {
+            ...SITE.site_view,
+            local_site: { ...SITE.site_view.local_site, ...localSite },
+          },
+        }),
       )
       .route(
         ({ url }) => url.split("?")[0]!.endsWith("/api/v4/account"),
@@ -229,6 +235,20 @@ describe("LemmyV4Api getSite user settings", () => {
   ])("maps show_downvotes = %s", async (showDownvotes, expected) => {
     const site = await getSite({ show_downvotes: showDownvotes });
     expect(site.showDownvotes).toBe(expected);
+  });
+
+  test.each([
+    ["all", true],
+    ["local", true],
+    ["disable", false],
+  ])("maps downvote mode %s to enabled = %s", async (mode, enabled) => {
+    const posts = await getSite({}, { post_downvotes: mode });
+    expect(posts.enablePostDownvotes).toBe(enabled);
+    expect(posts.enableCommentDownvotes).toBe(true);
+
+    const comments = await getSite({}, { comment_downvotes: mode });
+    expect(comments.enableCommentDownvotes).toBe(enabled);
+    expect(comments.enablePostDownvotes).toBe(true);
   });
 });
 
