@@ -875,12 +875,15 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
     );
 
     const admins = lemmySite.admins.map((p) => convertPerson(p));
+    const localUser = myUser?.local_user_view.local_user;
     const site = {
       privateInstance: lemmySite.site_view.local_site.private_instance,
       description: lemmySite.site_view.site.summary ?? null,
       instance: this.instance,
       admins: admins.map((a) => a.apId),
-      myEmail: null,
+      // The profile form sends this back on save, so a missing email here
+      // would clear it on the server
+      myEmail: localUser?.email ?? null,
       version: lemmySite.version,
       me,
       moderates: moderates?.map((c) => c.handle) ?? null,
@@ -912,8 +915,15 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
           open: "Open",
         } as const,
       ),
-      showNsfw: false,
-      blurNsfw: true,
+      showNsfw: localUser?.show_nsfw ?? false,
+      blurNsfw: localUser?.blur_nsfw ?? true,
+      showScores: localUser?.show_score,
+      showUpvotes: localUser?.show_upvotes,
+      // Blorp has no "show for others" mode, which only hides the downvotes
+      // on your own content, so it counts as showing them
+      showDownvotes: localUser
+        ? localUser.show_downvotes !== "hide"
+        : undefined,
       enablePostDownvotes: enableDownvotes,
       enableCommentDownvotes: enableDownvotes,
       communityCreationAdminOnly:
@@ -2363,6 +2373,13 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
         email: form.email,
         show_nsfw: form.showNsfw,
         blur_nsfw: form.blurNsfw,
+        show_score: form.showScores,
+        show_upvotes: form.showUpvotes,
+        show_downvotes: _.isUndefined(form.showDownvotes)
+          ? undefined
+          : form.showDownvotes
+            ? "show"
+            : "hide",
       },
       _.isUndefined,
     );

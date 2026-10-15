@@ -27,6 +27,7 @@ When click-testing against a local Lemmy (`pnpm dev` with `REACT_APP_DEFAULT_INS
 
 - Prefer satisfies over as when writing TypeScript
 - Do not silently change `||` to `??` when fixing type errors — they are not the same. If you are certain it should be ?? you can ask the developer to confirm.
+- Account settings that `getSite` returns are the profile form's starting values, and saving sends them back. A placeholder there (v4 once hard-coded `myEmail: null` and `showNsfw: false`) overwrites the account on every profile save, e.g. clearing its email. Map the real value, or only send fields the user changed.
 - The pinned `lemmy-v4` client's request types can lag the backend. For example, its `CreateCommunity` still has `icon`/`banner` and a required `title`, but the current backend has no `icon`/`banner` and an optional `title`. Check `lemmy/crates/db_views/*/src/api.rs` when a field looks wrong.
 
 ## Commands
