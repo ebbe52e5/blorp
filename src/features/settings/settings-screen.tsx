@@ -92,7 +92,7 @@ function AccountCard({
           <div className="flex w-full items-center justify-between">
             <PersonCard actorId={person.apId} account={account} size="sm" />
             {getAccountSite(account)?.showNsfw && (
-              <Badge variant="brand-secondary">
+              <Badge variant="brand">
                 {getAccountSite(account)?.blurNsfw
                   ? "NSFW Blurred"
                   : "NSFW Shown"}
