@@ -339,7 +339,7 @@ function Byline({
         >
           <span className="font-medium text-xs">{name}</span>
           {tag ? (
-            <Badge size="sm" variant="brand-secondary" className="ml-2">
+            <Badge size="sm" variant="brand" className="ml-2">
               {tag}
             </Badge>
           ) : (

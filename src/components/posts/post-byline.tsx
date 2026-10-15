@@ -400,7 +400,7 @@ export function PostByline({
                 <span className="sr-only">u/</span>
                 {creatorName}
                 {tag ? (
-                  <Badge size="sm" variant="brand-secondary" className="ml-2">
+                  <Badge size="sm" variant="brand" className="ml-2">
                     {tag}
                   </Badge>
                 ) : (

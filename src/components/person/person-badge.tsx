@@ -46,7 +46,7 @@ export function PersonBadge({
 
   if (person.isBot) {
     return (
-      <Badge variant="brand-secondary" size={size}>
+      <Badge variant="brand" size={size}>
         <Robot />
         Bot
       </Badge>

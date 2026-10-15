@@ -155,7 +155,7 @@ function PersonSidebarInner({
           <span className="flex items-center min-w-0 text-ellipsis overflow-hidden">
             <b>{name}</b>
             {tag ? (
-              <Badge size="sm" variant="brand-secondary" className="ml-2">
+              <Badge size="sm" variant="brand" className="ml-2">
                 {tag}
               </Badge>
             ) : (
