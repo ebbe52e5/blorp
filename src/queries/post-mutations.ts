@@ -8,6 +8,7 @@ import { isErrorLike } from "../lib/utils";
 import { extractErrorContent } from "../apis/utils";
 import { toast } from "sonner";
 import _ from "lodash";
+import { voteQueue, voteVerb } from "../lib/voting";
 
 function createPostMutation<
   ApiFn extends keyof ApiBlueprint<any>,
@@ -106,26 +107,47 @@ export const useSavePostMutation = createPostMutation({
   invalidateSavedPosts: true,
 });
 
-export const useLikePostMutation = createPostMutation({
-  apiFn: "likePost",
-  key: "score",
-  optimisticKey: "optimisticMyVote",
-  formatError: ({ score }) => {
-    let verb = "";
-    switch (score) {
-      case 0:
-        verb = "upvote";
-        break;
-      case 1:
-        verb = "unvote";
-        break;
-      case -1:
-        verb = "downvote";
-        break;
-    }
-    return `Couldn't ${verb} post`;
-  },
-});
+export function useLikePostMutation() {
+  const { api } = useApiClients();
+  const patchPost = usePostsStore((s) => s.patchPost);
+  const getCachePrefixer = useAuth((s) => s.getCachePrefixer);
+  const queueKey = (postApId: string) => `post:${getCachePrefixer()(postApId)}`;
+  return useMutation({
+    mutationFn: async (form: Forms.LikePost & { postApId: string }) =>
+      voteQueue.run(queueKey(form.postApId), async () =>
+        (await api).likePost(form),
+      ),
+    onMutate: ({ score, postApId }) => {
+      patchPost(postApId, getCachePrefixer(), { optimisticMyVote: score });
+      return { ticket: voteQueue.ticket(queueKey(postApId)) };
+    },
+    onSuccess: (postView, { postApId }, context) => {
+      // The server's vote and counts always go together, so storing them is
+      // safe; only the latest vote may drop the optimistic one
+      patchPost(postView.apId, getCachePrefixer(), {
+        ...postView,
+        ...(voteQueue.isLatest(queueKey(postApId), context.ticket)
+          ? { optimisticMyVote: undefined }
+          : null),
+      });
+    },
+    onError: (err, form, context) => {
+      if (
+        context &&
+        voteQueue.isLatest(queueKey(form.postApId), context.ticket)
+      ) {
+        patchPost(form.postApId, getCachePrefixer(), {
+          optimisticMyVote: undefined,
+        });
+      }
+      if (isErrorLike(err)) {
+        toast.error(extractErrorContent(err));
+      } else {
+        toast.error(`Couldn't ${voteVerb(form.score)} post`);
+      }
+    },
+  });
+}
 
 export function useAddPostReactionEmojiMutation() {
   const { api } = useApiClients();

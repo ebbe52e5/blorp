@@ -502,6 +502,17 @@ function convertTagToFlair(tag: lemmyV4.CommunityTag): Schemas.Flair {
   };
 }
 
+/**
+ * The actions row also holds read and saved state, and removing a vote only
+ * nulls vote_is_upvote, so a row without a vote is no vote, not a downvote
+ */
+function voteFromActions(isUpvote: boolean | null | undefined) {
+  if (_.isNil(isUpvote)) {
+    return 0;
+  }
+  return isUpvote ? 1 : -1;
+}
+
 function convertPost({
   post,
   community,
@@ -557,7 +568,7 @@ function convertPost({
     nsfw: post.nsfw || community.nsfw,
     altText: post.alt_text ?? null,
     flairs: tags?.map((t) => ({ id: t.id })) ?? [],
-    myVote: post_actions ? (post_actions.vote_is_upvote ? 1 : -1) : undefined,
+    myVote: voteFromActions(post_actions?.vote_is_upvote),
     emojiReactions: [],
   };
 }
@@ -565,11 +576,7 @@ function convertComment(
   commentView: Omit<lemmyV4.CommentView, "post_tags" | "can_mod" | "tags">,
 ): Schemas.Comment {
   const { post, creator, comment, community, comment_actions } = commentView;
-  const myVote = comment_actions
-    ? comment_actions.vote_is_upvote
-      ? 1
-      : -1
-    : null;
+  const myVote = voteFromActions(comment_actions?.vote_is_upvote);
   return {
     locked: comment.locked,
     createdAt: comment.published_at,

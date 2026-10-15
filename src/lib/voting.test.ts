@@ -1,5 +1,5 @@
 import { describe, test, expect } from "vitest";
-import { resolveVoteCounts } from "./voting";
+import { createVoteQueue, resolveVoteCounts } from "./voting";
 
 describe("resolveVoteCounts", () => {
   describe("display counts with no pending vote", () => {
@@ -136,5 +136,78 @@ describe("resolveVoteCounts", () => {
       });
       expect(result.isUpvoted).toBe(false);
     });
+  });
+});
+
+describe("createVoteQueue", () => {
+  function deferred() {
+    let resolve!: () => void;
+    let reject!: (err: Error) => void;
+    const promise = new Promise<void>((res, rej) => {
+      resolve = res;
+      reject = rej;
+    });
+    return { promise, resolve, reject };
+  }
+
+  test("runs votes on one key in order, one at a time", async () => {
+    const queue = createVoteQueue();
+    const log: string[] = [];
+    const first = deferred();
+
+    const a = queue.run("post:1", async () => {
+      log.push("a start");
+      await first.promise;
+      log.push("a end");
+    });
+    const b = queue.run("post:1", async () => {
+      log.push("b start");
+    });
+
+    await Promise.resolve();
+    expect(log).toEqual(["a start"]);
+
+    first.resolve();
+    await Promise.all([a, b]);
+    expect(log).toEqual(["a start", "a end", "b start"]);
+  });
+
+  test("runs votes on different keys in parallel", async () => {
+    const queue = createVoteQueue();
+    const log: string[] = [];
+    const first = deferred();
+
+    const a = queue.run("post:1", async () => {
+      log.push("a start");
+      await first.promise;
+    });
+    const b = queue.run("post:2", async () => {
+      log.push("b start");
+    });
+
+    await b;
+    expect(log).toEqual(["a start", "b start"]);
+    first.resolve();
+    await a;
+  });
+
+  test("a failed vote doesn't block the next one", async () => {
+    const queue = createVoteQueue();
+    const a = queue.run("post:1", () => Promise.reject(new Error("nope")));
+    const b = queue.run("post:1", async () => "ok");
+
+    await expect(a).rejects.toThrow("nope");
+    await expect(b).resolves.toBe("ok");
+  });
+
+  test("only the newest ticket for a key is the latest", () => {
+    const queue = createVoteQueue();
+    const first = queue.ticket("post:1");
+    const other = queue.ticket("post:2");
+    const second = queue.ticket("post:1");
+
+    expect(queue.isLatest("post:1", first)).toBe(false);
+    expect(queue.isLatest("post:1", second)).toBe(true);
+    expect(queue.isLatest("post:2", other)).toBe(true);
   });
 });

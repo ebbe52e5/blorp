@@ -58,6 +58,7 @@ import { apiClient } from "../apis/client";
 import { SetOptional } from "type-fest";
 import { env } from "@/src/env";
 import { ensureValue, isErrorLike, isNotNil } from "../lib/utils";
+import { voteQueue, voteVerb } from "../lib/voting";
 import { normalizeInstance } from "../normalize-instance";
 import { compressImage } from "../lib/image";
 import { useFlairsStore } from "@/src/stores/flairs";
@@ -1159,42 +1160,40 @@ export function useLikeCommentMutation() {
   const patchComment = useCommentsStore((s) => s.patchComment);
   const cacheComments = useCommentsStore((s) => s.cacheComments);
 
+  const queueKey = (path: string) => `comment:${getCachePrefixer()(path)}`;
+
   return useMutation({
     mutationFn: async (form: CustumCreateCommentLike) =>
-      await (await api).likeComment(_.omit(form, ["path"])),
+      voteQueue.run(queueKey(form.path), async () =>
+        (await api).likeComment(_.omit(form, ["path"])),
+      ),
     onMutate: ({ score, path }) => {
       patchComment(path, getCachePrefixer(), () => ({
         optimisticMyVote: score,
       }));
+      return { ticket: voteQueue.ticket(queueKey(path)) };
     },
-    onSuccess: (data) => {
+    onSuccess: (data, { path }, context) => {
+      // See useLikePostMutation
       cacheComments(getCachePrefixer(), [
         {
           ...data,
-          optimisticMyVote: undefined,
+          ...(voteQueue.isLatest(queueKey(path), context.ticket)
+            ? { optimisticMyVote: undefined }
+            : null),
         },
       ]);
     },
-    onError: (err, { path, score }) => {
-      patchComment(path, getCachePrefixer(), () => ({
-        optimisticMyVote: undefined,
-      }));
+    onError: (err, { path, score }, context) => {
+      if (context && voteQueue.isLatest(queueKey(path), context.ticket)) {
+        patchComment(path, getCachePrefixer(), () => ({
+          optimisticMyVote: undefined,
+        }));
+      }
       if (isErrorLike(err)) {
         toast.error(extractErrorContent(err));
       } else {
-        let verb = "";
-        switch (score) {
-          case 0:
-            verb = "upvote";
-            break;
-          case 1:
-            verb = "unvote";
-            break;
-          case -1:
-            verb = "downvote";
-            break;
-        }
-        toast.error(`Couldn't ${verb} post`);
+        toast.error(`Couldn't ${voteVerb(score)} comment`);
       }
     },
   });
