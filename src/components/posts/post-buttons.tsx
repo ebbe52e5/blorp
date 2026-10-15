@@ -299,7 +299,7 @@ export function PostVoting({
             className={cn(
               "-mx-px cursor-pointer text-md",
               isUpvoted && !prefersDownvotes && "text-brand",
-              isDownvoted && !prefersUpvotes && "text-brand-secondary",
+              isDownvoted && !prefersUpvotes && "text-muted-foreground",
             )}
             suffix={abbrv.suffix}
             value={abbrv.number}
@@ -367,10 +367,7 @@ export function PostVoting({
             postId,
           })
         }
-        className={cn(
-          "hover:text-brand-secondary hover:bg-brand-secondary/10",
-          isDownvoted && "text-brand-secondary",
-        )}
+        className={cn(isDownvoted && "text-muted-foreground")}
       >
         {isDownvoted ? (
           <PiArrowFatDownFill

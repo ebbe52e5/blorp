@@ -230,7 +230,7 @@ export function CommentVoting({
             className={cn(
               "-mx-0.5 cursor-pointer",
               isUpvoted && !prefersDownvotes && "text-brand",
-              isDownvoted && !prefersUpvotes && "text-brand-secondary",
+              isDownvoted && !prefersUpvotes && "text-muted-foreground",
             )}
             suffix={countAbbrv.suffix}
             value={countAbbrv.number}
@@ -264,7 +264,6 @@ export function CommentVoting({
         className={cn(
           "hover:text-brand hover:bg-brand/10 dark:hover:bg-brand/25",
           isUpvoted && "text-brand",
-          isDownvoted && "text-brand-secondary",
         )}
       >
         {isUpvoted ? (
@@ -298,10 +297,7 @@ export function CommentVoting({
             path: commentView.path,
           });
         }}
-        className={cn(
-          "hover:text-brand-secondary hover:bg-brand-secondary/10 dark:hover:bg-brand-secondary/30",
-          isDownvoted && "text-brand-secondary",
-        )}
+        className={cn(isDownvoted && "text-muted-foreground")}
       >
         {isDownvoted ? (
           <PiArrowFatDownFill aria-label="Remove downvote" />
