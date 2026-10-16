@@ -456,7 +456,11 @@ function LargePostCard({
           className={cn("flex flex-row flex-wrap gap-1", ABOVE_LINK_OVERLAY)}
         >
           {flairs.map((flair) => (
-            <Flair key={flair.id} flair={flair} />
+            <Flair
+              key={flair.id}
+              flair={flair}
+              communityHandle={post.communityHandle}
+            />
           ))}
         </div>
       )}
@@ -839,7 +843,12 @@ export function SmallPostCard({
             )}
           >
             {flairs.map((flair) => (
-              <Flair key={flair.id} flair={flair} size="sm" />
+              <Flair
+                key={flair.id}
+                flair={flair}
+                size="sm"
+                communityHandle={post.communityHandle}
+              />
             ))}
           </div>
         )}

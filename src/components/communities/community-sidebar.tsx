@@ -272,7 +272,13 @@ export function SmallScreenSidebar({
             <section className="p-3">
               <h2>ABOUT</h2>
               <div className="flex flex-wrap gap-1.5 mt-2 mb-1">
-                {flairs?.map((flair) => <Flair key={flair.id} flair={flair} />)}
+                {flairs?.map((flair) => (
+                  <Flair
+                    key={flair.id}
+                    flair={flair}
+                    communityHandle={communityHandle}
+                  />
+                ))}
               </div>
             </section>
           )}
@@ -599,7 +605,11 @@ function CommunitySidebarInner({
                   <CollapsibleContent className="pb-1 pt-3">
                     <div className="flex flex-wrap gap-1.5">
                       {flairs?.map((flair) => (
-                        <Flair key={flair.id} flair={flair} />
+                        <Flair
+                          key={flair.id}
+                          flair={flair}
+                          communityHandle={communityHandle}
+                        />
                       ))}
                     </div>
                   </CollapsibleContent>
