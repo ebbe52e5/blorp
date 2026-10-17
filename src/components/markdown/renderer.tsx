@@ -99,6 +99,28 @@ function SafeAnchor(
   );
 }
 
+// Links to audio files render as an inline player
+const AUDIO_URL = /\.(mp3|m4a|aac|ogg|oga|opus|wav|flac)(?:[?#]|$)/i;
+
+function AudioPlayer({ src, label }: { src: string; label: string | null }) {
+  const { insideLink } = useContext(Context);
+  if (insideLink) {
+    return <span className="underline">{label ?? src}</span>;
+  }
+  return (
+    <span className="block my-2">
+      <audio
+        controls
+        preload="none"
+        src={src}
+        aria-label={label ?? undefined}
+        title={label ?? undefined}
+        className="w-full max-w-md"
+      />
+    </span>
+  );
+}
+
 function Image(
   props: DetailedHTMLProps<
     ImgHTMLAttributes<HTMLImageElement>,
@@ -179,6 +201,10 @@ const options: (
             {domToReact(domNode.children as DOMNode[], options(root))}
           </SafeRouterLink>
         );
+      }
+
+      if (AUDIO_URL.test(href)) {
+        return <AudioPlayer src={href} label={textContent} />;
       }
 
       if (href.startsWith("/")) {
