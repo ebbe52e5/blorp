@@ -10,6 +10,33 @@ function renderMarkdown(markdown: string, disableLinks?: boolean) {
   ).container;
 }
 
+describe("MarkdownRenderer first line indent", () => {
+  test("keeps ideographic spaces that start a paragraph", () => {
+    const paragraphs = renderMarkdown(
+      "第一节\n\n\u3000\u3000第一段。\n\n> \u3000\u3000引文",
+    ).querySelectorAll("p");
+    expect(Array.from(paragraphs, (p) => p.textContent)).toEqual([
+      "第一节",
+      "\u3000\u3000第一段。",
+      "\u3000\u3000引文",
+    ]);
+  });
+
+  test("only the first line of a paragraph is affected", () => {
+    const p = renderMarkdown(
+      "\u3000\u3000第一行\\\n\u3000\u3000第二行",
+    ).querySelector("p");
+    expect(p!.textContent).toBe("\u3000\u3000第一行\n\u3000\u3000第二行");
+  });
+
+  test("leaves code blocks alone", () => {
+    const code = renderMarkdown("```\n\u3000\u3000code\n```").querySelector(
+      "code",
+    );
+    expect(code!.textContent).toContain("\u3000\u3000code");
+  });
+});
+
 describe("MarkdownRenderer audio links", () => {
   test("renders a link to an mp3 as an audio player", () => {
     const container = renderMarkdown(

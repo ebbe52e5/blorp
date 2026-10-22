@@ -40,7 +40,7 @@ import { useIonAlert } from "@ionic/react";
 import { Deferred } from "@/src/lib/deferred";
 import z from "zod";
 import { EllipsisActionMenu } from "../adaptable/action-menu";
-import { MdOutlineFormatClear } from "react-icons/md";
+import { MdFormatIndentIncrease, MdOutlineFormatClear } from "react-icons/md";
 import Mention from "@tiptap/extension-mention";
 import { useMentionSuggestions } from "./editor-extensions/mention";
 
@@ -126,6 +126,63 @@ export function insertLink(
         to: state.selection.to,
       }),
     )
+    .run();
+}
+
+type PmNode = Editor["state"]["doc"];
+
+/** Two ideographic spaces: the first-line indent of a Chinese paragraph. */
+export const PARAGRAPH_INDENT = "\u3000\u3000";
+
+function selectedParagraphs(editor: Editor) {
+  const { from, to, $from } = editor.state.selection;
+  const paragraphs: { node: PmNode; pos: number }[] = [];
+  editor.state.doc.nodesBetween(from, to, (node, pos) => {
+    if (node.type.name === "paragraph") {
+      paragraphs.push({ node, pos });
+      return false;
+    }
+    return true;
+  });
+  if (paragraphs.length === 0 && $from.parent.type.name === "paragraph") {
+    paragraphs.push({ node: $from.parent, pos: $from.before() });
+  }
+  return paragraphs;
+}
+
+/** Whether every paragraph in the selection starts with an indent. */
+export function isParagraphIndented(editor: Editor): boolean {
+  const paragraphs = selectedParagraphs(editor);
+  return (
+    paragraphs.length > 0 &&
+    paragraphs.every(({ node }) =>
+      node.textContent.startsWith(PARAGRAPH_INDENT),
+    )
+  );
+}
+
+/**
+ * Indent the first line of every paragraph in the selection, or, when all of
+ * them are already indented, remove their indents.
+ */
+export function toggleParagraphIndent(editor: Editor): void {
+  const paragraphs = selectedParagraphs(editor);
+  const unindent = isParagraphIndented(editor);
+  editor
+    .chain()
+    .focus()
+    .command(({ tr }) => {
+      // Back to front, so earlier positions stay valid
+      for (const { node, pos } of [...paragraphs].reverse()) {
+        const leading = /^\u3000*/.exec(node.textContent)?.[0].length ?? 0;
+        if (unindent) {
+          tr.delete(pos + 1, pos + 1 + leading);
+        } else if (leading === 0) {
+          tr.insertText(PARAGRAPH_INDENT, pos + 1);
+        }
+      }
+      return paragraphs.length > 0;
+    })
     .run();
 }
 
@@ -335,6 +392,21 @@ const MenuBar = ({
         aria-label={editor.isActive("blockquote") ? "Unquote" : "Quote"}
       >
         <FaQuoteRight />
+      </Toggle>
+
+      <Toggle
+        size="icon"
+        data-state={isParagraphIndented(editor) ? "on" : "off"}
+        type="button"
+        onClick={() => toggleParagraphIndent(editor)}
+        disabled={selectedParagraphs(editor).length === 0}
+        aria-label={
+          isParagraphIndented(editor)
+            ? "Remove first line indent"
+            : "Indent first line"
+        }
+      >
+        <MdFormatIndentIncrease />
       </Toggle>
 
       <Toggle

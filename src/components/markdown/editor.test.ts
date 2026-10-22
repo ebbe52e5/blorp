@@ -7,6 +7,8 @@ import {
   insertLink,
   updateLink,
   getActiveLinkInfo,
+  isParagraphIndented,
+  toggleParagraphIndent,
 } from "./editor";
 
 /**
@@ -593,6 +595,47 @@ describe("spoiler extension", () => {
     expect(getMarkdown(editor)).toBe(
       "::: spoiler Outer\n::: spoiler Middle\n::: spoiler Inner\nDeep secret\n:::\n:::\n:::",
     );
+  });
+});
+
+describe("first line indent", () => {
+  let editor: Editor;
+
+  beforeEach(() => {
+    editor = createEditor();
+  });
+
+  afterEach(() => {
+    editor.destroy();
+  });
+
+  it("round-trips ideographic spaces at the start of paragraphs", () => {
+    const input = "第一节\n\n\u3000\u3000第一段。\n\n\u3000\u3000第二段";
+    setMarkdown(editor, input);
+    expect(getMarkdown(editor)).toBe(input);
+  });
+
+  it("indents every selected paragraph, then removes the indents", () => {
+    setMarkdown(editor, "标题\n\n\u3000\u3000第一段\n\n第二段");
+    editor.commands.selectAll();
+    expect(isParagraphIndented(editor)).toBe(false);
+
+    toggleParagraphIndent(editor);
+    expect(getMarkdown(editor)).toBe(
+      "\u3000\u3000标题\n\n\u3000\u3000第一段\n\n\u3000\u3000第二段",
+    );
+    expect(isParagraphIndented(editor)).toBe(true);
+
+    toggleParagraphIndent(editor);
+    expect(getMarkdown(editor)).toBe("标题\n\n第一段\n\n第二段");
+  });
+
+  it("toggles only the paragraph holding the cursor", () => {
+    setMarkdown(editor, "标题\n\n正文");
+    // Inside the second paragraph: doc start, "标题" paragraph (2 + 2 chars)
+    editor.commands.setTextSelection(7);
+    toggleParagraphIndent(editor);
+    expect(getMarkdown(editor)).toBe("标题\n\n\u3000\u3000正文");
   });
 });
 

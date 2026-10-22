@@ -309,8 +309,35 @@ function createMd(root: ReturnType<typeof useLinkContext>["root"]) {
   });
 
   registerSpoilerPlugin(md);
+  keepLeadingIdeographicSpace(md);
 
   return md;
+}
+
+/**
+ * Chinese text indents a paragraph's first line with two ideographic spaces
+ * (U+3000), typed by the author. markdown-it trims them off a paragraph, so
+ * put back the ones that preceded the paragraph's first line in the source.
+ */
+export function keepLeadingIdeographicSpace(md: MarkdownIt) {
+  md.core.ruler.after("block", "keep_leading_ideographic_space", (state) => {
+    const lines = state.src.split("\n");
+    state.tokens.forEach((token, i) => {
+      const inline = state.tokens[i + 1];
+      if (token.type !== "paragraph_open" || inline?.type !== "inline") {
+        return;
+      }
+      const line = inline.map ? lines[inline.map[0]] : undefined;
+      if (!line || !inline.content) {
+        return;
+      }
+      const start = line.indexOf(inline.content.split("\n", 1)[0] ?? "");
+      const indent = start > 0 ? /\u3000+$/.exec(line.slice(0, start)) : null;
+      if (indent) {
+        inline.content = indent[0] + inline.content;
+      }
+    });
+  });
 }
 
 const RENDERERS: Record<ReturnType<typeof useLinkContext>["root"], MarkdownIt> =
