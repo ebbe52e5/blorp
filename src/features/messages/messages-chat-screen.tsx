@@ -5,6 +5,7 @@ import {
   useCreatePrivateMessageMutation,
   useMarkPrivateMessageReadMutation,
   usePrivateMessagesQuery,
+  useUploadImageMutation,
 } from "@/src/queries";
 import { decodeApId } from "@/src/apis/utils";
 import { cn } from "@/src/lib/utils";
@@ -26,6 +27,7 @@ import { useProfileFromStore } from "@/src/stores/profiles";
 import { PersonAvatar } from "@/src/components/person/person-avatar";
 import TextareaAutosize from "react-textarea-autosize";
 import { Send } from "@/src/components/icons";
+import { LuImageUp } from "react-icons/lu";
 import { Button } from "@/src/components/ui/button";
 import { useIsActiveRoute, useMedia } from "@/src/hooks";
 import { ToolbarTitle } from "@/src/components/toolbar/toolbar-title";
@@ -239,15 +241,55 @@ function ComposeMessage({
   onSubmit: () => void;
 }) {
   const createPrivateMessage = useCreatePrivateMessageMutation(recipient);
+  const uploadImage = useUploadImageMutation();
   const [body, setBody] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Insert `![](url)` at the cursor as its own paragraph, so it isn't laid
+  // out inline next to the surrounding text
+  const insertImage = (url: string) => {
+    const el = textareaRef.current;
+    const value = el?.value ?? body;
+    const start = el?.selectionStart ?? value.length;
+    const end = el?.selectionEnd ?? value.length;
+    const before = value.slice(0, start);
+    const after = value.slice(end);
+    // A blank line on each side, counting newlines already there
+    const pad = (newlines: number) => "\n".repeat(Math.max(0, 2 - newlines));
+    const image =
+      (before ? pad(/\n*$/.exec(before)![0].length) : "") +
+      `![](${url})` +
+      (after ? pad(/^\n*/.exec(after)![0].length) : "");
+    setBody(before + image + after);
+    const caret = before.length + image.length;
+    requestAnimationFrame(() => {
+      el?.focus();
+      el?.setSelectionRange(caret, caret);
+    });
+  };
+
+  const uploadImages = async (files: File[]) => {
+    for (const file of files) {
+      try {
+        const { url } = await uploadImage.mutateAsync({ image: file });
+        if (url) {
+          insertImage(url);
+        }
+      } catch {
+        // useUploadImageMutation already shows an error toast
+      }
+    }
+  };
+
   return (
     <ContentGutters>
       <form
         data-theme-component={ThemeComponent.Button}
-        className="my-1 flex items-center gap-2 border rounded-lg pr-1 focus-within:ring"
+        className="my-1 flex items-center gap-2 border rounded-lg pl-1 pr-1 focus-within:ring"
         onSubmit={(e) => {
           e.preventDefault();
-          if (body.trim().length > 0) {
+          if (body.trim().length > 0 && !uploadImage.isPending) {
             createPrivateMessage.mutateAsync({
               body,
               recipientId: recipient.id,
@@ -257,17 +299,53 @@ function ComposeMessage({
           }
         }}
       >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={(e) => {
+            const files = Array.from(e.target.files ?? []);
+            // Allow picking the same file again
+            e.target.value = "";
+            uploadImages(files);
+          }}
+        />
+        <Button
+          type="button"
+          size="icon"
+          variant="ghost"
+          className="h-6.5 w-6.5"
+          aria-label="Upload image"
+          disabled={uploadImage.isPending}
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <LuImageUp />
+        </Button>
         <TextareaAutosize
+          ref={textareaRef}
           placeholder="Message"
-          className="pl-3 py-1 flex-1 outline-none resize-none min-h-8"
+          className="py-1 flex-1 outline-none resize-none min-h-8"
           value={body}
           onChange={(e) => setBody(e.target.value)}
+          onPaste={(e) => {
+            const images = Array.from(e.clipboardData.files).filter((file) =>
+              file.type.startsWith("image/"),
+            );
+            if (images.length > 0) {
+              e.preventDefault();
+              uploadImages(images);
+            }
+          }}
           maxRows={6}
         />
         <Button
           size="icon"
           variant={body.length === 0 ? "ghost" : "default"}
           className="-rotate-90 h-6.5 w-6.5"
+          disabled={uploadImage.isPending}
+          aria-label="Send"
         >
           <Send />
         </Button>
