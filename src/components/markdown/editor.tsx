@@ -722,7 +722,8 @@ function TipTapEditor({
       <div
         data-testid="markdown-editor-desktop-toolbar"
         className={cn(
-          "flex flex-row justify-between py-1.5 px-2 pb-0 max-md:hidden",
+          // Sticky so the toolbar stays reachable while scrolling a long body
+          "flex flex-row justify-between py-1.5 px-2 pb-1 max-md:hidden sticky top-0 z-10 bg-background rounded-t-lg",
           shouldHideMenu && "hidden",
         )}
         onMouseDown={(e) => e.preventDefault()}
@@ -872,7 +873,7 @@ function TextAreaEditor({
     <>
       <div
         className={cn(
-          "flex flex-row justify-end py-1.5 px-2 pb-0 max-md:hidden",
+          "flex flex-row justify-end py-1.5 px-2 pb-1 max-md:hidden sticky top-0 z-10 bg-background rounded-t-lg",
           hideMenu && "hidden",
         )}
         onMouseDown={(e) => e.preventDefault()}
