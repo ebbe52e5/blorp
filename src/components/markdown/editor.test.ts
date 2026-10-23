@@ -9,6 +9,8 @@ import {
   getActiveLinkInfo,
   isParagraphIndented,
   toggleParagraphIndent,
+  getParagraphAlign,
+  setParagraphAlign,
 } from "./editor";
 
 /**
@@ -636,6 +638,54 @@ describe("first line indent", () => {
     editor.commands.setTextSelection(7);
     toggleParagraphIndent(editor);
     expect(getMarkdown(editor)).toBe("标题\n\n\u3000\u3000正文");
+  });
+});
+
+describe("paragraph alignment", () => {
+  let editor: Editor;
+
+  beforeEach(() => {
+    editor = createEditor();
+  });
+
+  afterEach(() => {
+    editor.destroy();
+  });
+
+  it("round-trips aligned paragraphs as HTML", () => {
+    const input =
+      '<p align="center">第一章 <strong>缘起</strong></p>\n\n正文\n\n<p align="right">—— <a target="_blank" rel="noopener noreferrer nofollow" href="https://zhifou.io">缠中说禅</a></p>';
+    setMarkdown(editor, input);
+    expect(getMarkdown(editor)).toBe(input);
+  });
+
+  it("aligns the selected paragraphs, and left removes the alignment", () => {
+    setMarkdown(editor, "标题\n\n**正文**");
+    editor.commands.selectAll();
+    expect(getParagraphAlign(editor)).toBe("left");
+
+    setParagraphAlign(editor, "center");
+    expect(getMarkdown(editor)).toBe(
+      '<p align="center">标题</p>\n\n<p align="center"><strong>正文</strong></p>',
+    );
+    expect(getParagraphAlign(editor)).toBe("center");
+
+    setParagraphAlign(editor, "left");
+    expect(getMarkdown(editor)).toBe("标题\n\n**正文**");
+  });
+
+  it("escapes HTML special characters in aligned text", () => {
+    setMarkdown(editor, "a");
+    editor.commands.selectAll();
+    editor.commands.insertContent("1 < 2 & 3");
+    setParagraphAlign(editor, "right");
+    expect(getMarkdown(editor)).toBe('<p align="right">1 &lt; 2 &amp; 3</p>');
+  });
+
+  it("reports no alignment when the selection mixes them", () => {
+    setMarkdown(editor, '<p align="right">落款</p>\n\n正文');
+    editor.commands.selectAll();
+    expect(getParagraphAlign(editor)).toBeNull();
   });
 });
 

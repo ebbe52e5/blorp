@@ -37,6 +37,16 @@ describe("MarkdownRenderer first line indent", () => {
   });
 });
 
+describe("MarkdownRenderer paragraph alignment", () => {
+  test("keeps the align attribute of an HTML paragraph", () => {
+    const p = renderMarkdown(
+      '<p align="center">第一章 <strong>缘起</strong></p>',
+    ).querySelector("p");
+    expect(p!.getAttribute("align")).toBe("center");
+    expect(p!.innerHTML).toBe("第一章 <strong>缘起</strong>");
+  });
+});
+
 describe("MarkdownRenderer audio links", () => {
   test("renders a link to an mp3 as an audio player", () => {
     const container = renderMarkdown(

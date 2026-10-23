@@ -5,7 +5,12 @@ import {
   ReactNodeViewRenderer,
   useEditor,
 } from "@tiptap/react";
-import type { NodeViewRenderer } from "@tiptap/core";
+import {
+  getHTMLFromFragment,
+  getSchema,
+  type NodeViewRenderer,
+} from "@tiptap/core";
+import Paragraph from "@tiptap/extension-paragraph";
 import Placeholder from "@tiptap/extension-placeholder";
 import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "@tiptap/markdown";
@@ -40,7 +45,13 @@ import { useIonAlert } from "@ionic/react";
 import { Deferred } from "@/src/lib/deferred";
 import z from "zod";
 import { EllipsisActionMenu } from "../adaptable/action-menu";
-import { MdFormatIndentIncrease, MdOutlineFormatClear } from "react-icons/md";
+import {
+  MdFormatAlignCenter,
+  MdFormatAlignLeft,
+  MdFormatAlignRight,
+  MdFormatIndentIncrease,
+  MdOutlineFormatClear,
+} from "react-icons/md";
 import Mention from "@tiptap/extension-mention";
 import { useMentionSuggestions } from "./editor-extensions/mention";
 
@@ -186,6 +197,84 @@ export function toggleParagraphIndent(editor: Editor): void {
     .run();
 }
 
+export type ParagraphAlign = "left" | "center" | "right";
+
+function parseAlign(value: string | null | undefined): ParagraphAlign | null {
+  return value === "center" || value === "right" ? value : null;
+}
+
+/** The alignment shared by every paragraph in the selection, if any. */
+export function getParagraphAlign(editor: Editor): ParagraphAlign | null {
+  const aligns = new Set(
+    selectedParagraphs(editor).map(
+      ({ node }) => parseAlign(node.attrs["textAlign"]) ?? "left",
+    ),
+  );
+  return aligns.size === 1 ? [...aligns][0]! : null;
+}
+
+/** Align every paragraph in the selection. */
+export function setParagraphAlign(editor: Editor, align: ParagraphAlign) {
+  const paragraphs = selectedParagraphs(editor);
+  editor
+    .chain()
+    .focus()
+    .command(({ tr }) => {
+      for (const { node, pos } of paragraphs) {
+        tr.setNodeMarkup(pos, undefined, {
+          ...node.attrs,
+          textAlign: parseAlign(align),
+        });
+      }
+      return paragraphs.length > 0;
+    })
+    .run();
+}
+
+let htmlSchema: ReturnType<typeof getSchema> | undefined;
+
+/**
+ * Markdown has no alignment syntax, so an aligned paragraph is written as
+ * `<p align="center">…</p>`, with its inline content as HTML: markdown-it
+ * doesn't parse markdown inside an HTML block. Blorp renders it (html: true);
+ * other Lemmy clients show the tags as text.
+ */
+const AlignedParagraph = Paragraph.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      textAlign: {
+        default: null,
+        parseHTML: (el) =>
+          parseAlign(el.getAttribute("align") ?? el.style.textAlign),
+        renderHTML: (attrs) =>
+          attrs["textAlign"]
+            ? { style: `text-align: ${attrs["textAlign"]}` }
+            : {},
+      },
+    };
+  },
+
+  renderMarkdown(node, h, ctx) {
+    const align = parseAlign(node.attrs?.["textAlign"]);
+    if (!align || !node.content?.length) {
+      return Paragraph.config.renderMarkdown?.(node, h, ctx) ?? "";
+    }
+    // renderMarkdown has no access to the editor, so build a schema to
+    // serialize the inline content with. Mention is only registered when
+    // the editor has suggestions; add it so mention nodes still resolve.
+    htmlSchema ??= getSchema([
+      ...getEditorExtensions(),
+      Mention.configure({ HTMLAttributes: { class: "mention" } }),
+    ]);
+    const html = getHTMLFromFragment(
+      htmlSchema.nodeFromJSON(node).content,
+      htmlSchema,
+    );
+    return `<p align="${align}">${html}</p>`;
+  },
+});
+
 const CustomLink = Link.extend({
   inclusive: false,
 });
@@ -257,16 +346,25 @@ function useRenderOnTipTapChange(editor: Editor | null) {
   }, [editor]);
 }
 
+const ALIGN_OPTIONS = [
+  { align: "left", label: "Align left", Icon: MdFormatAlignLeft },
+  { align: "center", label: "Align center", Icon: MdFormatAlignCenter },
+  { align: "right", label: "Align right", Icon: MdFormatAlignRight },
+] as const;
+
 const MenuBar = ({
   editor,
   onFiles,
   className,
   onActionMenuOpenChange,
+  compact,
 }: {
   editor: Editor | null;
   onFiles: (file: File[]) => void;
   className?: string;
   onActionMenuOpenChange?: (open: boolean) => void;
+  /** Move the alignment buttons into the overflow menu */
+  compact?: boolean;
 }) => {
   const [alrt] = useIonAlert();
 
@@ -409,6 +507,21 @@ const MenuBar = ({
         <MdFormatIndentIncrease />
       </Toggle>
 
+      {!compact &&
+        ALIGN_OPTIONS.map(({ align, label, Icon }) => (
+          <Toggle
+            key={align}
+            size="icon"
+            data-state={getParagraphAlign(editor) === align ? "on" : "off"}
+            type="button"
+            onClick={() => setParagraphAlign(editor, align)}
+            disabled={selectedParagraphs(editor).length === 0}
+            aria-label={label}
+          >
+            <Icon />
+          </Toggle>
+        ))}
+
       <Toggle
         size="icon"
         data-state="off"
@@ -489,6 +602,13 @@ const MenuBar = ({
             checked: editor.isActive("superscript"),
             onClick: () => editor.chain().focus().toggleSuperscript().run(),
           },
+          ...(compact && selectedParagraphs(editor).length > 0
+            ? ALIGN_OPTIONS.map(({ align, label }) => ({
+                text: label,
+                checked: getParagraphAlign(editor) === align,
+                onClick: () => setParagraphAlign(editor, align),
+              }))
+            : []),
         ]}
       />
     </div>
@@ -514,7 +634,10 @@ export function getEditorExtensions({
       // Disable StarterKit's built-in Link — we register CustomLink below
       // to avoid the "Duplicate extension names found: ['link']" warning.
       link: false,
+      // Replaced by AlignedParagraph
+      paragraph: false,
     }),
+    AlignedParagraph,
     Image.configure({ inline: true }),
     codeBlockRenderer
       ? CodeBlockLowlight.extend({
@@ -784,6 +907,7 @@ function TipTapEditor({
       >
         <MenuBar
           className="gap-2.5"
+          compact
           editor={editor}
           onActionMenuOpenChange={setIsActionMenuOpen}
           onFiles={(files) => {

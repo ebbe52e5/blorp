@@ -81,6 +81,7 @@
     "@tiptap/extension-image": "3.26.0",
     "@tiptap/extension-link": "3.26.0",
     "@tiptap/extension-mention": "3.26.0",
+    "@tiptap/extension-paragraph": "3.26.0",
     "@tiptap/extension-placeholder": "3.26.0",
     "@tiptap/extension-subscript": "3.26.0",
     "@tiptap/extension-superscript": "3.26.0",
