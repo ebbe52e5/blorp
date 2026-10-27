@@ -62,6 +62,8 @@ import { Field, FieldLabel } from "../components/ui/field";
 import { useQueryToast } from "../hooks/use-query-toast";
 import { getFirstZodIssue } from "../lib/zod";
 import { Badge } from "../components/ui/badge";
+import { authCookieFor } from "../lib/auth-cookie";
+import { isWeb } from "../lib/device";
 
 function LegalNotice({ instance }: { instance: SelectedInstance }) {
   return (
@@ -176,6 +178,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const isLoggedIn = useAuth((s) => s.isLoggedIn());
   const site = useAuth((s) => getAccountSite(s.getSelectedAccount()));
+  const selectedInstance = useAuth((s) => s.getSelectedAccount().instance);
+  const selectedJwt = useAuth((s) => s.getSelectedAccount().jwt);
+
+  // Lets <img> tags load images from a private instance that only serves
+  // them to logged in users. Needed by the zhifou.io Lemmy fork's deploy,
+  // which runs private with federation disabled.
+  useEffect(() => {
+    if (isWeb()) {
+      document.cookie = authCookieFor({
+        pageOrigin: window.location.origin,
+        instance: selectedInstance,
+        jwt: selectedJwt,
+      });
+    }
+  }, [selectedInstance, selectedJwt]);
 
   const [promise, setPromise] = useState<{
     resolve: (value: void) => any;
