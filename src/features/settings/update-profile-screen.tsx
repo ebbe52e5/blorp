@@ -515,6 +515,19 @@ export default function SettingsPage() {
               className="gap-4 flex flex-col"
               data-testid="signup-form"
             >
+              <div className="flex flex-col gap-1">
+                <label
+                  className="text-muted-foreground text-sm"
+                  htmlFor="username"
+                >
+                  Username
+                </label>
+                <Input id="username" value={handle ?? ""} disabled readOnly />
+                <span className="text-muted-foreground text-xs">
+                  Your unique username. It can't be changed.
+                </span>
+              </div>
+
               {!isPieFed && (
                 <div className="flex flex-col gap-1">
                   <label
