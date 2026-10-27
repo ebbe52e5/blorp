@@ -11,7 +11,9 @@ import { registerSpoilerPlugin } from "./renderer";
  * @returns - Plain text with first N sentences.
  */
 export function removeMd(markdown: string) {
-  const md = new MarkdownIt();
+  // html: true so HTML, e.g. an aligned paragraph's <p align="center">,
+  // becomes html_block / html_inline tokens instead of literal text
+  const md = new MarkdownIt({ html: true });
   registerSpoilerPlugin(md);
   const tokens = md.parse(markdown, []);
 
@@ -32,6 +34,15 @@ export function removeMd(markdown: string) {
   }
 
   for (const token of tokens) {
+    // An aligned paragraph is an HTML block; keep its text, drop its tags
+    if (!capture && token.type === "html_block") {
+      const text = htmlBlockText(token.content);
+      if (text) {
+        textChunks.push(text);
+      }
+      continue;
+    }
+
     // Start capturing only on allowed opening token
     if (allowedOpenTypes.includes(token.type)) {
       capture = true;
@@ -58,4 +69,14 @@ export function removeMd(markdown: string) {
 
   const text = textChunks.join(" ").replace(/\s+/g, " ").trim();
   return skipped ? `${text.replace(/\.$/, "")}…` : text;
+}
+
+function htmlBlockText(html: string) {
+  // DOMParser doesn't run scripts or load images. <br> becomes a space so
+  // the lines around it don't run together.
+  const doc = new DOMParser().parseFromString(
+    html.replace(/<br\s*\/?>/gi, " "),
+    "text/html",
+  );
+  return doc.body.textContent.trim();
 }
