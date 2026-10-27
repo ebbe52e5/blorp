@@ -32,6 +32,8 @@ export const personSchema = z.object({
   apId: z.string(),
   avatar: z.string().nullable(),
   handle: handleSchema,
+  // Optional so profiles cached before Blorp read display names still parse
+  displayName: z.string().nullable().optional(),
   matrixUserId: z.string().nullable(),
   deleted: z.boolean(),
   isBot: z.boolean(),
@@ -79,6 +81,7 @@ export const postSchema = z.object({
   creatorId: z.number(),
   creatorApId: z.string(),
   creatorHandle: handleSchema,
+  creatorDisplayName: z.string().nullable().optional(),
   isBannedFromCommunity: z.boolean(),
   communityInstanceId: z.number().nullable().optional(),
   title: z.string(),
@@ -293,6 +296,7 @@ export const commentSchema = z.object({
   creatorId: z.number(),
   creatorApId: z.string(),
   creatorHandle: handleSchema,
+  creatorDisplayName: z.string().nullable().optional(),
   isBannedFromCommunity: z.boolean(),
   postId: z.number(),
   postApId: z.string(),
@@ -1094,6 +1098,8 @@ export namespace Forms {
   export type SaveUserSettings = {
     avatar?: File;
     banner?: File;
+    // An empty string clears it
+    displayName?: string;
     bio?: string;
     email?: string;
     showNsfw?: boolean;

@@ -66,6 +66,20 @@ describe("LemmyV4Api saveUserSettings", () => {
     ).toEqual({ bio: "hello" });
   });
 
+  test.each([
+    ["ethan", "ethan"],
+    // Lemmy clears the display name when it's sent empty
+    ["", ""],
+  ])("saves the display name %j", async (displayName, wire) => {
+    mockRoute("/api/v4/account/settings/save", { success: true });
+
+    await api.saveUserSettings({ displayName });
+
+    expect(
+      JSON.parse(String(fetchMock.callHistory.lastCall()?.options.body)),
+    ).toEqual({ display_name: wire });
+  });
+
   test("throws when the upload fails", async () => {
     mockRoute("/api/v4/account/avatar", { error: "unknown" }, 500);
 

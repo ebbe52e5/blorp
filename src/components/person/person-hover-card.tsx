@@ -43,8 +43,18 @@ export function PersonHoverCard({
         className="flex flex-col gap-3 py-4 flex-1 w-72"
       >
         <div className="font-bold text-sm h-5">
-          {personView?.handle ?? <Skeleton className="w-2/3 h-full" />}
+          {personView ? (
+            personView.displayName || personView.handle
+          ) : (
+            <Skeleton className="w-2/3 h-full" />
+          )}
         </div>
+        {/* The display name isn't unique, so keep the handle in view */}
+        {personView?.displayName && (
+          <div className="text-sm text-muted-foreground -mt-2">
+            {personView.handle}
+          </div>
+        )}
 
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <LuCakeSlice />

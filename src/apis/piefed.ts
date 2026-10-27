@@ -171,6 +171,7 @@ function convertPost({
       apId: creator.actor_id,
       name: creator.user_name,
     }),
+    creatorDisplayName: creator.title ?? null,
     url: post.url ?? null,
     // TODO: see if this exists
     urlContentType: null,
@@ -286,6 +287,7 @@ function convertPerson(
     avatar: person.avatar ?? null,
     matrixUserId: null,
     handle: createHandle({ apId: person.actor_id, name: person.user_name }),
+    displayName: person.title ?? null,
     deleted: person.deleted,
     createdAt: person.published ?? "",
     isBot: person.bot,
@@ -325,6 +327,7 @@ function convertComment(
       apId: creator.actor_id,
       name: creator.user_name,
     }),
+    creatorDisplayName: creator.title ?? null,
     isBannedFromCommunity: commentView.creator_banned_from_community ?? false,
     path: comment.path,
     downvotes: counts.downvotes,

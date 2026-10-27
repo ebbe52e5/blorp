@@ -489,6 +489,7 @@ function convertPerson(
     bio: person.bio ?? null,
     matrixUserId: person.matrix_user_id ?? null,
     handle: createHandle({ apId: person.ap_id, name: person.name }),
+    displayName: person.display_name ?? null,
     deleted: person.deleted,
     createdAt: person.published_at,
     isBot: person.bot_account,
@@ -562,6 +563,7 @@ function convertPost({
     creatorApId: creator.ap_id,
     communityInstanceId: community.instance_id,
     creatorHandle: createHandle({ apId: creator.ap_id, name: creator.name }),
+    creatorDisplayName: creator.display_name ?? null,
     isBannedFromCommunity: creator_banned_from_community,
     thumbnailAspectRatio: ar,
     url: post.url ?? null,
@@ -592,6 +594,7 @@ function convertComment(
     creatorId: creator.id,
     creatorApId: creator.ap_id,
     creatorHandle: createHandle({ apId: creator.ap_id, name: creator.name }),
+    creatorDisplayName: creator.display_name ?? null,
     isBannedFromCommunity: commentView.creator_banned_from_community,
     path: comment.path,
     downvotes: comment.downvotes,
@@ -2406,6 +2409,7 @@ export class LemmyV4Api implements ApiBlueprint<lemmyV4.LemmyHttp> {
 
     const settings = _.omitBy(
       {
+        display_name: form.displayName,
         bio: form.bio,
         email: form.email,
         show_nsfw: form.showNsfw,

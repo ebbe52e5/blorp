@@ -337,7 +337,9 @@ function Byline({
           }}
           className="text-base overflow-ellipsis flex flex-row overflow-x-hidden items-center hover:underline"
         >
-          <span className="font-medium text-xs">{name}</span>
+          <span className="font-medium text-xs">
+            {profileView?.displayName || name}
+          </span>
           {tag ? (
             <Badge size="sm" variant="brand" className="ml-2">
               {tag}

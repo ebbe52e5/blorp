@@ -177,6 +177,7 @@ function convertPerson({
     bio: person.bio ?? null,
     matrixUserId: person.matrix_user_id ?? null,
     handle: createHandle({ apId: person.actor_id, name: person.name }),
+    displayName: person.display_name ?? null,
     deleted: person.deleted,
     createdAt: person.published,
     isBot: person.bot_account,
@@ -201,6 +202,7 @@ function convertPost(
   return {
     locked: post.locked,
     creatorHandle: createHandle({ apId: creator.actor_id, name: creator.name }),
+    creatorDisplayName: creator.display_name ?? null,
     url: post.url ?? null,
     urlContentType: post.url_content_type ?? null,
     creatorId: post.creator_id,
@@ -255,6 +257,7 @@ function convertComment(commentView: lemmyV3.CommentView): Schemas.Comment {
     creatorId: creator.id,
     creatorApId: creator.actor_id,
     creatorHandle: createHandle({ apId: creator.actor_id, name: creator.name }),
+    creatorDisplayName: creator.display_name ?? null,
     isBannedFromCommunity: commentView.creator_banned_from_community,
     path: comment.path,
     downvotes: counts.downvotes,
@@ -1784,6 +1787,7 @@ export class LemmyV3Api implements ApiBlueprint<lemmyV3.LemmyHttp> {
       await this.client.saveUserSettings({
         avatar,
         banner,
+        display_name: form.displayName,
         bio: form.bio,
         email: form.email,
         show_nsfw: form.showNsfw,

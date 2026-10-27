@@ -32,6 +32,8 @@ import { isCapacitor, isIos } from "@/src/lib/device";
 import { useSettingsStore } from "@/src/stores/settings";
 import { SimpleSelect } from "@/src/components/ui/simple-select";
 import { type ScoreDisplay } from "@/src/stores/utils";
+import { parseHandle } from "@/src/lib/handle";
+import { DISPLAY_NAME_MAX_LENGTH } from "@/src/features/create-community/shared";
 
 const VOTE_DISPLAY_OPTIONS: { value: ScoreDisplay; label: string }[] = [
   { value: "score", label: "Score" },
@@ -324,6 +326,9 @@ export default function SettingsPage() {
   const [_email, setEmail] = useState<string>();
   const email = _email ?? site?.myEmail ?? "";
 
+  const [_displayName, setDisplayName] = useState<string>();
+  const displayName = _displayName ?? site?.me?.displayName ?? "";
+
   const [_bio, setBio] = useState<string>();
   const bio = _bio ?? site?.me?.bio ?? "";
 
@@ -425,6 +430,9 @@ export default function SettingsPage() {
         .mutateAsync({
           account,
           form: {
+            // Only sent once changed, so an untouched field can't fail
+            // validation of a name another app set
+            displayName: _displayName?.trim(),
             bio,
             email,
             showNsfw,
@@ -521,6 +529,29 @@ export default function SettingsPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                   />
+                </div>
+              )}
+
+              {/* PieFed's settings API can't change the display name */}
+              {!isPieFed && (
+                <div className="flex flex-col gap-1">
+                  <label
+                    className="text-muted-foreground text-sm"
+                    htmlFor="display-name"
+                  >
+                    Display name
+                  </label>
+                  <Input
+                    placeholder={person ? parseHandle(person.handle).name : ""}
+                    id="display-name"
+                    value={displayName}
+                    maxLength={DISPLAY_NAME_MAX_LENGTH}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                  />
+                  <span className="text-muted-foreground text-xs">
+                    Shown instead of your username. Leave empty to show your
+                    username.
+                  </span>
                 </div>
               )}
 
