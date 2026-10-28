@@ -314,6 +314,19 @@ function CreatePostInner() {
   // Edits aren't restricted, only new posts
   const postingRestricted =
     !useCanPostInCommunity(draft.communityHandle ?? undefined) && !isEdit;
+  // Lemmy only lets accepted followers post in a private community, and
+  // answers anyone else with a bare not_found. Only known once the community
+  // was fetched with the viewer's follow state.
+  const communityView = community?.communityView;
+  const followState =
+    communityView?.optimisticSubscribed ?? communityView?.subscribed;
+  const awaitingApproval =
+    !isEdit &&
+    communityView?.visibility === "private" &&
+    !!followState &&
+    followState !== "Subscribed"
+      ? followState
+      : null;
   const flairs = useFlairs(community?.flairs?.map((f) => f.id));
   const flairLookup = useFlairLookup(flairs);
 
@@ -450,6 +463,7 @@ function CreatePostInner() {
         !draft.communityHandle ||
         (isEdit && !canEdit) ||
         postingRestricted ||
+        !!awaitingApproval ||
         bodyTooLong ||
         (draft.type === "poll" &&
           (software === "lemmy" || communitySoftware === "lemmy"))
@@ -526,6 +540,13 @@ function CreatePostInner() {
               {postingRestricted && (
                 <p className="text-sm text-destructive">
                   Only moderators can post in this community.
+                </p>
+              )}
+              {awaitingApproval && (
+                <p className="text-sm text-destructive">
+                  {awaitingApproval === "Pending"
+                    ? "Your request to join this private community is waiting for a moderator's approval. You can post once it's approved."
+                    : "This is a private community. Join it and wait for a moderator to approve you before posting."}
                 </p>
               )}
 
