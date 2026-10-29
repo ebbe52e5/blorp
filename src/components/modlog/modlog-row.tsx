@@ -2,7 +2,7 @@ import { Schemas } from "@/src/apis/api-blueprint";
 import { PersonHoverCard } from "@/src/components/person/person-hover-card";
 import { Link } from "@/src/routing/index";
 import { useLinkContext } from "@/src/hooks/navigation-hooks";
-import { encodeApId, parseHandle } from "@/src/apis/utils";
+import { encodePostParam, encodeApId, parseHandle } from "@/src/apis/utils";
 import { RelativeTime } from "../relative-time";
 import { ContentGutters } from "../gutters";
 import { cn } from "@/src/lib/utils";
@@ -82,7 +82,7 @@ export function ModlogRow({ item }: { item: Schemas.ModlogItem }) {
             <Link
               to={`${linkCtx.root}posts/:post`}
               params={{
-                post: encodeURIComponent(item.postApId),
+                post: encodePostParam(item.postApId),
               }}
               className="text-brand truncate max-w-xs"
             >
@@ -93,7 +93,7 @@ export function ModlogRow({ item }: { item: Schemas.ModlogItem }) {
             <Link
               to={`${linkCtx.root}posts/:post`}
               params={{
-                post: encodeURIComponent(item.postApId),
+                post: encodePostParam(item.postApId),
               }}
               className="text-brand"
             >

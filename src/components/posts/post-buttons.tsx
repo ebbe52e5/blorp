@@ -23,7 +23,7 @@ import {
 } from "@/src/components/adaptable/action-menu/hooks";
 import { ActionMenu, ActionMenuProps } from "../adaptable/action-menu";
 import {
-  encodeApId,
+  encodePostParam,
   getPostMyVote,
   getPostEmojiReactions,
 } from "@/src/apis/utils";
@@ -405,7 +405,7 @@ export function PostCommentsButton({
         <Link
           to={`${linkCtx.root}posts/:post`}
           params={{
-            post: encodeApId(post.apId),
+            post: encodePostParam(post.apId),
           }}
         >
           <TbMessageCircle className="scale-115" />
@@ -443,7 +443,7 @@ function usePostShareActions({
     id: post.id,
     apId: post.apId,
     route: resolveRoute(`${linkCtx.root}posts/:post`, {
-      post: encodeApId(post.apId),
+      post: encodePostParam(post.apId),
     }),
     body: post.body,
   });

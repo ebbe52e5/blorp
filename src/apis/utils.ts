@@ -1,4 +1,5 @@
 import { Errors, Schemas } from "./api-blueprint";
+import { env } from "@/src/env";
 import _ from "lodash";
 import z from "zod";
 
@@ -15,6 +16,52 @@ export function encodeApId(id: string) {
 
 export function decodeApId(encodedUrl: string) {
   return decodeURIComponent(encodedUrl);
+}
+
+// The zhifou.io Lemmy fork: post and comment route params for objects on the
+// default instance are shortened to the bare id, so the address bar shows
+// /home/posts/1500 instead of /home/posts/https%3A%2F%2Fzhifou.io%2Fpost%2F1500.
+// Remote objects keep the full encoded ap_id. The default instance is fixed at
+// build time, so short links mean the same thing for every account and can be
+// shared.
+type RouteObjectKind = "post" | "comment";
+
+function encodeRouteParam(apId: string, kind: RouteObjectKind) {
+  const prefix = `${env.defaultInstance}/${kind}/`;
+  if (apId.startsWith(prefix)) {
+    const id = apId.slice(prefix.length);
+    if (/^\d+$/.test(id)) {
+      return id;
+    }
+  }
+  return encodeApId(apId);
+}
+
+function decodeRouteParam(param: string, kind: RouteObjectKind) {
+  if (/^\d+$/.test(param)) {
+    return `${env.defaultInstance}/${kind}/${param}`;
+  }
+  return decodeApId(param);
+}
+
+export function encodePostParam(apId: string) {
+  return encodeRouteParam(apId, "post");
+}
+
+export function decodePostParam(param: string) {
+  return decodeRouteParam(param, "post");
+}
+
+export function encodeCommentParam(apId: string) {
+  return encodeRouteParam(apId, "comment");
+}
+
+/**
+ * Returns the comment ap_id, or the legacy dotted comment path
+ * (e.g. "0.12.34") unchanged.
+ */
+export function decodeCommentParam(param: string) {
+  return decodeRouteParam(param, "comment");
 }
 
 export const encodedApIdSchema = z.preprocess((val) => {

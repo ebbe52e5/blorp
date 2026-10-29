@@ -31,6 +31,8 @@ import {
 import { useShowCommentReportModal } from "../posts/post-report";
 import { useLinkContext } from "@/src/hooks/navigation-hooks";
 import {
+  encodePostParam,
+  encodeCommentParam,
   encodeApId,
   commentIsAnswer,
   getCommentEmojiReactions,
@@ -129,8 +131,8 @@ export function useCommentActions({
 
   const route = commentView
     ? resolveRoute(`${linkCtx.root}posts/:post/comments/:comment`, {
-        post: encodeApId(commentView.postApId),
-        comment: encodeApId(commentView.apId),
+        post: encodePostParam(commentView.postApId),
+        comment: encodeCommentParam(commentView.apId),
       })
     : null;
 
@@ -591,8 +593,8 @@ function PostCommentInner({
               <Link
                 to={`${linkCtx.root}posts/:post/comments/:comment`}
                 params={{
-                  post: encodeApId(postApId),
-                  comment: encodeApId(commentView.apId),
+                  post: encodePostParam(postApId),
+                  comment: encodeCommentParam(commentView.apId),
                 }}
                 replace
               >
@@ -610,7 +612,7 @@ function PostCommentInner({
             <Link
               to={`${linkCtx.root}posts/:post`}
               params={{
-                post: encodeApId(postApId),
+                post: encodePostParam(postApId),
               }}
               replace
             >
@@ -660,8 +662,8 @@ function PostCommentInner({
               <Link
                 to="/inbox/posts/:post/comments/:comment"
                 params={{
-                  post: encodeApId(commentView.postApId),
-                  comment: encodeApId(commentView.apId),
+                  post: encodePostParam(commentView.postApId),
+                  comment: encodeCommentParam(commentView.apId),
                 }}
               >
                 {bodyRenderer}
@@ -763,8 +765,8 @@ function PostCommentInner({
                 <Link
                   to={`${linkCtx.root}posts/:post/comments/:comment`}
                   params={{
-                    post: encodeApId(commentView.postApId),
-                    comment: encodeApId(commentView.apId),
+                    post: encodePostParam(commentView.postApId),
+                    comment: encodeCommentParam(commentView.apId),
                   }}
                   className="translate-y-1/2 pl-2 bg-background block text-muted-foreground"
                 >

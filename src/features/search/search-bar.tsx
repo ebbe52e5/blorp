@@ -15,7 +15,7 @@ import { useProfileFromStore } from "@/src/stores/profiles";
 import { useLinkContext } from "@/src/hooks/navigation-hooks";
 import { useIonRouter } from "@ionic/react";
 import { resolveRoute } from "@/src/routing";
-import { encodeApId } from "@/src/apis/utils";
+import { encodePostParam, encodeApId } from "@/src/apis/utils";
 import { useCommunityFromStore } from "@/src/stores/communities";
 import type { Forms, Handle } from "@/src/apis/api-blueprint";
 import {
@@ -71,7 +71,7 @@ function PostSearchResult({ apId }: { apId: string }) {
   const onSelect = () =>
     router.push(
       resolveRoute(`${linkCtx.root}posts/:post`, {
-        post: encodeApId(apId),
+        post: encodePostParam(apId),
       }),
     );
 

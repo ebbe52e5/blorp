@@ -15,6 +15,7 @@ import {
 import { BsFillPinAngleFill } from "react-icons/bs";
 import { useIonRouter } from "@ionic/react";
 import {
+  encodePostParam,
   encodeApId,
   getPostMyVote,
   getPostSaved,
@@ -90,7 +91,7 @@ export function usePostActions({
     id: post.id,
     apId: post.apId,
     route: resolveRoute(`${linkCtx.root}posts/:post`, {
-      post: encodeApId(post.apId),
+      post: encodePostParam(post.apId),
     }),
     body: post.body,
   });

@@ -28,6 +28,7 @@ import { z } from "zod";
 import { useCommentsStore } from "../stores/comments";
 import { useCommunitiesStore } from "../stores/communities";
 import {
+  encodePostParam,
   encodeApId,
   extractErrorContent,
   isFeedVisibleTo,
@@ -3489,7 +3490,7 @@ export function useCreatePostMutation() {
       toast.dismiss(toastId);
       if (communityHandle) {
         history.replace(
-          `/home/c/${communityHandle}/posts/${encodeURIComponent(apId)}`,
+          `/home/c/${communityHandle}/posts/${encodePostParam(apId)}`,
         );
       }
       queryClient.invalidateQueries({
@@ -3523,7 +3524,7 @@ export function useEditPostMutation(apId: string) {
       patchPost(apId, getCachePrefixer(), postView);
       const handle = postView.communityHandle;
       if (handle) {
-        history.replace(`/home/c/${handle}/posts/${encodeURIComponent(apId)}`);
+        history.replace(`/home/c/${handle}/posts/${encodePostParam(apId)}`);
       }
     },
     onError: (err, _, toastId) => {

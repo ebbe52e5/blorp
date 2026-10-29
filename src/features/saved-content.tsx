@@ -19,7 +19,7 @@ import _ from "lodash";
 import { useCommentsByPaths } from "../stores/comments";
 import { MarkdownRenderer } from "../components/markdown/renderer";
 import { useLinkContext } from "@/src/hooks/navigation-hooks";
-import { encodeApId } from "../apis/utils";
+import { encodePostParam, encodeCommentParam } from "../apis/utils";
 import { Link } from "@/src/routing/index";
 import { IonContent, IonHeader, IonToolbar } from "@ionic/react";
 import { UserDropdown } from "../components/nav";
@@ -63,8 +63,8 @@ function Comment({ path }: { path: string }) {
       className="border-b pb-4 mt-4"
       to={`${linkCtx.root}posts/:post/comments/:comment`}
       params={{
-        post: encodeApId(commentView.postApId),
-        comment: encodeApId(commentView.apId),
+        post: encodePostParam(commentView.postApId),
+        comment: encodeCommentParam(commentView.apId),
       }}
     >
       <MarkdownRenderer markdown={commentView.body} disableLinks />

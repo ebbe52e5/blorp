@@ -51,7 +51,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "../components/ui/tooltip";
-import { encodeApId, getCommentSaved, parseHandle } from "../apis/utils";
+import {
+  encodePostParam,
+  encodeCommentParam,
+  encodeApId,
+  getCommentSaved,
+  parseHandle,
+} from "../apis/utils";
 import {
   CommentButtonBar,
   CommentVoting,
@@ -403,8 +409,8 @@ function Mention({
             <Link
               to={`/inbox/posts/:post/comments/:comment`}
               params={{
-                post: encodeApId(mention.postApId),
-                comment: encodeApId(mention.commentApId),
+                post: encodePostParam(mention.postApId),
+                comment: encodeCommentParam(mention.commentApId),
               }}
               onClickCapture={() => {
                 markRead.mutate({
@@ -503,8 +509,8 @@ function Reply({
             <Link
               to={`/inbox/posts/:post/comments/:comment`}
               params={{
-                post: encodeApId(replyView.postApId),
-                comment: encodeApId(replyView.commentApId),
+                post: encodePostParam(replyView.postApId),
+                comment: encodeCommentParam(replyView.commentApId),
               }}
               onClickCapture={() => {
                 markRead.mutate({

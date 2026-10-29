@@ -43,7 +43,11 @@ import { Button } from "@/src/components/ui/button";
 import { cn } from "@/src/lib/utils";
 import { useCommunityFromStore } from "@/src/stores/communities";
 import { useCommentsByPaths } from "@/src/stores/comments";
-import { encodeApId, getCommentSaved } from "@/src/apis/utils";
+import {
+  encodePostParam,
+  encodeCommentParam,
+  getCommentSaved,
+} from "@/src/apis/utils";
 import {
   CommentButtonBar,
   CommentVoting,
@@ -127,8 +131,8 @@ function Comment({ commentPath }: { commentPath: string }) {
             <Link
               to={`${linkCtx.root}posts/:post/comments/:comment`}
               params={{
-                post: encodeApId(comment.postApId),
-                comment: encodeApId(comment.apId),
+                post: encodePostParam(comment.postApId),
+                comment: encodeCommentParam(comment.apId),
               }}
             >
               <div className="flex flex-row flex-wrap">

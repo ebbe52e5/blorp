@@ -2,7 +2,7 @@ import { usePostFromStore, usePostsStore } from "@/src/stores/posts";
 import { useLinkContext } from "@/src/hooks/navigation-hooks";
 import { PostCardStyle, useSettingsStore } from "@/src/stores/settings";
 import { getPostEmbed } from "@/src/apis/post-embed";
-import { encodeApId } from "@/src/apis/utils";
+import { encodePostParam, encodeApId } from "@/src/apis/utils";
 import { Link } from "@/src/routing/index";
 import {
   PostArticleEmbed,
@@ -328,7 +328,7 @@ function CrossPosts({
           key={apId}
           to={`${linkCtx.root}posts/:post`}
           params={{
-            post: encodeApId(apId),
+            post: encodePostParam(apId),
           }}
           className="hover:underline truncate max-w-full"
         >
@@ -394,7 +394,7 @@ function LargePostCard({
 
   const apId = post.apId;
 
-  const encodedApId = encodeApId(apId);
+  const encodedApId = encodePostParam(apId);
   const embed = getPostEmbed(post);
 
   const showImage =
@@ -727,7 +727,7 @@ export function SmallPostCard({
 
   const apId = post.apId;
 
-  const encodedApId = encodeApId(apId);
+  const encodedApId = encodePostParam(apId);
   const embed = getPostEmbed(post);
 
   const showImage =
@@ -940,7 +940,7 @@ function ExtraSmallPostCard({
 
   const apId = post.apId;
 
-  const encodedApId = encodeApId(apId);
+  const encodedApId = encodePostParam(apId);
 
   const titleId = `${id}-title`;
   const bodyId = `${id}-title`;

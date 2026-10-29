@@ -49,6 +49,7 @@ import { CommentSortSelect } from "../../components/lemmy-sort";
 import { ToolbarBackButton } from "../../components/toolbar/toolbar-back-button";
 import { ToolbarButtons } from "../../components/toolbar/toolbar-buttons";
 import { cn, isNotNil } from "../../lib/utils";
+import { decodeCommentParam, decodePostParam } from "@/src/apis/utils";
 import { SearchBar } from "../search/search-bar";
 import { useCommentsByPaths } from "../../stores/comments";
 import { useCommunityFromStore } from "../../stores/communities";
@@ -144,7 +145,7 @@ function useResolveComment(pathOrApId: string | undefined): {
   highlightCommentId: number | undefined;
   status: "pending" | "error" | "success";
 } {
-  const decoded = pathOrApId ? decodeURIComponent(pathOrApId) : undefined;
+  const decoded = pathOrApId ? decodeCommentParam(pathOrApId) : undefined;
 
   const { apId, commentId, highlightCommentId } = useMemo(() => {
     const noResult = {
@@ -223,7 +224,7 @@ export default function Post() {
   );
   const [search, setSearch] = useState("");
 
-  const decodedApId = apId ? decodeURIComponent(apId) : undefined;
+  const decodedApId = apId ? decodePostParam(apId) : undefined;
 
   const parentComment = useResolveComment(commentPath);
 

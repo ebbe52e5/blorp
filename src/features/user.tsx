@@ -14,7 +14,13 @@ import { VirtualList } from "../components/virtual-list";
 import { memo, useEffect, useMemo } from "react";
 import { usePagination } from "../components/pagination/use-pagination";
 import { usePaginationMode } from "../stores/utils";
-import { decodeApId, encodeApId, getCommentSaved } from "../apis/utils";
+import {
+  encodePostParam,
+  encodeCommentParam,
+  decodeApId,
+  encodeApId,
+  getCommentSaved,
+} from "../apis/utils";
 import { ToggleGroup, ToggleGroupItem } from "../components/ui/toggle-group";
 import _ from "lodash";
 import { useCommentsByPaths } from "../stores/comments";
@@ -81,8 +87,8 @@ const Comment = memo(function Comment({ path }: { path: string }) {
         <Link
           to={`${linkCtx.root}posts/:post/comments/:comment`}
           params={{
-            post: encodeApId(commentView.postApId),
-            comment: encodeApId(commentView.apId),
+            post: encodePostParam(commentView.postApId),
+            comment: encodeCommentParam(commentView.apId),
           }}
           className={cn(
             "py-2.5 flex-1 overflow-hidden text-sm flex flex-col gap-1",

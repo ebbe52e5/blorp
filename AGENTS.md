@@ -60,7 +60,7 @@ Blorp is a single React codebase that ships to three targets: web (Vite), mobile
 - `zustand-persist-migrate` — every Zustand `persist` store must define `migrate`, so state written by a newer app version isn't silently discarded if a user downgrades.
 - Direct access to `auth` store's `selectedUuid`/`accountIndex`, or indexing into `usePostsStore`'s `posts` map, is banned in favor of `getSelectedAccount()` / `usePostFromStore()`.
 
-**Typed routing.** `src/routing/routes.tsx` defines each route's path plus a Zod schema for its params; `src/routing/index.tsx` derives a typed `useHistory()`/`Link` from that map, so route params are typechecked at the call site.
+**Typed routing.** `src/routing/routes.tsx` defines each route's path plus a Zod schema for its params; `src/routing/index.tsx` derives a typed `useHistory()`/`Link` from that map, so route params are typechecked at the call site. Fill `:post`/`:comment` params with `encodePostParam`/`encodeCommentParam` (default-instance objects become a bare id) and read them with `decodePostParam`/`decodeCommentParam`, not `encodeApId`/`decodeURIComponent`. Keep `encodeApId` for other values: the edit-post draft's `?id=` must stay the full ap_id, because drafts are keyed by it and `encodedApIdSchema` requires a URL.
 
 **Runtime-configurable self-hosting.** `src/env.ts` resolves `REACT_APP_*` config from (in order of precedence) URL params on `deploy.blorpblorp.xyz`, Docker-injected `window` globals, then Vite env vars — see the env var table in `README.md` and `docs/dev/2026-04-04-adding-env-vars.md` before adding a new one.
 

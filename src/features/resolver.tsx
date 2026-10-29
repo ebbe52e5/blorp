@@ -3,7 +3,7 @@ import { Page } from "../components/page";
 import { useHistory, useLocation } from "react-router";
 import { useResolveObjectQuery } from "../queries";
 import { resolveRoute } from "../routing";
-import { encodeApId } from "../apis/utils";
+import { encodePostParam, encodeApId } from "../apis/utils";
 
 const origin = (() => {
   try {
@@ -30,7 +30,7 @@ export default function ApResolver() {
     if (post) {
       replace(
         resolveRoute("/home/posts/:post", {
-          post: encodeApId(post.apId),
+          post: encodePostParam(post.apId),
         }),
       );
     } else if (community) {
