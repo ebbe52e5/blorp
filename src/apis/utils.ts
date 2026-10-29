@@ -21,9 +21,9 @@ export function decodeApId(encodedUrl: string) {
 // The zhifou.io Lemmy fork: post and comment route params for objects on the
 // default instance are shortened to the bare id, so the address bar shows
 // /home/posts/1500 instead of /home/posts/https%3A%2F%2Fzhifou.io%2Fpost%2F1500.
-// Remote objects keep the full encoded ap_id. The default instance is fixed at
-// build time, so short links mean the same thing for every account and can be
-// shared.
+// Remote objects keep the full encoded ap_id. The default instance is fixed per
+// deployment rather than per account, so short links mean the same thing for
+// every account and can be shared.
 type RouteObjectKind = "post" | "comment";
 
 function encodeRouteParam(apId: string, kind: RouteObjectKind) {
