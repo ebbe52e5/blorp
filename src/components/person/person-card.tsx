@@ -11,7 +11,7 @@ import { cn } from "@/src/lib/utils";
 import { Skeleton } from "../ui/skeleton";
 import { Account } from "@/src/stores/auth";
 import { useProfileFromStore } from "@/src/stores/profiles";
-import { encodeApId, parseHandle } from "@/src/apis/utils";
+import { parseHandle, encodeUserParam } from "@/src/apis/utils";
 import { useLinkContext } from "@/src/hooks/navigation-hooks";
 import { PersonHoverCard } from "./person-hover-card";
 import _ from "lodash";
@@ -110,7 +110,7 @@ function PersonCardInner({
       data-testid="person-card"
       to={`${linkCtx.root}u/:userId`}
       params={{
-        userId: encodeApId(actorId),
+        userId: encodeUserParam(actorId),
       }}
       className={cn(
         "flex flex-row gap-2 items-center min-w-0 h-12 text-foreground",

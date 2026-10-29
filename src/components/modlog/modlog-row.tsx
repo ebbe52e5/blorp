@@ -2,7 +2,11 @@ import { Schemas } from "@/src/apis/api-blueprint";
 import { PersonHoverCard } from "@/src/components/person/person-hover-card";
 import { Link } from "@/src/routing/index";
 import { useLinkContext } from "@/src/hooks/navigation-hooks";
-import { encodePostParam, encodeApId, parseHandle } from "@/src/apis/utils";
+import {
+  encodePostParam,
+  parseHandle,
+  encodeUserParam,
+} from "@/src/apis/utils";
 import { RelativeTime } from "../relative-time";
 import { ContentGutters } from "../gutters";
 import { cn } from "@/src/lib/utils";
@@ -47,7 +51,7 @@ export function ModlogRow({ item }: { item: Schemas.ModlogItem }) {
           <PersonHoverCard actorId={item.modApId} asChild>
             <Link
               to={`${linkCtx.root}u/:userId`}
-              params={{ userId: encodeApId(item.modApId) }}
+              params={{ userId: encodeUserParam(item.modApId) }}
               className="text-brand truncate block"
             >
               {parseHandle(item.modHandle).name ?? item.modHandle}
@@ -70,7 +74,7 @@ export function ModlogRow({ item }: { item: Schemas.ModlogItem }) {
               <PersonHoverCard actorId={item.userApId} asChild>
                 <Link
                   to={`${linkCtx.root}u/:userId`}
-                  params={{ userId: encodeApId(item.userApId) }}
+                  params={{ userId: encodeUserParam(item.userApId) }}
                   className="text-brand"
                 >
                   {parseHandle(item.userHandle).name ?? item.userHandle}

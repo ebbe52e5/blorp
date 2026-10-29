@@ -7,7 +7,7 @@ import {
   usePrivateMessagesQuery,
   useUploadImageMutation,
 } from "@/src/queries";
-import { decodeApId } from "@/src/apis/utils";
+import { decodeUserParam } from "@/src/apis/utils";
 import { cn } from "@/src/lib/utils";
 import { Link, useParams } from "@/src/routing";
 import { parseAccountInfo, useAuth } from "@/src/stores/auth";
@@ -49,7 +49,7 @@ export default function Messages() {
 
   const { mutateAsync: markMessageRead } = useMarkPrivateMessageReadMutation();
   const encodedOtherActorId = useParams("/messages/chat/:userId").userId;
-  const otherActorId = decodeApId(encodedOtherActorId);
+  const otherActorId = decodeUserParam(encodedOtherActorId);
 
   const person = useProfileFromStore(otherActorId);
   const [signal, setSignal] = useState(0);

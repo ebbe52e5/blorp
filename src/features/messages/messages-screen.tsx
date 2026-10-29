@@ -7,7 +7,7 @@ import { ToolbarTitle } from "@/src/components/toolbar/toolbar-title";
 import { Separator } from "@/src/components/ui/separator";
 import { VirtualList } from "@/src/components/virtual-list";
 import { usePrivateMessagesQuery } from "@/src/queries";
-import { encodeApId } from "@/src/apis/utils";
+import { encodeUserParam } from "@/src/apis/utils";
 import { cn, isNotNil } from "@/src/lib/utils";
 import { Link } from "@/src/routing";
 import { parseAccountInfo, useAuth } from "@/src/stores/auth";
@@ -132,7 +132,7 @@ export default function Messages() {
             return (
               <Link
                 to="/messages/chat/:userId"
-                params={{ userId: encodeApId(getOtherPerson(item).apId) }}
+                params={{ userId: encodeUserParam(getOtherPerson(item).apId) }}
               >
                 <ContentGutters className="px-0">
                   <div>

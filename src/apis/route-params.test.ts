@@ -3,12 +3,14 @@ import { env } from "@/src/env";
 import {
   decodeCommentParam,
   decodePostParam,
+  decodeUserParam,
   encodeApId,
   encodeCommentParam,
   encodePostParam,
+  encodeUserParam,
 } from "./utils";
 
-describe("post and comment route params", () => {
+describe("post, comment and user route params", () => {
   const local = env.defaultInstance;
   const remotePost = "https://lemmy.other.example/post/1500";
 
@@ -40,5 +42,23 @@ describe("post and comment route params", () => {
 
   test("legacy dotted comment paths pass through", () => {
     expect(decodeCommentParam("0.12.34")).toBe("0.12.34");
+  });
+
+  test("local users encode to their username and round-trip", () => {
+    const apId = `${local}/u/Some_User1`;
+    expect(encodeUserParam(apId)).toBe("Some_User1");
+    expect(decodeUserParam("Some_User1")).toBe(apId);
+  });
+
+  test("remote users and handles keep their old form", () => {
+    const remote = "https://lemmy.other.example/u/alice";
+    expect(encodeUserParam(remote)).toBe(encodeApId(remote));
+    expect(decodeUserParam(encodeApId(remote))).toBe(remote);
+    expect(decodeUserParam("alice@lemmy.other.example")).toBe(
+      "alice@lemmy.other.example",
+    );
+    expect(decodeUserParam(encodeApId(`${local}/u/Eason`))).toBe(
+      `${local}/u/Eason`,
+    );
   });
 });

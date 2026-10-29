@@ -9,7 +9,7 @@ import {
 } from "@/src/components/ui/dropdown-menu";
 import { parseAccountInfo, useAuth } from "../stores/auth";
 import { useLinkContext } from "@/src/hooks/navigation-hooks";
-import { encodeApId, parseHandle } from "../apis/utils";
+import { parseHandle, encodeUserParam } from "../apis/utils";
 import {
   Avatar,
   AvatarFallback,
@@ -166,7 +166,7 @@ export function UserDropdown() {
             <Link
               to={`${linkCtx.root}u/:userId`}
               params={{
-                userId: encodeApId(person.apId),
+                userId: encodeUserParam(person.apId),
               }}
             >
               <DropdownMenuItem>
@@ -316,7 +316,7 @@ export function UserSidebar() {
             <Link
               to={`${linkCtx.root}u/:userId`}
               params={{
-                userId: encodeApId(person.apId),
+                userId: encodeUserParam(person.apId),
               }}
               className="flex flex-row items-center gap-2 text-lg"
             >

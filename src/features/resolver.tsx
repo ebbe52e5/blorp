@@ -3,7 +3,7 @@ import { Page } from "../components/page";
 import { useHistory, useLocation } from "react-router";
 import { useResolveObjectQuery } from "../queries";
 import { resolveRoute } from "../routing";
-import { encodePostParam, encodeApId } from "../apis/utils";
+import { encodePostParam, encodeApId, encodeUserParam } from "../apis/utils";
 
 const origin = (() => {
   try {
@@ -42,7 +42,7 @@ export default function ApResolver() {
     } else if (user) {
       replace(
         resolveRoute("/home/u/:userId", {
-          userId: encodeApId(user.apId),
+          userId: encodeUserParam(user.apId),
         }),
       );
     } else if (feed) {

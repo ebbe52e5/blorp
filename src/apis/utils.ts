@@ -18,19 +18,29 @@ export function decodeApId(encodedUrl: string) {
   return decodeURIComponent(encodedUrl);
 }
 
-// The zhifou.io Lemmy fork: post and comment route params for objects on the
-// default instance are shortened to the bare id, so the address bar shows
-// /home/posts/1500 instead of /home/posts/https%3A%2F%2Fzhifou.io%2Fpost%2F1500.
+// The zhifou.io Lemmy fork: post, comment and user route params for objects on
+// the default instance are shortened to the bare id or username, so the
+// address bar shows /home/posts/1500 instead of
+// /home/posts/https%3A%2F%2Fzhifou.io%2Fpost%2F1500.
 // Remote objects keep the full encoded ap_id. The default instance is fixed per
 // deployment rather than per account, so short links mean the same thing for
 // every account and can be shared.
-type RouteObjectKind = "post" | "comment";
+const ROUTE_OBJECT_KINDS = {
+  post: { path: "post", id: /^\d+$/ },
+  comment: { path: "comment", id: /^\d+$/ },
+  // Lemmy usernames are [A-Za-z0-9_]; no "@" or ":", so a short param can't be
+  // mistaken for a handle or an encoded URL.
+  user: { path: "u", id: /^\w+$/ },
+} as const;
+
+type RouteObjectKind = keyof typeof ROUTE_OBJECT_KINDS;
 
 function encodeRouteParam(apId: string, kind: RouteObjectKind) {
-  const prefix = `${env.defaultInstance}/${kind}/`;
+  const { path, id: idPattern } = ROUTE_OBJECT_KINDS[kind];
+  const prefix = `${env.defaultInstance}/${path}/`;
   if (apId.startsWith(prefix)) {
     const id = apId.slice(prefix.length);
-    if (/^\d+$/.test(id)) {
+    if (idPattern.test(id)) {
       return id;
     }
   }
@@ -38,10 +48,19 @@ function encodeRouteParam(apId: string, kind: RouteObjectKind) {
 }
 
 function decodeRouteParam(param: string, kind: RouteObjectKind) {
-  if (/^\d+$/.test(param)) {
-    return `${env.defaultInstance}/${kind}/${param}`;
+  const { path, id: idPattern } = ROUTE_OBJECT_KINDS[kind];
+  if (idPattern.test(param)) {
+    return `${env.defaultInstance}/${path}/${param}`;
   }
   return decodeApId(param);
+}
+
+export function encodeUserParam(apId: string) {
+  return encodeRouteParam(apId, "user");
+}
+
+export function decodeUserParam(param: string) {
+  return decodeRouteParam(param, "user");
 }
 
 export function encodePostParam(apId: string) {

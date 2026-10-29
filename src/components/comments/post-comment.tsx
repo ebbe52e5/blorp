@@ -33,12 +33,12 @@ import { useLinkContext } from "@/src/hooks/navigation-hooks";
 import {
   encodePostParam,
   encodeCommentParam,
-  encodeApId,
   commentIsAnswer,
   getCommentEmojiReactions,
   getCommentMyVote,
   getCommentSaved,
   parseHandle,
+  encodeUserParam,
 } from "@/src/apis/utils";
 import { Link, resolveRoute } from "../../routing/index";
 import {
@@ -335,7 +335,7 @@ function Byline({
         <Link
           to={`${linkCtx.root}u/:userId`}
           params={{
-            userId: encodeApId(actorId),
+            userId: encodeUserParam(actorId),
           }}
           className="text-base overflow-ellipsis flex flex-row overflow-x-hidden items-center hover:underline"
         >

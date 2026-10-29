@@ -20,6 +20,7 @@ import {
   getPostMyVote,
   getPostSaved,
   parseHandle,
+  encodeUserParam,
 } from "@/src/apis/utils";
 import { CommunityHoverCard } from "../communities/community-hover-card";
 import { PersonHoverCard } from "../person/person-hover-card";
@@ -288,7 +289,7 @@ export function PostByline({
 
   const isAdmin = useIsAdmin(post.creatorApId);
 
-  const encodedCreatorApId = encodeApId(post.creatorApId);
+  const encodedCreatorApId = encodeUserParam(post.creatorApId);
 
   const saved = getPostSaved(post);
   const locked = post.optimisticLocked ?? post.locked;

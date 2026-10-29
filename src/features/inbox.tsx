@@ -54,9 +54,9 @@ import {
 import {
   encodePostParam,
   encodeCommentParam,
-  encodeApId,
   getCommentSaved,
   parseHandle,
+  encodeUserParam,
 } from "../apis/utils";
 import {
   CommentButtonBar,
@@ -144,7 +144,7 @@ function PostReport({
         <div className="flex mt-2.5 mb-1 gap-3 items-start">
           <Link
             to="/inbox/u/:userId"
-            params={{ userId: encodeApId(postReport.creatorApId) }}
+            params={{ userId: encodeUserParam(postReport.creatorApId) }}
           >
             <BadgeIcon
               icon={<Report className="h-full w-full text-muted-foreground" />}
@@ -226,7 +226,7 @@ function CommunityFollowRequest({
         <div className="flex my-2.5 gap-3 items-center">
           <Link
             to="/inbox/u/:userId"
-            params={{ userId: encodeApId(followRequest.personApId) }}
+            params={{ userId: encodeUserParam(followRequest.personApId) }}
           >
             <PersonAvatar actorId={followRequest.personApId} size="sm" />
           </Link>
@@ -234,7 +234,7 @@ function CommunityFollowRequest({
             <PersonHoverCard actorId={followRequest.personApId} asChild>
               <Link
                 to="/inbox/u/:userId"
-                params={{ userId: encodeApId(followRequest.personApId) }}
+                params={{ userId: encodeUserParam(followRequest.personApId) }}
                 className="font-medium"
               >
                 {person}
@@ -298,7 +298,7 @@ function CommentReport({
         <div className="flex mt-2.5 mb-1 gap-3 items-start">
           <Link
             to="/inbox/u/:userId"
-            params={{ userId: encodeApId(commentReport.creatorApId) }}
+            params={{ userId: encodeUserParam(commentReport.creatorApId) }}
           >
             <BadgeIcon
               icon={<Report className="h-full w-full text-muted-foreground" />}
@@ -392,7 +392,7 @@ function Mention({
         <div className="flex mt-2.5 mb-1 gap-3 items-start">
           <Link
             to="/inbox/u/:userId"
-            params={{ userId: encodeApId(mention.creatorApId) }}
+            params={{ userId: encodeUserParam(mention.creatorApId) }}
           >
             <BadgeIcon
               icon={<Person className="h-full w-full text-muted-foreground" />}
@@ -492,7 +492,7 @@ function Reply({
         <div className="flex mt-2.5 mb-1 gap-3 items-start">
           <Link
             to="/inbox/u/:userId"
-            params={{ userId: encodeApId(replyView.creatorApId) }}
+            params={{ userId: encodeUserParam(replyView.creatorApId) }}
           >
             <BadgeIcon
               icon={<Message className="h-full w-full text-muted-foreground" />}
@@ -591,7 +591,7 @@ function RegistrationApplication({
         <div className="flex gap-3 items-center">
           <Link
             to="/inbox/u/:userId"
-            params={{ userId: encodeApId(application.personApId) }}
+            params={{ userId: encodeUserParam(application.personApId) }}
           >
             <PersonAvatar actorId={application.personApId} size="sm" />
           </Link>
@@ -599,7 +599,7 @@ function RegistrationApplication({
             <PersonHoverCard actorId={application.personApId} asChild>
               <Link
                 to="/inbox/u/:userId"
-                params={{ userId: encodeApId(application.personApId) }}
+                params={{ userId: encodeUserParam(application.personApId) }}
                 className="font-medium"
               >
                 {person}

@@ -17,9 +17,9 @@ import { usePaginationMode } from "../stores/utils";
 import {
   encodePostParam,
   encodeCommentParam,
-  decodeApId,
-  encodeApId,
   getCommentSaved,
+  encodeUserParam,
+  decodeUserParam,
 } from "../apis/utils";
 import { ToggleGroup, ToggleGroupItem } from "../components/ui/toggle-group";
 import _ from "lodash";
@@ -133,7 +133,7 @@ export default function User() {
   const linkCtx = useLinkContext();
   const { userId } = useParams(`${linkCtx.root}u/:userId`);
 
-  const actorId = userId ? decodeApId(userId) : undefined;
+  const actorId = userId ? decodeUserParam(userId) : undefined;
 
   const typeParam = useUrlSearchState(
     "type",
@@ -152,7 +152,7 @@ export default function User() {
     const actualApId = personQuery.data?.apId;
     if (actorId && actualApId && actorId !== actualApId) {
       const newPath = resolveRoute(`${linkCtx.root}u/:userId`, {
-        userId: encodeApId(actualApId),
+        userId: encodeUserParam(actualApId),
       });
       history.replace(newPath);
     }

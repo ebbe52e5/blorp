@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import { EllipsisActionMenu, SubAction } from "../adaptable/action-menu";
-import { encodeApId } from "@/src/apis/utils";
+import { encodeUserParam } from "@/src/apis/utils";
 import { Deferred } from "@/src/lib/deferred";
 import { useIonAlert, useIonRouter } from "@ionic/react";
 import { useBlockPersonMutation, useTagUser, useUserTag } from "@/src/queries";
@@ -51,7 +51,7 @@ export function usePersonActions({
           apId: person.apId,
           handle: person.handle,
           route: resolveRoute(`${linkCtx.root}u/:userId`, {
-            userId: encodeApId(person.apId),
+            userId: encodeUserParam(person.apId),
           }),
         }
       : null,
@@ -71,7 +71,7 @@ export function usePersonActions({
                   onClick: () =>
                     router.push(
                       resolveRoute("/messages/chat/:userId", {
-                        userId: encodeApId(person.apId),
+                        userId: encodeUserParam(person.apId),
                       }),
                     ),
                 },
